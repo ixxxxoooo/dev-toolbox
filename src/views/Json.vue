@@ -15,7 +15,7 @@
             </button>
             <h1 class="text-xl font-semibold text-foreground">JSON 格式化工具</h1>
           </div>
-          
+
           <div class="flex items-center space-x-2">
             <button
               @click="loadFile"
@@ -84,7 +84,7 @@
               <span class="text-sm">转换</span>
             </label>
           </div>
-          
+
           <div class="flex items-center space-x-4">
             <label class="flex items-center space-x-2">
               <span class="text-sm">缩进:</span>
@@ -332,7 +332,7 @@ watch([inputText, operation, indentSize, convertFrom, convertTo], () => {
 const processJson = () => {
   error.value = ''
   validationResult.value = null
-  
+
   if (!inputText.value.trim()) {
     formattedJson.value = ''
     return
@@ -430,13 +430,13 @@ const convertYamlToJson = (): void => {
   const result: Record<string, any> = {}
   let current: Record<string, any> = result
   const stack: Record<string, any>[] = []
-  
+
   lines.forEach((line: string) => {
     const match = line.match(/^(\s*)([^:]+):\s*(.*)$/)
     if (match) {
       const [, spaces, key, value] = match
       const level = spaces.length / 2
-      
+
       if (level === 0) {
         current = result
       } else {
@@ -445,7 +445,7 @@ const convertYamlToJson = (): void => {
         }
         current = stack[stack.length - 1] || result
       }
-      
+
       if (value.trim()) {
         current[key] = isNaN(Number(value)) ? value : Number(value)
       } else {
@@ -455,7 +455,7 @@ const convertYamlToJson = (): void => {
       }
     }
   })
-  
+
   formattedJson.value = JSON.stringify(result, null, 2)
 }
 
@@ -491,7 +491,7 @@ const convertCsvToJson = (): void => {
     formattedJson.value = '[]'
     return
   }
-  
+
   const headers = lines[0].split(',').map((h: string) => h.trim())
   const json = lines.slice(1).map((line: string) => {
     const values = line.split(',').map((v: string) => v.trim())
@@ -501,14 +501,14 @@ const convertCsvToJson = (): void => {
     })
     return obj
   })
-  
+
   formattedJson.value = JSON.stringify(json, null, 2)
 }
 
 // JSON路径查询
 const executeQuery = () => {
   if (!jsonPathQuery.value || !isValidJson.value) return
-  
+
   try {
     const json = JSON.parse(inputText.value)
     const result = evaluateJsonPath(json, jsonPathQuery.value)
@@ -522,7 +522,7 @@ const evaluateJsonPath = (obj: any, path: string): any => {
   // 简化的JSONPath实现
   const parts = path.replace(/^\$/, '').split('.').filter(Boolean)
   let current = obj
-  
+
   for (const part of parts) {
     if (part.includes('[')) {
       const [key, index] = part.split('[')
@@ -534,10 +534,10 @@ const evaluateJsonPath = (obj: any, path: string): any => {
     } else {
       current = current[part]
     }
-    
+
     if (current === undefined) return undefined
   }
-  
+
   return current
 }
 
@@ -546,10 +546,10 @@ const jsonToYaml = (obj: any, indent: number): string => {
   if (typeof obj !== 'object' || obj === null) {
     return String(obj)
   }
-  
+
   let yaml = ''
   const spaces = '  '.repeat(indent)
-  
+
   if (Array.isArray(obj)) {
     obj.forEach((item: any) => {
       if (typeof item === 'object' && item !== null) {
@@ -568,7 +568,7 @@ const jsonToYaml = (obj: any, indent: number): string => {
       }
     })
   }
-  
+
   return yaml
 }
 
@@ -576,9 +576,9 @@ const jsonToXml = (obj: any, rootName: string): string => {
   if (typeof obj !== 'object' || obj === null) {
     return `<${rootName}>${String(obj)}</${rootName}>`
   }
-  
+
   let xml = `<${rootName}>`
-  
+
   if (Array.isArray(obj)) {
     obj.forEach((item: any) => {
       xml += jsonToXml(item, 'item')
@@ -588,7 +588,7 @@ const jsonToXml = (obj: any, rootName: string): string => {
       xml += jsonToXml(obj[key], key)
     })
   }
-  
+
   xml += `</${rootName}>`
   return xml
 }
@@ -654,7 +654,7 @@ const loadFile = () => {
 const handleFileSelect = (event: Event): void => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (file) {
     fileInfo.value = {
       name: file.name,
@@ -662,7 +662,7 @@ const handleFileSelect = (event: Event): void => {
       type: file.type || 'application/json',
       lastModified: new Date(file.lastModified)
     }
-    
+
     const reader = new FileReader()
     reader.onload = (e: ProgressEvent<FileReader>) => {
       inputText.value = e.target?.result as string
@@ -670,24 +670,24 @@ const handleFileSelect = (event: Event): void => {
     }
     reader.readAsText(file)
   }
-  
+
   // 清空文件输入
   target.value = ''
 }
 
 const downloadFile = () => {
   if (!formattedJson.value) return
-  
+
   const extension = operation.value === 'convert' ? convertTo.value : 'json'
   const filename = `${fileInfo.value?.name || 'data'}.${extension}`
-  
-  const blob = new Blob([formattedJson.value], { 
-    type: operation.value === 'convert' && convertTo.value === 'json' 
-      ? 'application/json' 
-      : 'text/plain' 
+
+  const blob = new Blob([formattedJson.value], {
+    type: operation.value === 'convert' && convertTo.value === 'json'
+      ? 'application/json'
+      : 'text/plain'
   })
   const url = URL.createObjectURL(blob)
-  
+
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -700,7 +700,14 @@ const downloadFile = () => {
 // 剪贴板操作
 const pasteInput = async () => {
   try {
-    const text = await navigator.clipboard.readText()
+    let text = ''
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      text = await (window as any).electronAPI.clipboard.read()
+    } else {
+      // 回退到浏览器 API
+      text = await navigator.clipboard.readText()
+    }
     inputText.value = text
     processJson()
   } catch (err) {
@@ -711,7 +718,13 @@ const pasteInput = async () => {
 const copyInput = async () => {
   if (!inputText.value) return
   try {
-    await navigator.clipboard.writeText(inputText.value)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(inputText.value)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(inputText.value)
+    }
   } catch (err) {
     error.value = '无法复制到剪贴板'
   }
@@ -720,7 +733,13 @@ const copyInput = async () => {
 const copyOutput = async () => {
   if (!formattedJson.value) return
   try {
-    await navigator.clipboard.writeText(formattedJson.value)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(formattedJson.value)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(formattedJson.value)
+    }
   } catch (err) {
     error.value = '无法复制到剪贴板'
   }

@@ -15,7 +15,7 @@
             </button>
             <h1 class="text-xl font-semibold text-foreground">文本对比工具</h1>
           </div>
-          
+
           <div class="flex items-center space-x-2">
             <button
               @click="loadFile('left')"
@@ -134,7 +134,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="grid grid-cols-2 gap-4 h-64">
           <!-- 左侧差异 -->
           <div class="border border-border rounded-md overflow-auto">
@@ -197,14 +197,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-declare class DiffMatchPatch {
-  diff_main(text1: string, text2: string): [number, string][];
-  diff_cleanupSemantic(diffs: [number, string][]): void;
-  diff_lineMode_(text1: string, text2: string): [number, string][];
-  diff_wordMode_(text1: string, text2: string): [number, string][];
-}
+import * as DiffMatchPatch from 'diff-match-patch'
 
-const DiffMatchPatchClass = (window as any).diff_match_patch || DiffMatchPatch;
+// 创建 diff-match-patch 实例
+const dmp = new DiffMatchPatch.diff_match_patch()
 
 interface DiffLine {
   type: 'equal' | 'insert' | 'delete'
@@ -235,27 +231,21 @@ const activeFileSide = ref<'left' | 'right' | null>(null)
 
 // 计算差异
 const calculateDiff = () => {
-  if (!leftText.value && !rightText.value) {
-    diffResult.value = null
-    return
-  }
 
-  const dmp = new DiffMatchPatchClass()
   let diffs: any[]
 
   switch (diffType.value) {
     case 'words':
-      diffs = dmp.diff_wordMode_(leftText.value, rightText.value)
+      diffs = calculateWordDiff(leftText.value, rightText.value)
       break
     case 'lines':
-      diffs = dmp.diff_lineMode_(leftText.value, rightText.value)
+      diffs = calculateLineDiff(leftText.value, rightText.value)
       break
     default:
       diffs = dmp.diff_main(leftText.value, rightText.value)
+      dmp.diff_cleanupSemantic(diffs)
       break
   }
-
-  dmp.diff_cleanupSemantic(diffs)
 
   const leftLines: DiffLine[] = []
   const rightLines: DiffLine[] = []
@@ -266,11 +256,11 @@ const calculateDiff = () => {
 
   diffs.forEach(([operation, text]: [number, string]) => {
     const lines = text.split('\n')
-    
+
     lines.forEach((line, index) => {
       if (line || index < lines.length - 1) {
         const escapedLine = escapeHtml(line || ' ')
-        
+
         if (operation === 0) { // equal
           leftLines.push({ type: 'equal', content: escapedLine, lineNumber: leftLineNumber })
           rightLines.push({ type: 'equal', content: escapedLine, lineNumber: rightLineNumber })
@@ -294,6 +284,53 @@ const calculateDiff = () => {
 
   diffResult.value = { left: leftLines, right: rightLines }
   diffStats.value = stats
+}
+
+// 单词级差异计算
+const calculateWordDiff = (text1: string, text2: string): [number, string][] => {
+  const words1 = text1.split(/(\s+)/)
+  const words2 = text2.split(/(\s+)/)
+
+  // 使用基本的差异算法
+  const diffs: [number, string][] = []
+  const maxLen = Math.max(words1.length, words2.length)
+
+  for (let i = 0; i < maxLen; i++) {
+    const word1 = words1[i] || ''
+    const word2 = words2[i] || ''
+
+    if (word1 === word2) {
+      if (word1) diffs.push([0, word1]) // equal
+    } else {
+      if (word1) diffs.push([-1, word1]) // delete
+      if (word2) diffs.push([1, word2])  // insert
+    }
+  }
+
+  return diffs
+}
+
+// 行级差异计算
+const calculateLineDiff = (text1: string, text2: string): [number, string][] => {
+  const lines1 = text1.split('\n')
+  const lines2 = text2.split('\n')
+
+  const diffs: [number, string][] = []
+  const maxLen = Math.max(lines1.length, lines2.length)
+
+  for (let i = 0; i < maxLen; i++) {
+    const line1 = lines1[i]
+    const line2 = lines2[i]
+
+    if (line1 === line2) {
+      if (line1 !== undefined) diffs.push([0, line1 + '\n']) // equal
+    } else {
+      if (line1 !== undefined) diffs.push([-1, line1 + '\n']) // delete
+      if (line2 !== undefined) diffs.push([1, line2 + '\n'])  // insert
+    }
+  }
+
+  return diffs
 }
 
 // 转义 HTML
@@ -327,7 +364,7 @@ const loadFile = (side: 'left' | 'right') => {
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (file && activeFileSide.value) {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -341,7 +378,7 @@ const handleFileSelect = (event: Event) => {
     }
     reader.readAsText(file)
   }
-  
+
   // 清空文件输入
   target.value = ''
 }
@@ -349,13 +386,25 @@ const handleFileSelect = (event: Event) => {
 // 粘贴文本
 const pasteText = async (side: 'left' | 'right') => {
   try {
-    const text = await navigator.clipboard.readText()
-    if (side === 'left') {
-      leftText.value = text
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      const text = await (window as any).electronAPI.clipboard.read()
+      if (side === 'left') {
+        leftText.value = text
+      } else {
+        rightText.value = text
+      }
+      calculateDiff()
     } else {
-      rightText.value = text
+      // 回退到浏览器 API
+      const text = await navigator.clipboard.readText()
+      if (side === 'left') {
+        leftText.value = text
+      } else {
+        rightText.value = text
+      }
+      calculateDiff()
     }
-    calculateDiff()
   } catch (err) {
     console.error('无法读取剪贴板:', err)
   }
@@ -372,7 +421,7 @@ const clearAll = () => {
 // 复制结果
 const copyResult = async () => {
   if (!diffResult.value) return
-  
+
   let result = '文本对比结果\n\n'
   result += `原始文本:\n${leftText.value}\n\n`
   result += `修改文本:\n${rightText.value}\n\n`
@@ -380,9 +429,15 @@ const copyResult = async () => {
   result += `添加: ${diffStats.value.added} 行\n`
   result += `删除: ${diffStats.value.removed} 行\n`
   result += `修改: ${diffStats.value.modified} 行\n\n`
-  
+
   try {
-    await navigator.clipboard.writeText(result)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(result)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(result)
+    }
   } catch (err) {
     console.error('无法复制到剪贴板:', err)
   }
@@ -395,7 +450,7 @@ const handleDragOver = (e: DragEvent) => {
 
 const handleDrop = (e: DragEvent, side: 'left' | 'right') => {
   e.preventDefault()
-  
+
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
     const file = files[0]

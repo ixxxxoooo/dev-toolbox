@@ -15,7 +15,7 @@
             </button>
             <h1 class="text-xl font-semibold text-foreground">时间戳转换工具</h1>
           </div>
-          
+
           <div class="flex items-center space-x-2">
             <button
               @click="copyCurrentTimestamp"
@@ -40,7 +40,7 @@
         <!-- 时间戳转日期 -->
         <div class="bg-card border border-border rounded-lg p-6">
           <h3 class="text-lg font-semibold text-foreground mb-4">时间戳转日期</h3>
-          
+
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-foreground mb-2">输入时间戳</label>
@@ -101,7 +101,7 @@
         <!-- 日期转时间戳 -->
         <div class="bg-card border border-border rounded-lg p-6">
           <h3 class="text-lg font-semibold text-foreground mb-4">日期转时间戳</h3>
-          
+
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-foreground mb-2">选择日期时间</label>
@@ -164,7 +164,7 @@
       <!-- 常用时间戳 -->
       <div class="mt-6 bg-card border border-border rounded-lg p-6">
         <h3 class="text-lg font-semibold text-foreground mb-4">常用时间戳</h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div
             v-for="preset in commonTimestamps"
@@ -187,7 +187,7 @@
       <!-- 快捷操作 -->
       <div class="mt-6 bg-card border border-border rounded-lg p-6">
         <h3 class="text-lg font-semibold text-foreground mb-4">快捷操作</h3>
-        
+
         <div class="flex flex-wrap gap-2">
           <button
             v-for="action in quickActions"
@@ -313,15 +313,15 @@ const dateToSTimestamp = computed(() => {
 // 方法
 const formatTimestamp = (timestamp: string, format: string): string => {
   if (!timestamp || !/^[\d.]+$/.test(timestamp)) return ''
-  
+
   try {
     let ts = parseFloat(timestamp)
     if (timestampUnit.value === 's') {
       ts *= 1000
     }
-    
+
     const date = new Date(ts)
-    
+
     // 设置时区
     const options: Intl.DateTimeFormatOptions = {
       timeZone: timezone.value,
@@ -333,7 +333,7 @@ const formatTimestamp = (timestamp: string, format: string): string => {
       second: '2-digit',
       hour12: false
     }
-    
+
     switch (format) {
       case 'ISO':
         return date.toISOString()
@@ -362,18 +362,18 @@ const formatTimestamp = (timestamp: string, format: string): string => {
 const convertTimestampToDate = () => {
   error.value = ''
   if (!timestampInput.value) return
-  
+
   try {
     let ts = parseFloat(timestampInput.value)
     if (isNaN(ts)) {
       error.value = '请输入有效的时间戳'
       return
     }
-    
+
     if (timestampUnit.value === 's') {
       ts *= 1000
     }
-    
+
     new Date(ts) // 验证时间戳
   } catch {
     error.value = '无效的时间戳格式'
@@ -383,7 +383,7 @@ const convertTimestampToDate = () => {
 const convertDateToTimestamp = () => {
   error.value = ''
   if (!dateInput.value) return
-  
+
   try {
     new Date(dateInput.value) // 验证日期格式
   } catch {
@@ -394,7 +394,13 @@ const convertDateToTimestamp = () => {
 const copyToClipboard = async (text: string): Promise<void> => {
   if (!text) return
   try {
-    await navigator.clipboard.writeText(text)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(text)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(text)
+    }
   } catch (err: any) {
     error.value = '复制失败'
   }
@@ -402,7 +408,14 @@ const copyToClipboard = async (text: string): Promise<void> => {
 
 const copyCurrentTimestamp = async () => {
   try {
-    await navigator.clipboard.writeText(String(Date.now()))
+    const timestamp = String(Date.now())
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(timestamp)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(timestamp)
+    }
   } catch (err) {
     error.value = '复制失败'
   }

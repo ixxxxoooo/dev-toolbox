@@ -15,7 +15,7 @@
             </button>
             <h1 class="text-xl font-semibold text-foreground">Base64 编解码工具</h1>
           </div>
-          
+
           <div class="flex items-center space-x-2">
             <button
               @click="loadFile"
@@ -66,7 +66,7 @@
               <span class="text-sm">解码</span>
             </label>
           </div>
-          
+
           <div class="flex items-center space-x-4">
             <label class="flex items-center space-x-2">
               <input
@@ -244,7 +244,7 @@ watch([inputText, operation, urlSafe], () => {
 // 处理文本
 const processText = () => {
   error.value = ''
-  
+
   if (!inputText.value.trim()) {
     outputText.value = ''
     return
@@ -269,7 +269,7 @@ const processText = () => {
 // Base64 编码
 const encodeBase64 = (text: string): string => {
   const base64 = btoa(unescape(encodeURIComponent(text)))
-  return urlSafe.value 
+  return urlSafe.value
     ? base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
     : base64
 }
@@ -277,7 +277,7 @@ const encodeBase64 = (text: string): string => {
 // Base64 解码
 const decodeBase64 = (text: string): string => {
   let base64 = text.trim()
-  
+
   if (urlSafe.value) {
     base64 = base64.replace(/-/g, '+').replace(/_/g, '/')
     // 添加填充
@@ -285,7 +285,7 @@ const decodeBase64 = (text: string): string => {
       base64 += '='
     }
   }
-  
+
   return decodeURIComponent(escape(atob(base64)))
 }
 
@@ -336,7 +336,7 @@ const loadFile = (): void => {
 const handleFileSelect = (event: Event): void => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (file) {
     fileInfo.value = {
       name: file.name,
@@ -344,34 +344,34 @@ const handleFileSelect = (event: Event): void => {
       type: file.type || 'text/plain',
       lastModified: file.lastModified
     }
-    
+
     const reader = new FileReader()
     reader.onload = (e: ProgressEvent<FileReader>) => {
       inputText.value = e.target?.result as string
       processText()
     }
-    
+
     if (operation.value === 'encode') {
       reader.readAsText(file)
     } else {
       reader.readAsDataURL(file)
     }
   }
-  
+
   // 清空文件输入
   target.value = ''
 }
 
 const downloadFile = (): void => {
   if (!outputText.value) return
-  
-  const filename = operation.value === 'encode' 
+
+  const filename = operation.value === 'encode'
     ? `base64_${fileInfo.value?.name || 'encoded.txt'}`
     : `decoded_${fileInfo.value?.name || 'decoded.txt'}`
-  
+
   const blob = new Blob([outputText.value], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
-  
+
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -384,7 +384,14 @@ const downloadFile = (): void => {
 // 剪贴板操作
 const pasteInput = async (): Promise<void> => {
   try {
-    const text = await navigator.clipboard.readText()
+    let text = ''
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      text = await (window as any).electronAPI.clipboard.read()
+    } else {
+      // 回退到浏览器 API
+      text = await navigator.clipboard.readText()
+    }
     inputText.value = text
     processText()
   } catch (err: any) {
@@ -395,7 +402,13 @@ const pasteInput = async (): Promise<void> => {
 const copyInput = async (): Promise<void> => {
   if (!inputText.value) return
   try {
-    await navigator.clipboard.writeText(inputText.value)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(inputText.value)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(inputText.value)
+    }
   } catch (err: any) {
     error.value = '无法复制到剪贴板'
   }
@@ -404,7 +417,13 @@ const copyInput = async (): Promise<void> => {
 const copyOutput = async (): Promise<void> => {
   if (!outputText.value) return
   try {
-    await navigator.clipboard.writeText(outputText.value)
+    // 优先使用 Electron API
+    if ((window as any).electronAPI?.clipboard) {
+      await (window as any).electronAPI.clipboard.write(outputText.value)
+    } else {
+      // 回退到浏览器 API
+      await navigator.clipboard.writeText(outputText.value)
+    }
   } catch (err: any) {
     error.value = '无法复制到剪贴板'
   }
