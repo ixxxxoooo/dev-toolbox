@@ -111,3 +111,61 @@
   opacity: 0;
   transform: translateY(-10px);
 }
+
+/* 按钮点击反馈效果 */
+button {
+  @apply transition-all duration-150 ease-in-out;
+  transform-origin: center;
+}
+
+button:active {
+  @apply scale-95;
+  transition-duration: 75ms;
+}
+
+button:disabled:active {
+  @apply scale-100;
+}
+
+/* 特定按钮类型的点击反馈 */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80;
+}
+
+.btn-primary:active {
+  @apply shadow-inner;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70;
+}
+
+.btn-secondary:active {
+  @apply shadow-inner;
+}
+
+.btn-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80;
+}
+
+.btn-destructive:active {
+  @apply shadow-inner;
+}
+
+.btn-ghost {
+  @apply hover:bg-secondary/50 active:bg-secondary/70;
+}
+
+.btn-ghost:active {
+  @apply shadow-inner;
+}
+
+/* 圆形按钮特殊处理 */
+.btn-round:active {
+  @apply scale-90;
+}
+
+/* 图标按钮特殊处理 */
+.btn-icon:active {
+  @apply scale-90 bg-secondary/80;
+}

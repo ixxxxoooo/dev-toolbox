@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -77,18 +77,19 @@
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button @click="goToPrevDiff" title="跳转到上一个差异" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">
+          <button @click="goToPrevDiff" title="跳转到上一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
             &uarr; 上一个
           </button>
-          <button @click="goToNextDiff" title="跳转到下一个差异" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">
+          <button @click="goToNextDiff" title="跳转到下一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
             &darr; 下一个
           </button>
-          <button @click="swapContent" title="交换左右两边的文本内容" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">
+          <button @click="swapContent" title="交换左右两边的文本内容" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
             交换内容
           </button>
-          <button @click="clearAll" title="清空两边的所有文本" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md transition-colors">
+          <button @click="clearAll" title="清空两边的所有文本" class="px-3 py-1.5 text-sm btn-destructive rounded-md">
             清空全部
           </button>
+          <ThemeToggleButton />
         </div>
       </div>
     </div>
@@ -101,15 +102,15 @@
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-r border-border">
             <span class="text-sm font-medium">原始文本</span>
             <div class="flex items-center space-x-2">
-              <button @click="pasteTo('original')" title="粘贴内容到左侧" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors">粘贴</button>
-              <button @click="copyFrom('original')" title="复制左侧内容" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors">复制</button>
+              <button @click="pasteTo('original')" title="粘贴内容到左侧" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
+              <button @click="copyFrom('original')" title="复制左侧内容" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
             </div>
           </div>
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
             <span class="text-sm font-medium">修改文本</span>
             <div class="flex items-center space-x-2">
-              <button @click="pasteTo('modified')" title="粘贴内容到右侧" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors">粘贴</button>
-              <button @click="copyFrom('modified')" title="复制右侧内容" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors">复制</button>
+              <button @click="pasteTo('modified')" title="粘贴内容到右侧" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
+              <button @click="copyFrom('modified')" title="复制右侧内容" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
             </div>
           </div>
         </div>
@@ -132,6 +133,7 @@ import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 
 // Refs
 const diffEditorRef = ref<HTMLElement | null>(null);

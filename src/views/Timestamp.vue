@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -43,8 +43,9 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md">粘贴并解析</button>
-            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">设为当前时间</button>
+            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm btn-secondary rounded-md">粘贴并解析</button>
+            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm btn-primary rounded-md">设为当前时间</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -72,7 +73,7 @@
             <span class="text-sm text-muted-foreground">{{ item.label }}</span>
             <div class="flex items-center space-x-3">
               <span class="font-mono text-foreground">{{ item.value }}</span>
-              <button @click="copyToClipboard(item.value)" :title="`复制 (⌘+${index + 1})`" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
+              <button @click="copyToClipboard(item.value)" :title="`复制 (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
             </div>
           </div>
         </div>
@@ -88,6 +89,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);

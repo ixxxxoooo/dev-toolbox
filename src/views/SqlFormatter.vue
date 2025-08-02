@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -46,9 +46,10 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">导入文件</button>
-            <button @click="downloadFile" :disabled="!sqlText.trim()" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors disabled:opacity-50">下载SQL</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md transition-colors">清空</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">导入文件</button>
+            <button @click="downloadFile" :disabled="!sqlText.trim()" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">下载SQL</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -99,12 +100,12 @@
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
             <h3 class="text-sm font-medium">SQL 编辑器</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
-              <button @click="formatSQL" class="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90">格式化</button>
-              <button @click="minifySQL" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">压缩</button>
-              <button @click="escapeSQL" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">转义</button>
-              <button @click="unescapeSQL" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">去转义</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="formatSQL" class="text-xs px-2 py-1 btn-primary rounded">格式化</button>
+              <button @click="minifySQL" class="text-xs px-2 py-1 btn-secondary rounded">压缩</button>
+              <button @click="escapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">转义</button>
+              <button @click="unescapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">去转义</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -123,6 +124,7 @@ import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
 import { HelpCircle } from 'lucide-vue-next'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
+import ThemeToggleButton from '../components/ThemeToggleButton.vue'
 
 // Refs
 const sqlEditorRef = ref<HTMLElement | null>(null)

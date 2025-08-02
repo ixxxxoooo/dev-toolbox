@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -41,9 +41,10 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">导入文件</button>
-            <button @click="downloadFile" :disabled="!isValidJson" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors disabled:opacity-50">下载JSON</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md transition-colors">清空</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">导入文件</button>
+            <button @click="downloadFile" :disabled="!isValidJson" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">下载JSON</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -60,7 +61,7 @@
           <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="unescape" class="rounded"><span class="text-sm">去转义</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors">{{ showTreeView ? '隐藏' : '显示' }}树状视图</button>
+          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ showTreeView ? '隐藏' : '显示' }}树状视图</button>
           <label class="flex items-center space-x-2" title="自动换行">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
             <span class="text-sm">自动换行</span>
@@ -98,8 +99,8 @@
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
             <h3 class="text-sm font-medium">输入</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -118,7 +119,7 @@
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
             <h3 class="text-sm font-medium">结果</h3>
-            <button @click="copyOutput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
+            <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
           </div>
           <div class="flex-1 relative">
             <div ref="outputEditorRef" class="absolute inset-0"></div>
@@ -138,6 +139,7 @@ import * as xmlJs from 'xml-js';
 import JsonTreeView from '../components/JsonTreeView.vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 
 // Refs
 const inputEditorRef = ref<HTMLElement | null>(null);

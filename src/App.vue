@@ -5,14 +5,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useThemeStore } from './stores/theme'
 
-const themeStore = useThemeStore()
-
-onMounted(() => {
-  themeStore.initializeTheme()
-})
+// 主题存储会在创建时自动初始化，无需手动调用
+useThemeStore()
 </script>
 
 <style>

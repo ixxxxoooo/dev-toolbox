@@ -72,6 +72,14 @@ export const modules: ToolModule[] = [
     icon: 'database',
     category: '数据格式',
     route: '/sql-formatter'
+  },
+  {
+    id: 'password-generator',
+    name: '密码生成器',
+    description: '基于业界最佳实践生成安全密码，支持多种密码类型和强度分析',
+    icon: 'shield',
+    category: '开发工具',
+    route: '/password-generator'
   }
 ]
 

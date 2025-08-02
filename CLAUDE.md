@@ -38,7 +38,7 @@ This is an Electron + Vue 3 + TypeScript desktop application providing developer
 **Vue Application Structure:**
 - Router-based SPA using `createWebHashHistory()` (required for Electron file:// protocol)
 - Tool modules defined in `src/utils/modules.ts` with metadata (name, description, icon, route)
-- Individual tool views in `src/views/` directory (9 tools: Diff, Base64, JSON, URL, Timestamp, UUID, TextAnalyzer, HashGenerator, SqlFormatter)
+- Individual tool views in `src/views/` directory (10 tools: Diff, Base64, JSON, URL, Timestamp, UUID, TextAnalyzer, HashGenerator, SqlFormatter, PasswordGenerator)
 - Centralized theme management via `src/stores/theme.ts` using Pinia
 
 **Build Process:**
@@ -64,8 +64,20 @@ Main process exposes secure APIs via preload script:
 ### File Structure Notes
 - `src/types/index.ts`: TypeScript definitions for ToolModule interface
 - `src/components/`: Reusable components (JsonTreeView, ToolSwitcher, etc.)
+- `src/components/ToolSwitcher.vue`: Enhanced with hover tooltips for tool descriptions
 - Alias `@/` maps to `src/` directory
 - Icon file: `src/icon.icns` used for all platforms
+
+### Recent Updates
+- **ToolSwitcher Component**: Added hover tooltips showing tool descriptions for better UX
+- **SQL Formatter**: Added proper Database icon from lucide-vue-next
+- **UUID Generator**: Improved UX by moving copy button next to the UUID input field
+- **Password Generator**: New comprehensive tool with industry best practices:
+  - Multiple password types: Strong, Readable, PIN, Memorable
+  - Configurable options for each type
+  - Real-time strength analysis with entropy calculation
+  - Security recommendations and crack time estimation
+  - Cryptographically secure random generation using Web Crypto API
 
 ### Development Environment
 - Vite dev server runs on port 3000 (strict port)

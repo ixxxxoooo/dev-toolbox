@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -32,9 +32,9 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="generateUuid" class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">生成 UUID</button>
-            <button @click="copyUuid" :disabled="!uuid" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors disabled:opacity-50">复制</button>
-            <button @click="clearUuid" :disabled="!uuid" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md transition-colors disabled:opacity-50">清空</button>
+            <button @click="generateUuid" class="px-3 py-1.5 text-sm rounded-md btn-primary">生成 UUID</button>
+            <button @click="clearUuid" :disabled="!uuid" class="px-3 py-1.5 text-sm rounded-md btn-destructive transition-colors disabled:opacity-50">清空</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -45,14 +45,24 @@
       <div class="w-full max-w-xl">
         <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
           <h2 class="text-lg font-semibold mb-4 text-center">生成的 UUID</h2>
-          <div class="relative">
+          <div class="relative flex items-center space-x-2">
             <input 
               type="text" 
               readonly 
               v-model="uuid" 
               placeholder="点击生成 UUID 按钮"
-              class="w-full text-center text-xl font-mono p-4 bg-muted border border-border rounded-lg focus:outline-none"
+              class="flex-1 text-center text-xl font-mono p-4 bg-muted border border-border rounded-lg focus:outline-none"
             />
+            <button 
+              @click="copyUuid" 
+              :disabled="!uuid" 
+              class="px-4 py-4 rounded-lg btn-secondary disabled:opacity-50 flex items-center justify-center"
+              title="复制 UUID"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -64,6 +74,7 @@
 import { ref, onMounted } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 
 const uuid = ref('');
 

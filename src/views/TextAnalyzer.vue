@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -31,8 +31,9 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md">粘贴</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md">清空</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">粘贴</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -78,6 +79,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 
 // Refs
 const editorRef = ref<HTMLElement | null>(null);

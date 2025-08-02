@@ -54,6 +54,11 @@ const routes = [
     path: '/sql-formatter',
     name: 'SqlFormatter',
     component: () => import('./views/SqlFormatter.vue')
+  },
+  {
+    path: '/password-generator',
+    name: 'PasswordGenerator',
+    component: () => import('./views/PasswordGenerator.vue')
   }
 ]
 

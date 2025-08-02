@@ -8,6 +8,15 @@ interface ThemeStore {
 
 class ThemeStoreImpl implements ThemeStore {
   isDark = ref(false)
+  private initialized = false
+
+  constructor() {
+    // 确保只初始化一次
+    if (!this.initialized) {
+      this.initializeTheme()
+      this.initialized = true
+    }
+  }
 
   toggleTheme() {
     this.isDark.value = !this.isDark.value
@@ -33,4 +42,7 @@ class ThemeStoreImpl implements ThemeStore {
   }
 }
 
-export const useThemeStore = () => new ThemeStoreImpl()
+// 创建单例实例
+const themeStoreInstance = new ThemeStoreImpl()
+
+export const useThemeStore = () => themeStoreInstance

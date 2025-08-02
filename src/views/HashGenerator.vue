@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
+            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors btn-icon" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -30,8 +30,9 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md">粘贴</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md">清空</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm rounded-md btn-secondary">粘贴</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm rounded-md btn-destructive">清空</button>
+            <ThemeToggleButton />
           </div>
         </div>
       </div>
@@ -45,8 +46,8 @@
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
             <h3 class="text-sm font-medium">输入文本</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">粘贴</button>
-              <button @click="clearInput" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">清空</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">粘贴</button>
+              <button @click="clearInput" class="text-xs px-2 py-1 rounded btn-secondary">清空</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -63,7 +64,7 @@
             <div v-for="hashType in hashTypes" :key="hashType.key" class="bg-card border border-border rounded-md p-3">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-semibold">{{ hashType.label }}</span>
-                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
+                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 rounded btn-secondary">复制</button>
               </div>
               <div class="font-mono text-sm break-all text-muted-foreground">{{ hashes[hashType.key as HashKey] || '-' }}</div>
             </div>
@@ -79,6 +80,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
 
 // Types
