@@ -1,212 +1,80 @@
 <template>
-  <div class="min-h-screen bg-background">
-    <!-- 顶部导航栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <div class="h-screen flex flex-col bg-background text-foreground">
+    <!-- 顶部标题栏 -->
+    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
       <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
-            <button
-              @click="$router.push('/')"
-              class="p-2 rounded-lg hover:bg-secondary transition-colors"
-            >
+            <ToolSwitcher />
+            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors" title="返回主页">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 class="text-xl font-semibold text-foreground">时间戳转换工具</h1>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-xl font-semibold">智能时间戳转换</h1>
+              <div class="relative group">
+                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
+                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                  <p class="font-bold mb-2">智能时间戳转换工具说明</p>
+                  <p class="mb-1">一个智能的时间转换工具，支持多种输入格式并实时显示多种输出结果。</p>
+                  <p class="font-bold mb-1">输入支持:</p>
+                  <ul class="list-disc list-inside text-xs mb-2">
+                    <li><strong class="font-semibold">时间戳:</strong> 10位 (秒) 或 13位 (毫秒) 纯数字，自动识别。</li>
+                    <li><strong class="font-semibold">日期字符串:</strong> 如 "2025-08-01 23:56:17"。</li>
+                    <li><strong class="font-semibold">ISO 8601:</strong> 如 "2025-08-01T15:56:17Z"。</li>
+                    <li><strong class="font-semibold">自然语言日期:</strong> 如 "August 1, 2025 11:56 PM" (英文)。</li>
+                  </ul>
+                  <p class="font-bold mb-1">输出格式:</p>
+                  <ul class="list-disc list-inside text-xs mb-2">
+                    <li>本地时间 (UTC+8), 本地日期, 时间戳 (秒/毫秒), UTC时间 (ISO 8601), RFC 2822, 相对时间。</li>
+                  </ul>
+                  <p class="font-bold mb-1">按钮说明:</p>
+                  <ul class="list-disc list-inside text-xs">
+                    <li><strong class="font-semibold">粘贴并解析:</strong> 从剪贴板粘贴内容并自动解析。</li>
+                    <li><strong class="font-semibold">设为当前时间:</strong> 将输入框设置为当前时间并解析。</li>
+                    <li><strong class="font-semibold">复制:</strong> 复制对应行的结果到剪贴板。</li>
+                  </ul>
+                  <p class="mt-2"><strong class="text-primary">示例:</strong></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">输入: <span class="text-red-400">1754063777432</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">输出 (本地时间): <span class="text-green-400">2025-08-01 23:56:17</span></p>
+                </div>
+              </div>
+            </div>
           </div>
-
           <div class="flex items-center space-x-2">
-            <button
-              @click="copyCurrentTimestamp"
-              class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
-            >
-              复制当前时间戳
-            </button>
-            <button
-              @click="clearAll"
-              class="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md transition-colors"
-            >
-              清空
-            </button>
+            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 rounded-md">粘贴并解析</button>
+            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md">设为当前时间</button>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- 主要内容区域 -->
-    <main class="container mx-auto px-4 py-4">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- 时间戳转日期 -->
-        <div class="bg-card border border-border rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-foreground mb-4">时间戳转日期</h3>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">输入时间戳</label>
-              <div class="flex space-x-2">
-                <input
-                  v-model="timestampInput"
-                  type="text"
-                  placeholder="输入时间戳 (毫秒或秒)"
-                  class="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  @input="convertTimestampToDate"
-                />
-                <select
-                  v-model="timestampUnit"
-                  class="px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  @change="convertTimestampToDate"
-                >
-                  <option value="ms">毫秒</option>
-                  <option value="s">秒</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">时区</label>
-              <select
-                v-model="timezone"
-                class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                @change="convertTimestampToDate"
-              >
-                <option value="UTC">UTC</option>
-                <option value="Asia/Shanghai">北京时间 (UTC+8)</option>
-                <option value="America/New_York">纽约时间 (UTC-5)</option>
-                <option value="Europe/London">伦敦时间 (UTC+0)</option>
-                <option value="Asia/Tokyo">东京时间 (UTC+9)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">转换结果</label>
-              <div class="space-y-2">
-                <div v-for="format in dateFormats" :key="format.value" class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">{{ format.label }}:</span>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm font-mono">{{ formatTimestamp(timestampInput, format.value) }}</span>
-                    <button
-                      @click="copyToClipboard(formatTimestamp(timestampInput, format.value))"
-                      class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors"
-                    >
-                      复制
-                    </button>
-                  </div>
-                </div>
-              </div>
+    <!-- The rest of the template remains the same -->
+    <main class="flex-1 container mx-auto px-4 py-8 flex justify-center">
+      <div class="w-full max-w-3xl">
+        <div class="relative">
+          <input 
+            type="text" 
+            v-model="userInput" 
+            @input="parseInput"
+            placeholder="输入时间戳、日期字符串或自然语言..."
+            class="w-full text-center text-xl font-mono p-4 pr-10 bg-transparent border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+            :class="isValid ? 'border-primary focus:ring-primary/50' : 'border-destructive focus:ring-destructive/50'"
+          />
+          <span v-if="isValid" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
+          <span v-else-if="userInput" class="absolute right-3 top-1/2 -translate-y-1/2 text-destructive">✗</span>
+        </div>
+        <div v-if="!isValid && userInput" class="text-center text-destructive text-sm mt-2">{{ errorMessage }}</div>
+        <div v-if="isValid" class="mt-8 space-y-3">
+          <h2 class="text-lg font-semibold text-center mb-4">转换结果</h2>
+          <div v-for="(item, index) in outputFormats" :key="item.label" class="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
+            <span class="text-sm text-muted-foreground">{{ item.label }}</span>
+            <div class="flex items-center space-x-3">
+              <span class="font-mono text-foreground">{{ item.value }}</span>
+              <button @click="copyToClipboard(item.value)" :title="`复制 (⌘+${index + 1})`" class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80">复制</button>
             </div>
           </div>
-        </div>
-
-        <!-- 日期转时间戳 -->
-        <div class="bg-card border border-border rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-foreground mb-4">日期转时间戳</h3>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">选择日期时间</label>
-              <input
-                v-model="dateInput"
-                type="datetime-local"
-                class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                @input="convertDateToTimestamp"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">时区</label>
-              <select
-                v-model="timezone"
-                class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                @change="convertDateToTimestamp"
-              >
-                <option value="UTC">UTC</option>
-                <option value="Asia/Shanghai">北京时间 (UTC+8)</option>
-                <option value="America/New_York">纽约时间 (UTC-5)</option>
-                <option value="Europe/London">伦敦时间 (UTC+0)</option>
-                <option value="Asia/Tokyo">东京时间 (UTC+9)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-2">转换结果</label>
-              <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">毫秒时间戳:</span>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm font-mono">{{ dateToMsTimestamp }}</span>
-                    <button
-                      @click="copyToClipboard(dateToMsTimestamp)"
-                      class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors"
-                    >
-                      复制
-                    </button>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">秒时间戳:</span>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm font-mono">{{ dateToSTimestamp }}</span>
-                    <button
-                      @click="copyToClipboard(dateToSTimestamp)"
-                      class="text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors"
-                    >
-                      复制
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 常用时间戳 -->
-      <div class="mt-6 bg-card border border-border rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-foreground mb-4">常用时间戳</h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div
-            v-for="preset in commonTimestamps"
-            :key="preset.label"
-            class="border border-border rounded-lg p-3 hover:border-primary/50 transition-colors"
-          >
-            <div class="text-sm font-medium text-foreground">{{ preset.label }}</div>
-            <div class="text-xs text-muted-foreground mt-1">{{ preset.description }}</div>
-            <div class="text-xs font-mono mt-2">{{ preset.timestamp }}</div>
-            <button
-              @click="usePreset(preset)"
-              class="mt-2 text-xs px-2 py-1 bg-secondary rounded hover:bg-secondary/80 transition-colors"
-            >
-              使用
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 快捷操作 -->
-      <div class="mt-6 bg-card border border-border rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-foreground mb-4">快捷操作</h3>
-
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="action in quickActions"
-            :key="action.label"
-            @click="action.handler"
-            class="px-3 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
-          >
-            {{ action.label }}
-          </button>
-        </div>
-      </div>
-
-      <!-- 错误提示 -->
-      <div v-if="error" class="mt-4 bg-destructive/10 border border-destructive rounded-lg p-4">
-        <div class="flex items-center">
-          <svg class="h-4 w-4 text-destructive mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm text-destructive">{{ error }}</span>
         </div>
       </div>
     </main>
@@ -214,281 +82,102 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { HelpCircle } from 'lucide-vue-next';
+import ToolSwitcher from '../components/ToolSwitcher.vue';
 
-interface DateFormat {
-  label: string
-  value: string
-}
+dayjs.extend(customParseFormat);
+dayjs.extend(relativeTime);
 
-interface CommonTimestamp {
-  label: string
-  description: string
-  timestamp: string
-}
+// State
+const userInput = ref('');
+const parsedDate = ref<dayjs.Dayjs | null>(null);
+const errorMessage = ref('');
 
-interface QuickAction {
-  label: string
-  handler: () => void
-}
+// Computed
+const isValid = computed(() => parsedDate.value !== null && parsedDate.value.isValid());
 
-// 工具函数
+const outputFormats = computed(() => {
+  if (!isValid.value || !parsedDate.value) return [];
+  const d = parsedDate.value;
+  return [
+    { label: '本地时间 (UTC+8)', value: d.format('YYYY-MM-DD HH:mm:ss') },
+    { label: '本地日期', value: d.format('YYYY-MM-DD') },
+    { label: '时间戳 (秒)', value: d.unix() },
+    { label: '时间戳 (毫秒)', value: d.valueOf() },
+    { label: 'UTC 时间 (ISO 8601)', value: d.toISOString() },
+    { label: 'RFC 2822', value: d.format('ddd, DD MMM YYYY HH:mm:ss ZZ') },
+    { label: '相对时间', value: d.fromNow() },
+  ];
+});
 
-
-// 状态变量
-const timestampInput = ref<string>('')
-const timestampUnit = ref<'ms' | 's'>('ms')
-const dateInput = ref<string>('')
-const timezone = ref<string>('Asia/Shanghai')
-const error = ref<string>('')
-
-// 日期格式
-const dateFormats: DateFormat[] = [
-  { label: 'ISO 8601', value: 'ISO' },
-  { label: 'RFC 2822', value: 'RFC' },
-  { label: 'YYYY-MM-DD HH:mm:ss', value: 'YYYY-MM-DD HH:mm:ss' },
-  { label: 'YYYY-MM-DD HH:mm:ss.SSS', value: 'YYYY-MM-DD HH:mm:ss.SSS' },
-  { label: 'MM/DD/YYYY HH:mm:ss', value: 'MM/DD/YYYY HH:mm:ss' },
-  { label: 'DD/MM/YYYY HH:mm:ss', value: 'DD/MM/YYYY HH:mm:ss' },
-  { label: 'Unix Timestamp (ms)', value: 'timestamp-ms' },
-  { label: 'Unix Timestamp (s)', value: 'timestamp-s' }
-]
-
-// 常用时间戳预设
-const commonTimestamps: CommonTimestamp[] = [
-  { label: '现在', description: '当前时间', timestamp: Date.now().toString() },
-  { label: '今天开始', description: '今天 00:00:00', timestamp: new Date().setHours(0, 0, 0, 0).toString() },
-  { label: '今天结束', description: '今天 23:59:59', timestamp: new Date().setHours(23, 59, 59, 999).toString() },
-  { label: '本周开始', description: '本周一 00:00:00', timestamp: (() => {
-    const date = new Date()
-    const day = date.getDay()
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1)
-    return new Date(date.setDate(diff)).setHours(0, 0, 0, 0).toString()
-  })() },
-  { label: '本月开始', description: '本月1日 00:00:00', timestamp: new Date().setDate(1).toString() },
-  { label: '明年开始', description: '明年1月1日 00:00:00', timestamp: new Date(new Date().getFullYear() + 1, 0, 1).getTime().toString() }
-]
-
-// 快捷操作
-const quickActions: QuickAction[] = [
-  {
-    label: '当前时间',
-    handler: () => setCurrentTime()
-  },
-  {
-    label: '今天开始',
-    handler: () => setTodayStart()
-  },
-  {
-    label: '本周开始',
-    handler: () => setWeekStart()
-  },
-  {
-    label: '本月开始',
-    handler: () => setMonthStart()
+// Functions
+const parseInput = () => {
+  const input = userInput.value.trim();
+  if (!input) {
+    parsedDate.value = null;
+    errorMessage.value = '';
+    return;
   }
-]
 
-// 计算属性
-const dateToMsTimestamp = computed(() => {
-  if (!dateInput.value) return ''
-  try {
-    const date = new Date(dateInput.value)
-    return String(date.getTime())
-  } catch {
-    return ''
-  }
-})
+  let d: dayjs.Dayjs | null = null;
 
-const dateToSTimestamp = computed(() => {
-  if (!dateInput.value) return ''
-  try {
-    const date = new Date(dateInput.value)
-    return String(Math.floor(date.getTime() / 1000))
-  } catch {
-    return ''
-  }
-})
-
-// 方法
-const formatTimestamp = (timestamp: string, format: string): string => {
-  if (!timestamp || !/^[\d.]+$/.test(timestamp)) return ''
-
-  try {
-    let ts = parseFloat(timestamp)
-    if (timestampUnit.value === 's') {
-      ts *= 1000
+  // 优先尝试 YYYYMMDD 格式
+  if (/^\d{8}$/.test(input)) {
+    d = dayjs(input, 'YYYYMMDD');
+    if (d.isValid()) {
+      parsedDate.value = d;
+      errorMessage.value = '';
+      return;
     }
-
-    const date = new Date(ts)
-
-    // 设置时区
-    const options: Intl.DateTimeFormatOptions = {
-      timeZone: timezone.value,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }
-
-    switch (format) {
-      case 'ISO':
-        return date.toISOString()
-      case 'RFC':
-        return date.toUTCString()
-      case 'YYYY-MM-DD HH:mm:ss':
-        return date.toLocaleString('zh-CN', options).replace(/\//g, '-')
-      case 'YYYY-MM-DD HH:mm:ss.SSS':
-        return date.toLocaleString('zh-CN', options).replace(/\//g, '-')
-      case 'MM/DD/YYYY HH:mm:ss':
-        return date.toLocaleString('en-US', options)
-      case 'DD/MM/YYYY HH:mm:ss':
-        return date.toLocaleString('en-GB', options)
-      case 'timestamp-ms':
-        return String(date.getTime())
-      case 'timestamp-s':
-        return String(Math.floor(date.getTime() / 1000))
-      default:
-        return date.toLocaleString('zh-CN', options)
-    }
-  } catch {
-    return ''
   }
-}
 
-const convertTimestampToDate = () => {
-  error.value = ''
-  if (!timestampInput.value) return
-
-  try {
-    let ts = parseFloat(timestampInput.value)
-    if (isNaN(ts)) {
-      error.value = '请输入有效的时间戳'
-      return
+  // 尝试作为时间戳解析 (秒或毫秒)
+  if (/^\d+$/.test(input) && (input.length === 10 || input.length === 13)) {
+    const num = Number(input);
+    d = input.length === 10 ? dayjs.unix(num) : dayjs(num);
+    if (d.isValid()) {
+      parsedDate.value = d;
+      errorMessage.value = '';
+      return;
     }
-
-    if (timestampUnit.value === 's') {
-      ts *= 1000
-    }
-
-    new Date(ts) // 验证时间戳
-  } catch {
-    error.value = '无效的时间戳格式'
   }
-}
 
-const convertDateToTimestamp = () => {
-  error.value = ''
-  if (!dateInput.value) return
-
-  try {
-    new Date(dateInput.value) // 验证日期格式
-  } catch {
-    error.value = '无效的日期格式'
+  // 尝试作为其他通用日期字符串解析
+  d = dayjs(input);
+  if (d.isValid()) {
+    parsedDate.value = d;
+    errorMessage.value = '';
+  } else {
+    parsedDate.value = null;
+    errorMessage.value = '无法识别的日期格式';
   }
-}
-
-const copyToClipboard = async (text: string): Promise<void> => {
-  if (!text) return
-  try {
-    // 优先使用 Electron API
-    if ((window as any).electronAPI?.clipboard) {
-      await (window as any).electronAPI.clipboard.write(text)
-    } else {
-      // 回退到浏览器 API
-      await navigator.clipboard.writeText(text)
-    }
-  } catch (err: any) {
-    error.value = '复制失败'
-  }
-}
-
-const copyCurrentTimestamp = async () => {
-  try {
-    const timestamp = String(Date.now())
-    // 优先使用 Electron API
-    if ((window as any).electronAPI?.clipboard) {
-      await (window as any).electronAPI.clipboard.write(timestamp)
-    } else {
-      // 回退到浏览器 API
-      await navigator.clipboard.writeText(timestamp)
-    }
-  } catch (err) {
-    error.value = '复制失败'
-  }
-}
-
-const clearAll = () => {
-  timestampInput.value = ''
-  dateInput.value = ''
-  error.value = ''
-}
-
-const usePreset = (preset: CommonTimestamp): void => {
-  timestampInput.value = preset.timestamp
-  convertTimestampToDate()
-}
-
-const getWeekStart = (): Date => {
-  const date = new Date()
-  const day = date.getDay()
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1)
-  const weekStart = new Date(date.setDate(diff))
-  weekStart.setHours(0, 0, 0, 0)
-  return weekStart
-}
+};
 
 const setCurrentTime = () => {
-  dateInput.value = new Date().toISOString().slice(0, 16)
-  convertDateToTimestamp()
-}
+  userInput.value = new Date().toISOString();
+  parseInput();
+};
 
-const setTodayStart = () => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  dateInput.value = today.toISOString().slice(0, 16)
-  convertDateToTimestamp()
-}
+const pasteAndParse = async () => {
+  try {
+    userInput.value = await navigator.clipboard.readText();
+    parseInput();
+  } catch (e) {
+    errorMessage.value = '无法读取剪贴板';
+  }
+};
 
-const setWeekStart = () => {
-  const weekStart = getWeekStart()
-  weekStart.setHours(0, 0, 0, 0)
-  dateInput.value = weekStart.toISOString().slice(0, 16)
-  convertDateToTimestamp()
-}
+const copyToClipboard = (text: string | number) => {
+  navigator.clipboard.writeText(String(text));
+};
 
-const setMonthStart = () => {
-  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-  monthStart.setHours(0, 0, 0, 0)
-  dateInput.value = monthStart.toISOString().slice(0, 16)
-  convertDateToTimestamp()
-}
-
-// 初始化
+// Lifecycle
 onMounted(() => {
-  setCurrentTime()
-})
+  setCurrentTime();
+});
+
 </script>
-
-<style scoped>
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-</style>

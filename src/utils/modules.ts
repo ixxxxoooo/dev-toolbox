@@ -40,6 +40,38 @@ export const modules: ToolModule[] = [
     icon: 'braces',
     category: '数据格式',
     route: '/json'
+  },
+  {
+    id: 'uuid',
+    name: 'UUID 生成器',
+    description: '生成全局唯一标识符 (UUID v4)',
+    icon: 'key',
+    category: '开发工具',
+    route: '/uuid'
+  },
+  {
+    id: 'text-analyzer',
+    name: '字符统计',
+    description: '统计文本的字数、字符数、行数、段落数等',
+    icon: 'text-cursor',
+    category: '文本处理',
+    route: '/text-analyzer'
+  },
+  {
+    id: 'hash-generator',
+    name: '哈希生成器',
+    description: '生成文本的MD5, SHA-1, SHA-256, SHA-512哈希值',
+    icon: 'hash',
+    category: '编码工具',
+    route: '/hash-generator'
+  },
+  {
+    id: 'sql-formatter',
+    name: 'SQL 格式化',
+    description: '格式化SQL语句，支持MySQL、PostgreSQL、TiDB等多种数据库语法',
+    icon: 'database',
+    category: '数据格式',
+    route: '/sql-formatter'
   }
 ]
 

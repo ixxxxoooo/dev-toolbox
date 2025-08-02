@@ -1,4 +1,7 @@
-import { app, BrowserWindow, ipcMain, Menu, clipboard } from 'electron'
+/// <reference types="node" />
+/// <reference types="electron" />
+
+import { app, BrowserWindow, ipcMain, Menu, clipboard, MenuItemConstructorOptions, Event, ContextMenuParams } from 'electron'
 import path from 'path'
 import Store from 'electron-store'
 
@@ -20,7 +23,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs')
     },
     titleBarStyle: 'hiddenInset',
-    show: false
+    show: false,
+    icon: path.join(__dirname, '../src/icon.icns')
   })
 
   if (isDev) {
@@ -39,7 +43,7 @@ function createWindow() {
   })
 
   // 添加右键上下文菜单
-  mainWindow.webContents.on('context-menu', (event, params) => {
+  mainWindow.webContents.on('context-menu', (event: Event, params: ContextMenuParams) => {
     const contextMenu = Menu.buildFromTemplate([
       {
         label: '撤销',
@@ -79,7 +83,7 @@ function createWindow() {
         role: 'selectAll',
         enabled: params.editFlags.canSelectAll
       }
-    ])
+    ] as MenuItemConstructorOptions[])
 
     contextMenu.popup({
       window: mainWindow!,
@@ -107,20 +111,20 @@ app.on('window-all-closed', () => {
 })
 
 // IPC 通信处理
-ipcMain.handle('store-get', (_, key: string) => {
+ipcMain.handle('store-get', (_: Electron.IpcMainInvokeEvent, key: string) => {
   return store.get(key)
 })
 
-ipcMain.handle('store-set', (_, key: string, value: any) => {
+ipcMain.handle('store-set', (_: Electron.IpcMainInvokeEvent, key: string, value: any) => {
   store.set(key, value)
 })
 
-ipcMain.handle('store-delete', (_, key: string) => {
+ipcMain.handle('store-delete', (_: Electron.IpcMainInvokeEvent, key: string) => {
   store.delete(key)
 })
 
 // 剪贴板操作处理
-ipcMain.handle('clipboard-write', (_, text: string) => {
+ipcMain.handle('clipboard-write', (_: Electron.IpcMainInvokeEvent, text: string) => {
   clipboard.writeText(text)
 })
 
@@ -130,7 +134,7 @@ ipcMain.handle('clipboard-read', () => {
 
 // 创建应用菜单
 const createMenu = () => {
-  const template: any[] = [
+  const template: MenuItemConstructorOptions[] = [
     {
       label: 'Dev Toolbox',
       submenu: [
@@ -153,7 +157,7 @@ const createMenu = () => {
         {
           label: '隐藏其他',
           accelerator: 'Command+Alt+H',
-          role: 'hideothers'
+          role: 'hideOthers' // 修正大小写
         },
         {
           label: '显示全部',
@@ -211,39 +215,39 @@ const createMenu = () => {
         {
           label: '重新加载',
           accelerator: 'CmdOrCtrl+R',
-          click: (item: any, focusedWindow: any) => {
-            if (focusedWindow) focusedWindow.reload()
-          }
+          click: (item, focusedWindow) => {
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reload() // 修正
+        }
         },
         {
           label: '强制重新加载',
           accelerator: 'CmdOrCtrl+Shift+R',
-          click: (item: any, focusedWindow: any) => {
-            if (focusedWindow) focusedWindow.webContents.reloadIgnoringCache()
-          }
+          click: (item, focusedWindow) => {
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reloadIgnoringCache() // 修正
+        }
         },
         {
           label: '开发者工具',
           accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
-          click: (item: any, focusedWindow: any) => {
-            if (focusedWindow) focusedWindow.webContents.toggleDevTools()
-          }
+          click: (item, focusedWindow) => {
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.toggleDevTools() // 修正
+        }
         },
         { type: 'separator' },
         {
           label: '实际大小',
           accelerator: 'CmdOrCtrl+0',
-          role: 'resetzoom'
+          role: 'resetZoom' // 修正大小写
         },
         {
           label: '放大',
           accelerator: 'CmdOrCtrl+Plus',
-          role: 'zoomin'
+          role: 'zoomIn' // 修正大小写
         },
         {
           label: '缩小',
           accelerator: 'CmdOrCtrl+-',
-          role: 'zoomout'
+          role: 'zoomOut' // 修正大小写
         },
         { type: 'separator' },
         {

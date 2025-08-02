@@ -4,6 +4,7 @@
     <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
+                      <ToolSwitcher />
           <h1 class="text-2xl font-bold text-foreground">Dev Toolbox</h1>
           <div class="flex items-center space-x-4">
             <!-- 搜索框 -->
@@ -111,6 +112,7 @@ import { useRouter } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
 import { modules, searchModules } from '../utils/modules'
 import type { ToolModule } from '../types'
+import ToolSwitcher from '../components/ToolSwitcher.vue'
 
 const router = useRouter()
 const themeStore = useThemeStore()
@@ -156,7 +158,10 @@ const getIconPath = (moduleId: string) => {
     timestamp: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
     url: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
     base64: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-    json: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+    json: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    uuid: 'M15 7h3a3 3 0 013 3v5a3 3 0 01-3 3h-3m-6 0H6a3 3 0 01-3-3v-5a3 3 0 013-3h3',
+    'text-analyzer': 'M8 12h8m-4 4v-8',
+    'hash-generator': 'M7 20h10m-5-5V9m-5 5h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z'
   }
   return iconMap[moduleId] || 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
 }

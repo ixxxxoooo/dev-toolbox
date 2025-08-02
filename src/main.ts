@@ -34,6 +34,26 @@ const routes = [
     path: '/json',
     name: 'Json',
     component: () => import('./views/Json.vue')
+  },
+  {
+    path: '/uuid',
+    name: 'UuidGenerator',
+    component: () => import('./views/UuidGenerator.vue')
+  },
+  {
+    path: '/text-analyzer',
+    name: 'TextAnalyzer',
+    component: () => import('./views/TextAnalyzer.vue')
+  },
+  {
+    path: '/hash-generator',
+    name: 'HashGenerator',
+    component: () => import('./views/HashGenerator.vue')
+  },
+  {
+    path: '/sql-formatter',
+    name: 'SqlFormatter',
+    component: () => import('./views/SqlFormatter.vue')
   }
 ]
 
