@@ -25,7 +25,7 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 12, y: 12 },
     show: false,
-    icon: path.join(__dirname, '../src/icon.icns')
+    icon: isDev ? path.join(__dirname, '../src/icon.icns') : undefined
   })
 
   if (isDev) {

@@ -5,7 +5,10 @@
       "Bash(npx vue-tsc:*)",
       "Bash(npm run build:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
