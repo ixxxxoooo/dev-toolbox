@@ -23,6 +23,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs')
     },
     titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 12, y: 12 },
     show: false,
     icon: path.join(__dirname, '../src/icon.icns')
   })

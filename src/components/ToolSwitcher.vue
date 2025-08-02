@@ -4,7 +4,7 @@
       <LayoutGrid class="h-5 w-5" />
     </button>
     
-    <div class="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+    <div class="absolute top-full left-0 mt-0.5 w-48 bg-card border border-border rounded-lg shadow-lg z-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
       <div class="p-2">
         <router-link 
           v-for="module in modules" 
