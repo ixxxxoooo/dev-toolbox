@@ -4,8 +4,10 @@
     <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
-                      <ToolSwitcher />
-          <h1 class="text-2xl font-bold text-foreground">Dev Toolbox</h1>
+          <div class="flex items-center space-x-4">
+            <ToolSwitcher />
+            <h1 class="text-2xl font-bold text-foreground">Dev Toolbox</h1>
+          </div>
           <div class="flex items-center space-x-4">
             <!-- 搜索框 -->
             <div class="relative">
@@ -41,10 +43,7 @@
           >
             <div class="flex items-center space-x-3">
               <div class="p-2 bg-primary/10 rounded-lg">
-                <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    :d="getIconPath(tool.id)" />
-                </svg>
+                <component :is="getIconComponent(tool.icon)" class="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h3 class="font-medium text-foreground">{{ tool.name }}</h3>
@@ -67,10 +66,7 @@
           >
             <div class="flex flex-col items-center text-center space-y-3">
               <div class="p-3 bg-primary/10 rounded-full">
-                <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    :d="getIconPath(module.id)" />
-                </svg>
+                <component :is="getIconComponent(module.icon)" class="h-8 w-8 text-primary" />
               </div>
               <div>
                 <h3 class="font-semibold text-foreground">{{ module.name }}</h3>
@@ -103,6 +99,7 @@ import { modules, searchModules } from '../utils/modules'
 import type { ToolModule } from '../types'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
+import { FileText, Clock, Link, Binary, Braces, Key, TextCursor, Hash, Database, Shield } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -141,18 +138,20 @@ const addToRecentTools = (tool: ToolModule) => {
   localStorage.setItem('recentTools', JSON.stringify(recentTools.value))
 }
 
-const getIconPath = (moduleId: string) => {
-  const iconMap: Record<string, string> = {
-    diff: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    timestamp: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-    url: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
-    base64: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
-    json: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-    uuid: 'M15 7h3a3 3 0 013 3v5a3 3 0 01-3 3h-3m-6 0H6a3 3 0 01-3-3v-5a3 3 0 013-3h3',
-    'text-analyzer': 'M8 12h8m-4 4v-8',
-    'hash-generator': 'M7 20h10m-5-5V9m-5 5h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z'
+const getIconComponent = (iconName: string) => {
+  const icons: { [key: string]: any } = {
+    'file-text': FileText,
+    'clock': Clock,
+    'link': Link,
+    'binary': Binary,
+    'braces': Braces,
+    'key': Key,
+    'text-cursor': TextCursor,
+    'hash': Hash,
+    'database': Database,
+    'shield': Shield,
   }
-  return iconMap[moduleId] || 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+  return icons[iconName] || FileText
 }
 
 onMounted(() => {
