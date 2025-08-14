@@ -115,6 +115,7 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
 // Refs
 const inputEditorRef = ref<HTMLElement | null>(null);
@@ -124,6 +125,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 // Monaco Editor Instances
 let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+// 主题监听器清理函数
+let inputThemeWatcher: (() => void) | null = null;
+let outputThemeWatcher: (() => void) | null = null;
 
 // State
 const inputText = ref('Hello World! 你好，世界！');
@@ -173,7 +178,7 @@ const initEditors = async () => {
   await nextTick();
   const editorOptions = {
     language: 'plaintext',
-    theme: 'vs-dark',
+    theme: getMonacoTheme(),
     automaticLayout: true,
     minimap: { enabled: false },
     wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off', // Apply word wrap setting
@@ -187,6 +192,8 @@ const initEditors = async () => {
     inputEditor.onDidChangeModelContent(() => {
       if (autoProcess.value) processText();
     });
+    // 设置主题监听器
+    inputThemeWatcher = watchThemeChange(inputEditor);
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
@@ -194,6 +201,8 @@ const initEditors = async () => {
       readOnly: true,
       ...editorOptions,
     });
+    // 设置主题监听器
+    outputThemeWatcher = watchThemeChange(outputEditor);
   }
   processText();
 };
@@ -249,6 +258,10 @@ watch(wordWrapEnabled, (newValue) => {
 // Lifecycle
 onMounted(initEditors);
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  inputThemeWatcher?.();
+  outputThemeWatcher?.();
+  // 销毁编辑器实例
   inputEditor?.dispose();
   outputEditor?.dispose();
 });

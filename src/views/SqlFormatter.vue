@@ -125,6 +125,7 @@ import { format } from 'sql-formatter'
 import { HelpCircle } from 'lucide-vue-next'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 
 // Refs
 const sqlEditorRef = ref<HTMLElement | null>(null)
@@ -132,6 +133,9 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 // Monaco Editor Instance
 let sqlEditor: monaco.editor.IStandaloneCodeEditor | null = null
+
+// 主题监听器清理函数
+let themeWatcher: (() => void) | null = null
 
 // State
 const sqlText = ref(`SELECT u.id, u.name, u.email, p.title, p.content, COUNT(c.id) as comment_count FROM users u LEFT JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.created_at >= '2023-01-01' AND u.status = 'active' GROUP BY u.id, p.id ORDER BY u.created_at DESC, comment_count DESC LIMIT 10;`)
@@ -142,19 +146,19 @@ const wordWrapEnabled = ref(true)
 // Functions
 const getSelectedTextOrAll = () => {
   if (!sqlEditor) return { text: sqlText.value, isSelection: false, selection: null }
-  
+
   const selection = sqlEditor.getSelection()
   if (selection && !selection.isEmpty()) {
     const selectedText = sqlEditor.getModel()?.getValueInRange(selection) || ''
     return { text: selectedText, isSelection: true, selection }
   }
-  
+
   return { text: sqlText.value, isSelection: false, selection: null }
 }
 
 const replaceTextInEditor = (newText: string, isSelection: boolean, selection: any) => {
   if (!sqlEditor) return
-  
+
   if (isSelection && selection) {
     // 替换选中的文本
     sqlEditor.executeEdits('sql-formatter', [{
@@ -199,7 +203,7 @@ const minifySQL = () => {
   try {
     // 检查是否包含多个SQL语句（通过分号判断）
     const hasSemicolon = text.includes(';')
-    
+
     if (hasSemicolon && !isSelection) {
       // 多段SQL，各自压缩
       const statements = splitSQLStatements(text)
@@ -217,7 +221,7 @@ const minifySQL = () => {
           return stmt.replace(/\s+/g, ' ').trim()
         }
       })
-      
+
       // 用换行分隔各个压缩后的语句
       const result = minifiedStatements.join('\n')
       replaceTextInEditor(result, isSelection, selection)
@@ -268,10 +272,10 @@ const unescapeSQL = () => {
 
 const initEditor = async () => {
   await nextTick()
-  
+
   const editorOptions = {
     language: 'sql',
-    theme: 'vs-dark',
+    theme: getMonacoTheme(),
     automaticLayout: true,
     minimap: { enabled: false },
     wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
@@ -287,10 +291,13 @@ const initEditor = async () => {
       value: sqlText.value,
       ...editorOptions,
     })
-    
+
     sqlEditor.onDidChangeModelContent(() => {
       sqlText.value = sqlEditor?.getValue() || ''
     })
+
+    // 设置主题监听器
+    themeWatcher = watchThemeChange(sqlEditor)
   }
 }
 
@@ -311,7 +318,7 @@ const handleFileSelect = (e: Event) => {
 
 const downloadFile = () => {
   if (!sqlText.value.trim()) return
-  
+
   const blob = new Blob([sqlText.value], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -348,6 +355,9 @@ watch(wordWrapEnabled, (newValue) => {
 onMounted(initEditor)
 
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  themeWatcher?.()
+  // 销毁编辑器实例
   sqlEditor?.dispose()
 })
 </script>

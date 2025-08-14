@@ -80,12 +80,16 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
 // Refs
 const editorRef = ref<HTMLElement | null>(null);
 
 // Monaco Editor Instance
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+// 主题监听器清理函数
+let themeWatcher: (() => void) | null = null;
 
 // State
 const inputText = ref('');
@@ -120,7 +124,7 @@ const initEditor = async () => {
     editor = monaco.editor.create(editorRef.value, {
       value: inputText.value,
       language: 'plaintext',
-      theme: 'vs-dark',
+      theme: getMonacoTheme(),
       automaticLayout: true,
       minimap: { enabled: false },
       wordWrap: 'on',
@@ -130,6 +134,8 @@ const initEditor = async () => {
       inputText.value = editor?.getValue() || '';
       analyzeText();
     });
+    // 设置主题监听器
+    themeWatcher = watchThemeChange(editor);
   }
   analyzeText(); // Initial analysis
 };
@@ -150,6 +156,9 @@ const clearInput = () => {
 // Lifecycle
 onMounted(initEditor);
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  themeWatcher?.();
+  // 销毁编辑器实例
   editor?.dispose();
 });
 </script>

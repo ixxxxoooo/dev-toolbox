@@ -82,6 +82,7 @@ import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
 // Types
 type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512';
@@ -91,6 +92,9 @@ const editorRef = ref<HTMLElement | null>(null);
 
 // Monaco Editor Instance
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+// 主题监听器清理函数
+let themeWatcher: (() => void) | null = null;
 
 // State
 const inputText = ref('Hello World!');
@@ -123,7 +127,7 @@ const initEditor = async () => {
     editor = monaco.editor.create(editorRef.value, {
       value: inputText.value,
       language: 'plaintext',
-      theme: 'vs-dark',
+      theme: getMonacoTheme(),
       automaticLayout: true,
       minimap: { enabled: false },
       wordWrap: 'on' as const,
@@ -133,6 +137,8 @@ const initEditor = async () => {
       inputText.value = editor?.getValue() || '';
       generateHashes();
     });
+    // 设置主题监听器
+    themeWatcher = watchThemeChange(editor);
   }
   generateHashes(); // Initial generation
 };
@@ -157,6 +163,9 @@ const copyHash = (key: HashKey) => {
 // Lifecycle
 onMounted(initEditor);
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  themeWatcher?.();
+  // 销毁编辑器实例
   editor?.dispose();
 });
 </script>

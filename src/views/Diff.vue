@@ -134,12 +134,16 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 
 // Refs
 const diffEditorRef = ref<HTMLElement | null>(null);
 
 // Monaco 编辑器实例
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
+
+// 主题监听器清理函数
+let themeWatcher: (() => void) | null = null;
 
 // State
 const leftContent = ref(
@@ -171,6 +175,7 @@ const initMonacoDiffEditor = async () => {
   const modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
 
   diffEditor = monaco.editor.createDiffEditor(diffEditorRef.value, {
+    theme: getMonacoTheme(),
     automaticLayout: true,
     scrollBeyondLastLine: false,
     readOnly: false,
@@ -192,9 +197,9 @@ const initMonacoDiffEditor = async () => {
     original: originalModel,
     modified: modifiedModel,
   });
-  
-  // 设置初始主题
-  monaco.editor.setTheme(theme.value);
+
+  // 设置主题监听器
+  themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
 
   // 监听内容变化以保持状态同步
   diffEditor.getOriginalEditor().onDidChangeModelContent(() => {
@@ -300,8 +305,8 @@ const pasteTo = async (side: 'original' | 'modified') => {
 
 const copyFrom = async (side: 'original' | 'modified') => {
   try {
-    const text = side === 'original' 
-      ? diffEditor?.getOriginalEditor().getValue() 
+    const text = side === 'original'
+      ? diffEditor?.getOriginalEditor().getValue()
       : diffEditor?.getModifiedEditor().getValue();
     if (text) {
       await navigator.clipboard.writeText(text);
@@ -317,12 +322,15 @@ const copyFrom = async (side: 'original' | 'modified') => {
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  themeWatcher?.();
+  // 销毁编辑器实例
   diffEditor?.dispose();
 });
 
 // 监听配置变化
 watch(diffMode, (newMode) => {
-  diffEditor?.updateOptions({ 
+  diffEditor?.updateOptions({
     renderSideBySide: newMode === 'split',
     minimap: { enabled: newMode === 'split' }
   });

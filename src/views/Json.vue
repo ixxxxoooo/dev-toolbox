@@ -140,6 +140,7 @@ import JsonTreeView from '../components/JsonTreeView.vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
 // Refs
 const inputEditorRef = ref<HTMLElement | null>(null);
@@ -149,6 +150,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 // Monaco Editor Instances
 let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+// 主题监听器清理函数
+let inputThemeWatcher: (() => void) | null = null;
+let outputThemeWatcher: (() => void) | null = null;
 
 // State
 const inputText = ref('{ "hello": "world" }');
@@ -180,7 +185,7 @@ const processData = () => {
 
   try {
     let resultData = '';
-    
+
     // Handle escape/unescape operations without parsing
     if (operation.value === 'escape') {
       resultData = JSON.stringify(inputText.value);
@@ -192,7 +197,7 @@ const processData = () => {
         // Manual unescape for non-JSON strings
         resultData = inputText.value
           .replace(/\\n/g, '\n')   // 去转义换行
-          .replace(/\\r/g, '\r')   // 去转义回车  
+          .replace(/\\r/g, '\r')   // 去转义回车
           .replace(/\\t/g, '\t')   // 去转义制表符
           .replace(/\\"/g, '"')    // 去转义双引号
           .replace(/\\'/g, "'")    // 去转义单引号
@@ -244,7 +249,7 @@ const initEditors = async () => {
   await nextTick();
   const editorOptions = {
     language: 'json',
-    theme: 'vs-dark',
+    theme: getMonacoTheme(),
     automaticLayout: true,
     minimap: { enabled: false },
     wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
@@ -259,6 +264,8 @@ const initEditors = async () => {
       inputText.value = inputEditor?.getValue() || '';
       if (autoProcess.value) processData();
     });
+    // 设置主题监听器
+    inputThemeWatcher = watchThemeChange(inputEditor);
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
@@ -266,6 +273,8 @@ const initEditors = async () => {
       readOnly: true,
       ...editorOptions,
     });
+    // 设置主题监听器
+    outputThemeWatcher = watchThemeChange(outputEditor);
   }
   processData();
 };
@@ -312,6 +321,10 @@ watch(wordWrapEnabled, (newValue) => {
 // Lifecycle
 onMounted(initEditors);
 onBeforeUnmount(() => {
+  // 清理主题监听器
+  inputThemeWatcher?.();
+  outputThemeWatcher?.();
+  // 销毁编辑器实例
   inputEditor?.dispose();
   outputEditor?.dispose();
 });
