@@ -141,6 +141,7 @@ import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
 // Refs
 const inputEditorRef = ref<HTMLElement | null>(null);
@@ -155,16 +156,28 @@ let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
 
-// State
-const inputText = ref('{ "hello": "world" }');
+// 本地存储键名
+const STORAGE_KEYS = {
+  inputText: 'json-input-text',
+  operation: 'json-operation',
+  indentSize: 'json-indent-size',
+  autoProcess: 'json-auto-process',
+  convertFrom: 'json-convert-from',
+  convertTo: 'json-convert-to',
+  showTreeView: 'json-show-tree-view',
+  wordWrapEnabled: 'json-word-wrap-enabled'
+};
+
+// State - 从本地存储加载初始值
+const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
 const outputText = ref('');
-const operation = ref('format');
-const indentSize = ref(2);
-const autoProcess = ref(true);
-const convertFrom = ref('json');
-const convertTo = ref('json');
-const showTreeView = ref(false);
-const wordWrapEnabled = ref(true); // New state for word wrap
+const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
+const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
+const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
+const convertFrom = ref(loadFromStorage(STORAGE_KEYS.convertFrom, 'json'));
+const convertTo = ref(loadFromStorage(STORAGE_KEYS.convertTo, 'json'));
+const showTreeView = ref(loadFromStorage(STORAGE_KEYS.showTreeView, false));
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
 // Computed
 const parsedJson = computed(() => {
@@ -262,7 +275,12 @@ const initEditors = async () => {
     });
     inputEditor.onDidChangeModelContent(() => {
       inputText.value = inputEditor?.getValue() || '';
+      saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processData();
+    });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     });
     // 设置主题监听器
     inputThemeWatcher = watchThemeChange(inputEditor);
@@ -272,6 +290,10 @@ const initEditors = async () => {
       value: outputText.value,
       readOnly: true,
       ...editorOptions,
+    });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     });
     // 设置主题监听器
     outputThemeWatcher = watchThemeChange(outputEditor);
@@ -307,15 +329,40 @@ const pasteInput = async () => inputEditor?.setValue(await navigator.clipboard.r
 const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
 const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
 
-// Watchers
-watch([operation, indentSize, convertFrom, convertTo], () => {
+// Watchers - 监听状态变化并保存到本地存储
+watch(operation, (newValue: string) => {
+  saveToStorage(STORAGE_KEYS.operation, newValue);
   if (autoProcess.value) processData();
 });
 
-watch(wordWrapEnabled, (newValue) => {
+watch(indentSize, (newValue: number) => {
+  saveToStorage(STORAGE_KEYS.indentSize, newValue);
+  if (autoProcess.value) processData();
+});
+
+watch(autoProcess, (newValue: boolean) => {
+  saveToStorage(STORAGE_KEYS.autoProcess, newValue);
+});
+
+watch(convertFrom, (newValue: string) => {
+  saveToStorage(STORAGE_KEYS.convertFrom, newValue);
+  if (autoProcess.value) processData();
+});
+
+watch(convertTo, (newValue: string) => {
+  saveToStorage(STORAGE_KEYS.convertTo, newValue);
+  if (autoProcess.value) processData();
+});
+
+watch(showTreeView, (newValue: boolean) => {
+  saveToStorage(STORAGE_KEYS.showTreeView, newValue);
+});
+
+watch(wordWrapEnabled, (newValue: boolean) => {
   const wrapOption = newValue ? 'on' : 'off';
   inputEditor?.updateOptions({ wordWrap: wrapOption });
   outputEditor?.updateOptions({ wordWrap: wrapOption });
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
 });
 
 // Lifecycle

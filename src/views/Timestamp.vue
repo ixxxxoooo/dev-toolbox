@@ -55,9 +55,9 @@
     <main class="flex-1 container mx-auto px-4 py-8 flex justify-center">
       <div class="w-full max-w-3xl">
         <div class="relative">
-          <input 
-            type="text" 
-            v-model="userInput" 
+          <input
+            type="text"
+            v-model="userInput"
             @input="parseInput"
             placeholder="输入时间戳、日期字符串或自然语言..."
             class="w-full text-center text-xl font-mono p-4 pr-10 bg-transparent border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
@@ -83,13 +83,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
@@ -180,6 +181,13 @@ const copyToClipboard = (text: string | number) => {
 // Lifecycle
 onMounted(() => {
   setCurrentTime();
+  // 禁用保存快捷键
+  addDisableSaveShortcut();
+});
+
+onBeforeUnmount(() => {
+  // 移除保存快捷键禁用
+  removeDisableSaveShortcut();
 });
 
 </script>

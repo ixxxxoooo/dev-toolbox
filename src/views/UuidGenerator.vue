@@ -46,16 +46,16 @@
         <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
           <h2 class="text-lg font-semibold mb-4 text-center">生成的 UUID</h2>
           <div class="relative flex items-center space-x-2">
-            <input 
-              type="text" 
-              readonly 
-              v-model="uuid" 
+            <input
+              type="text"
+              readonly
+              v-model="uuid"
               placeholder="点击生成 UUID 按钮"
               class="flex-1 text-center text-xl font-mono p-4 bg-muted border border-border rounded-lg focus:outline-none"
             />
-            <button 
-              @click="copyUuid" 
-              :disabled="!uuid" 
+            <button
+              @click="copyUuid"
+              :disabled="!uuid"
               class="px-4 py-4 rounded-lg btn-secondary disabled:opacity-50 flex items-center justify-center"
               title="复制 UUID"
             >
@@ -71,10 +71,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 const uuid = ref('');
 
@@ -99,5 +100,12 @@ const clearUuid = () => {
 
 onMounted(() => {
   generateUuid(); // Generate a UUID on component mount
+  // 禁用保存快捷键
+  addDisableSaveShortcut();
+});
+
+onBeforeUnmount(() => {
+  // 移除保存快捷键禁用
+  removeDisableSaveShortcut();
 });
 </script>

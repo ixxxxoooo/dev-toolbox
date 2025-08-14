@@ -126,6 +126,7 @@ import { HelpCircle } from 'lucide-vue-next'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
+import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 
 // Refs
 const sqlEditorRef = ref<HTMLElement | null>(null)
@@ -137,11 +138,19 @@ let sqlEditor: monaco.editor.IStandaloneCodeEditor | null = null
 // 主题监听器清理函数
 let themeWatcher: (() => void) | null = null
 
-// State
-const sqlText = ref(`SELECT u.id, u.name, u.email, p.title, p.content, COUNT(c.id) as comment_count FROM users u LEFT JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.created_at >= '2023-01-01' AND u.status = 'active' GROUP BY u.id, p.id ORDER BY u.created_at DESC, comment_count DESC LIMIT 10;`)
-const sqlDialect = ref('mysql')
-const indentSize = ref(2)
-const wordWrapEnabled = ref(true)
+// 本地存储键名
+const STORAGE_KEYS = {
+  sqlText: 'sql-text',
+  sqlDialect: 'sql-dialect',
+  indentSize: 'sql-indent-size',
+  wordWrapEnabled: 'sql-word-wrap-enabled'
+}
+
+// State - 从本地存储加载初始值
+const sqlText = ref(loadFromStorage(STORAGE_KEYS.sqlText, `SELECT u.id, u.name, u.email, p.title, p.content, COUNT(c.id) as comment_count FROM users u LEFT JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.created_at >= '2023-01-01' AND u.status = 'active' GROUP BY u.id, p.id ORDER BY u.created_at DESC, comment_count DESC LIMIT 10;`))
+const sqlDialect = ref(loadFromStorage(STORAGE_KEYS.sqlDialect, 'mysql'))
+const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2))
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
 
 // Functions
 const getSelectedTextOrAll = () => {
@@ -294,6 +303,12 @@ const initEditor = async () => {
 
     sqlEditor.onDidChangeModelContent(() => {
       sqlText.value = sqlEditor?.getValue() || ''
+      saveToStorage(STORAGE_KEYS.sqlText, sqlText.value)
+    })
+
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     })
 
     // 设置主题监听器
@@ -346,9 +361,19 @@ const copyInput = () => {
 }
 
 // Watchers
-watch(wordWrapEnabled, (newValue) => {
+// 监听状态变化并保存到本地存储
+watch(sqlDialect, (newValue: string) => {
+  saveToStorage(STORAGE_KEYS.sqlDialect, newValue)
+})
+
+watch(indentSize, (newValue: number) => {
+  saveToStorage(STORAGE_KEYS.indentSize, newValue)
+})
+
+watch(wordWrapEnabled, (newValue: boolean) => {
   const wrapOption = newValue ? 'on' : 'off'
   sqlEditor?.updateOptions({ wordWrap: wrapOption })
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue)
 })
 
 // Lifecycle

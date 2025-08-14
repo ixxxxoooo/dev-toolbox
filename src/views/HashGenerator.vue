@@ -137,6 +137,10 @@ const initEditor = async () => {
       inputText.value = editor?.getValue() || '';
       generateHashes();
     });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
+    });
     // 设置主题监听器
     themeWatcher = watchThemeChange(editor);
   }

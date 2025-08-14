@@ -39,6 +39,9 @@
               </div>
             </div>
           </div>
+          <div class="flex items-center space-x-2">
+            <ThemeToggleButton />
+          </div>
         </div>
       </div>
     </header>
@@ -89,7 +92,6 @@
           <button @click="clearAll" title="清空两边的所有文本" class="px-3 py-1.5 text-sm btn-destructive rounded-md">
             清空全部
           </button>
-          <ThemeToggleButton />
         </div>
       </div>
     </div>
@@ -135,6 +137,7 @@ import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
+import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
 // Refs
 const diffEditorRef = ref<HTMLElement | null>(null);
@@ -145,23 +148,36 @@ let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
 // 主题监听器清理函数
 let themeWatcher: (() => void) | null = null;
 
-// State
-const leftContent = ref(
+// 本地存储键名
+const STORAGE_KEYS = {
+  leftContent: 'diff-left-content',
+  rightContent: 'diff-right-content',
+  diffMode: 'diff-mode',
+  ignoreWhitespace: 'diff-ignore-whitespace',
+  showLineNumbers: 'diff-show-line-numbers',
+  theme: 'diff-theme',
+  wordWrapEnabled: 'diff-word-wrap-enabled'
+};
+
+
+
+// State - 从本地存储加载初始值
+const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent,
 `function sayHello() {
   console.log("Hello, world!");
 }`
-);
-const rightContent = ref(
+));
+const rightContent = ref(loadFromStorage(STORAGE_KEYS.rightContent,
 `  function sayHello() {
     console.log("Hello, world!");
   }
 `
-);
-const diffMode = ref<'split' | 'inline'>('split');
-const ignoreWhitespace = ref(false);
-const showLineNumbers = ref(true);
-const theme = ref('vs-dark');
-const wordWrapEnabled = ref(true); // New state for word wrap
+));
+const diffMode = ref<'split' | 'inline'>(loadFromStorage(STORAGE_KEYS.diffMode, 'split'));
+const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, false));
+const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true));
+const theme = ref(loadFromStorage(STORAGE_KEYS.theme, 'vs-dark'));
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
 // Functions
 const initMonacoDiffEditor = async () => {
@@ -201,12 +217,25 @@ const initMonacoDiffEditor = async () => {
   // 设置主题监听器
   themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
 
-  // 监听内容变化以保持状态同步
+  // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+  const originalEditor = diffEditor.getOriginalEditor();
+  const modifiedEditor = diffEditor.getModifiedEditor();
+
+  originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    // 禁用默认保存行为，什么都不做
+  });
+  modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    // 禁用默认保存行为，什么都不做
+  });
+
+  // 监听内容变化以保持状态同步并保存到本地存储
   diffEditor.getOriginalEditor().onDidChangeModelContent(() => {
     leftContent.value = diffEditor?.getOriginalEditor().getValue() || '';
+    saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
   });
   diffEditor.getModifiedEditor().onDidChangeModelContent(() => {
     rightContent.value = diffEditor?.getModifiedEditor().getValue() || '';
+    saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
   });
 };
 
@@ -233,10 +262,10 @@ const findNextDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
   if (!diffs || diffs.length === 0) return null;
 
   // Filter diffs that are after the current position
-  const nextDiffs = diffs.filter(d => d.originalStartLineNumber > currentPosition.lineNumber || d.modifiedStartLineNumber > currentPosition.lineNumber);
+  const nextDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalStartLineNumber > currentPosition.lineNumber || d.modifiedStartLineNumber > currentPosition.lineNumber);
   if (nextDiffs.length > 0) {
     // Find the closest next diff
-    return nextDiffs.reduce((prev, curr) => {
+    return nextDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
       const prevLine = Math.min(prev.originalStartLineNumber, prev.modifiedStartLineNumber);
       const currLine = Math.min(curr.originalStartLineNumber, curr.modifiedStartLineNumber);
       return currLine < prevLine ? curr : prev;
@@ -253,10 +282,10 @@ const findPrevDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
   if (!diffs || diffs.length === 0) return null;
 
   // Filter diffs that are before the current position
-  const prevDiffs = diffs.filter(d => d.originalEndLineNumber < currentPosition.lineNumber || d.modifiedEndLineNumber < currentPosition.lineNumber);
+  const prevDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalEndLineNumber < currentPosition.lineNumber || d.modifiedEndLineNumber < currentPosition.lineNumber);
   if (prevDiffs.length > 0) {
     // Find the closest previous diff
-    return prevDiffs.reduce((prev, curr) => {
+    return prevDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
       const prevLine = Math.max(prev.originalEndLineNumber, prev.modifiedEndLineNumber);
       const currLine = Math.max(curr.originalEndLineNumber, curr.modifiedEndLineNumber);
       return currLine > prevLine ? curr : prev;
@@ -328,29 +357,34 @@ onBeforeUnmount(() => {
   diffEditor?.dispose();
 });
 
-// 监听配置变化
-watch(diffMode, (newMode) => {
+// 监听配置变化并保存到本地存储
+watch(diffMode, (newMode: 'split' | 'inline') => {
   diffEditor?.updateOptions({
     renderSideBySide: newMode === 'split',
     minimap: { enabled: newMode === 'split' }
   });
+  saveToStorage(STORAGE_KEYS.diffMode, newMode);
 });
 
-watch(showLineNumbers, (newValue) => {
+watch(showLineNumbers, (newValue: boolean) => {
   diffEditor?.updateOptions({ lineNumbers: newValue ? 'on' : 'off' });
+  saveToStorage(STORAGE_KEYS.showLineNumbers, newValue);
 });
 
-watch(ignoreWhitespace, (newValue) => {
+watch(ignoreWhitespace, (newValue: boolean) => {
   diffEditor?.updateOptions({ ignoreTrimWhitespace: newValue });
+  saveToStorage(STORAGE_KEYS.ignoreWhitespace, newValue);
 });
 
-watch(theme, (newTheme) => {
+watch(theme, (newTheme: string) => {
   monaco.editor.setTheme(newTheme);
+  saveToStorage(STORAGE_KEYS.theme, newTheme);
 });
 
-watch(wordWrapEnabled, (newValue) => {
+watch(wordWrapEnabled, (newValue: boolean) => {
   const wrapOption = newValue ? 'on' : 'off';
   diffEditor?.updateOptions({ wordWrap: wrapOption });
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
 });
 
 </script>

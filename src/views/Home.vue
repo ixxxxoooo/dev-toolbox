@@ -21,7 +21,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            
+
             <!-- 主题切换按钮 -->
             <ThemeToggleButton />
           </div>
@@ -93,13 +93,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { modules, searchModules } from '../utils/modules'
 import type { ToolModule } from '../types'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
 import { FileText, Clock, Link, Binary, Braces, Key, TextCursor, Hash, Database, Shield } from 'lucide-vue-next'
+import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils'
 
 const router = useRouter()
 
@@ -116,7 +117,7 @@ const filteredModules = computed(() => {
 const navigateToTool = async (tool: ToolModule) => {
   // 添加到最近使用
   addToRecentTools(tool)
-  
+
   // 导航到工具页面
   await router.push(tool.route)
 }
@@ -126,14 +127,14 @@ const addToRecentTools = (tool: ToolModule) => {
   if (existingIndex > -1) {
     recentTools.value.splice(existingIndex, 1)
   }
-  
+
   recentTools.value.unshift(tool)
-  
+
   // 限制最近使用数量为 4 个
   if (recentTools.value.length > 4) {
     recentTools.value.pop()
   }
-  
+
   // 保存到本地存储
   localStorage.setItem('recentTools', JSON.stringify(recentTools.value))
 }
@@ -164,5 +165,12 @@ onMounted(() => {
       console.error('Failed to load recent tools:', error)
     }
   }
+  // 禁用保存快捷键
+  addDisableSaveShortcut()
+})
+
+onBeforeUnmount(() => {
+  // 移除保存快捷键禁用
+  removeDisableSaveShortcut()
 })
 </script>

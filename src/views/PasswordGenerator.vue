@@ -49,10 +49,10 @@
             <h3 class="text-sm font-semibold mb-3">密码类型</h3>
             <div class="space-y-2">
               <label v-for="type in passwordTypes" :key="type.key" class="flex items-center space-x-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  :value="type.key" 
-                  v-model="selectedType" 
+                <input
+                  type="radio"
+                  :value="type.key"
+                  v-model="selectedType"
                   @change="generatePassword"
                   class="form-radio text-primary"
                 />
@@ -66,11 +66,11 @@
             <h3 class="text-sm font-semibold mb-3">密码长度</h3>
             <div class="space-y-3">
               <div class="flex items-center space-x-4">
-                <input 
-                  type="range" 
-                  :min="getMinLength()" 
-                  :max="getMaxLength()" 
-                  v-model="passwordLength" 
+                <input
+                  type="range"
+                  :min="getMinLength()"
+                  :max="getMaxLength()"
+                  v-model="passwordLength"
                   @input="generatePassword"
                   class="flex-1"
                 />
@@ -123,11 +123,11 @@
               </label>
               <div class="space-y-2">
                 <label class="text-sm">单词数量: {{ memorableOptions.wordCount }}</label>
-                <input 
-                  type="range" 
-                  min="3" 
-                  max="6" 
-                  v-model="memorableOptions.wordCount" 
+                <input
+                  type="range"
+                  min="3"
+                  max="6"
+                  v-model="memorableOptions.wordCount"
                   @input="generatePassword"
                   class="w-full"
                 />
@@ -148,14 +148,14 @@
             </div>
             <div class="space-y-3">
               <div v-for="(password, index) in generatedPasswords" :key="index" class="flex items-center space-x-2">
-                <input 
-                  type="text" 
-                  readonly 
-                  :value="password" 
+                <input
+                  type="text"
+                  readonly
+                  :value="password"
                   class="flex-1 font-mono text-sm p-3 bg-muted border border-border rounded-lg focus:outline-none"
                 />
-                <button 
-                  @click="copyPassword(password)" 
+                <button
+                  @click="copyPassword(password)"
                   class="px-3 py-3 rounded-lg btn-secondary flex items-center justify-center"
                   title="复制密码"
                 >
@@ -203,10 +203,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 // Types
 interface PasswordOptions {
@@ -299,7 +300,7 @@ const getRecommendedLength = () => {
 
 const getCharacterSet = () => {
   let chars = '';
-  
+
   switch (selectedType.value) {
     case 'strong':
       if (options.value.uppercase) chars += charset.uppercase;
@@ -344,25 +345,25 @@ const generateStrongPassword = (length: number) => {
 const generateMemorablePassword = () => {
   const words = [];
   const usedIndices = new Set();
-  
+
   for (let i = 0; i < memorableOptions.value.wordCount; i++) {
     let randomIndex;
     do {
       randomIndex = Math.floor(Math.random() * commonWords.length);
     } while (usedIndices.has(randomIndex));
-    
+
     usedIndices.add(randomIndex);
     let word = commonWords[randomIndex];
-    
+
     if (memorableOptions.value.capitalizeWords) {
       word = word.charAt(0).toUpperCase() + word.slice(1);
     }
-    
+
     words.push(word);
   }
 
   let password = words.join('-');
-  
+
   if (memorableOptions.value.includeNumbers) {
     const randomNum = Math.floor(Math.random() * 9999) + 1;
     password += randomNum.toString();
@@ -377,13 +378,13 @@ const generatePassword = () => {
 
   for (let i = 0; i < count; i++) {
     let password = '';
-    
+
     if (selectedType.value === 'memorable') {
       password = generateMemorablePassword();
     } else {
       password = generateStrongPassword(passwordLength.value);
     }
-    
+
     if (password) {
       generatedPasswords.value.push(password);
     }
@@ -408,13 +409,13 @@ const getCharsetSize = () => {
 
 const calculateEntropy = () => {
   if (generatedPasswords.value.length === 0) return 0;
-  
+
   if (selectedType.value === 'memorable') {
     const wordEntropy = Math.log2(commonWords.length) * memorableOptions.value.wordCount;
     const numberEntropy = memorableOptions.value.includeNumbers ? Math.log2(9999) : 0;
     return wordEntropy + numberEntropy;
   }
-  
+
   const charsetSize = getCharsetSize();
   return Math.log2(charsetSize) * passwordLength.value;
 };
@@ -440,7 +441,7 @@ const getEstimatedCrackTime = () => {
   const attempts = Math.pow(2, entropy - 1); // 平均需要尝试一半的可能性
   const attemptsPerSecond = 1e9; // 假设每秒10亿次尝试
   const seconds = attempts / attemptsPerSecond;
-  
+
   if (seconds < 60) return '少于1分钟';
   if (seconds < 3600) return `${Math.round(seconds / 60)}分钟`;
   if (seconds < 86400) return `${Math.round(seconds / 3600)}小时`;
@@ -451,4 +452,15 @@ const getEstimatedCrackTime = () => {
 
 // 初始化生成密码
 generatePassword();
+
+// 生命周期钩子
+onMounted(() => {
+  // 禁用保存快捷键
+  addDisableSaveShortcut();
+});
+
+onBeforeUnmount(() => {
+  // 移除保存快捷键禁用
+  removeDisableSaveShortcut();
+});
 </script>

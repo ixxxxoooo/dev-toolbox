@@ -116,6 +116,7 @@ import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
 // Refs
 const inputEditorRef = ref<HTMLElement | null>(null);
@@ -130,13 +131,22 @@ let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
 
-// State
-const inputText = ref('Hello World! 你好，世界！');
+// 本地存储键名
+const STORAGE_KEYS = {
+  inputText: 'base64-input-text',
+  operation: 'base64-operation',
+  urlSafe: 'base64-url-safe',
+  autoProcess: 'base64-auto-process',
+  wordWrapEnabled: 'base64-word-wrap-enabled'
+};
+
+// State - 从本地存储加载初始值
+const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'Hello World! 你好，世界！'));
 const outputText = ref('');
-const operation = ref('encode');
-const urlSafe = ref(false);
-const autoProcess = ref(true);
-const wordWrapEnabled = ref(true); // New state for word wrap
+const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
+const urlSafe = ref(loadFromStorage(STORAGE_KEYS.urlSafe, false));
+const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
 // Functions
 const processText = () => {
@@ -190,7 +200,13 @@ const initEditors = async () => {
       ...editorOptions,
     });
     inputEditor.onDidChangeModelContent(() => {
+      inputText.value = inputEditor?.getValue() || '';
+      saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
+    });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     });
     // 设置主题监听器
     inputThemeWatcher = watchThemeChange(inputEditor);
@@ -200,6 +216,10 @@ const initEditors = async () => {
       value: outputText.value,
       readOnly: true,
       ...editorOptions,
+    });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     });
     // 设置主题监听器
     outputThemeWatcher = watchThemeChange(outputEditor);
@@ -245,14 +265,26 @@ const useAsInput = () => {
 };
 
 // Watchers
-watch([operation, urlSafe], () => {
+// 监听状态变化并保存到本地存储
+watch(operation, (newValue: string) => {
+  saveToStorage(STORAGE_KEYS.operation, newValue);
   if (autoProcess.value) processText();
 });
 
-watch(wordWrapEnabled, (newValue) => {
+watch(urlSafe, (newValue: boolean) => {
+  saveToStorage(STORAGE_KEYS.urlSafe, newValue);
+  if (autoProcess.value) processText();
+});
+
+watch(autoProcess, (newValue: boolean) => {
+  saveToStorage(STORAGE_KEYS.autoProcess, newValue);
+});
+
+watch(wordWrapEnabled, (newValue: boolean) => {
   const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off';
   inputEditor?.updateOptions({ wordWrap: wrapOption });
   outputEditor?.updateOptions({ wordWrap: wrapOption });
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
 });
 
 // Lifecycle

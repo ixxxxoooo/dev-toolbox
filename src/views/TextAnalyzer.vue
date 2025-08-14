@@ -115,7 +115,7 @@ const analyzeText = () => {
 
   stats.value.lines = text.split(/\r\n|\r|\n/).length;
   // Filter out empty strings from split to avoid counting empty lines as paragraphs
-  stats.value.paragraphs = text.split(/\r\n\r\n|\r\r|\n\n/).filter(p => p.trim() !== '').length;
+  stats.value.paragraphs = text.split(/\r\n\r\n|\r\r|\n\n/).filter((p: string) => p.trim() !== '').length;
 };
 
 const initEditor = async () => {
@@ -133,6 +133,10 @@ const initEditor = async () => {
     editor.onDidChangeModelContent(() => {
       inputText.value = editor?.getValue() || '';
       analyzeText();
+    });
+    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 禁用默认保存行为，什么都不做
     });
     // 设置主题监听器
     themeWatcher = watchThemeChange(editor);
