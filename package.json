@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder",
+    "build:web": "vue-tsc && vite build",
     "build:win": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win",
     "build:mac": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --mac",
     "build:linux": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --linux",
