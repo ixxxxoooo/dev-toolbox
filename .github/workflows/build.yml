@@ -39,7 +39,7 @@ jobs:
     needs: build-web
     strategy:
       matrix:
-        os: [macos-latest, windows-2022]
+        os: [macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -59,10 +59,6 @@ jobs:
     - name: Build Electron app (macOS)
       if: matrix.os == 'macos-latest'
       run: npm run build:mac
-
-    - name: Build Electron app (Windows)
-      if: matrix.os == 'windows-2022'
-      run: npm run build:win
 
     - name: Upload Electron build artifacts
       uses: actions/upload-artifact@v4
@@ -88,7 +84,6 @@ jobs:
       with:
         files: |
           electron-macos-latest/**/*
-          electron-windows-latest/**/*
         generate_release_notes: true
         draft: false
         prerelease: false
