@@ -61,7 +61,7 @@ jobs:
       run: npm run build:mac
 
     - name: Build Electron app (Windows)
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       run: npm run build:win
 
     - name: Build Electron app (Linux)
