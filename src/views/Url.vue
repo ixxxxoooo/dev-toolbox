@@ -31,7 +31,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.clear') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -43,11 +43,11 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">编码</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">解码</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('tools.url.options.encode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('tools.url.options.decode') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><span class="text-sm">模式:</span>
+          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('tools.url.options.mode') }}:</span>
             <select v-model="mode" class="text-sm px-2 py-1 border border-border rounded bg-background">
               <option v-if="operation === 'encode'" value="encodeURIComponent">Component</option>
               <option v-if="operation === 'encode'" value="encodeURI">URI</option>
@@ -57,11 +57,11 @@
           </label>
           <label class="flex items-center space-x-2">
             <input type="checkbox" v-model="autoProcess" class="rounded">
-            <span class="text-sm">自动处理</span>
+            <span class="text-sm">{{ $t('tools.url.options.autoProcess') }}</span>
           </label>
           <label class="flex items-center space-x-2" title="自动换行">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">自动换行</span>
+            <span class="text-sm">{{ $t('tools.url.options.wordWrap') }}</span>
           </label>
         </div>
       </div>
@@ -73,10 +73,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">输入</h3>
+            <h3 class="text-sm font-medium">{{ $t('tools.url.sections.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -87,10 +87,10 @@
         <!-- 输出编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">结果</h3>
+            <h3 class="text-sm font-medium">{{ $t('tools.url.sections.result') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
-              <button @click="useAsInput" class="text-xs px-2 py-1 btn-secondary rounded">作为输入</button>
+              <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
+              <button @click="useAsInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.url.buttons.useAsInput') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">

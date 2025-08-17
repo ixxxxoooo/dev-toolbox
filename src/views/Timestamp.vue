@@ -43,8 +43,8 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm btn-secondary rounded-md">粘贴并解析</button>
-            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm btn-primary rounded-md">设为当前时间</button>
+            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('tools.timestamp.actions.pasteAndParse') }}</button>
+            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm btn-primary rounded-md">{{ $t('tools.timestamp.actions.setCurrentTime') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -60,7 +60,7 @@
             type="text"
             v-model="userInput"
             @input="parseInput"
-            placeholder="输入时间戳、日期字符串或自然语言..."
+            :placeholder="$t('tools.timestamp.placeholder')"
             class="w-full text-center text-xl font-mono p-4 pr-10 bg-transparent border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
             :class="isValid ? 'border-primary focus:ring-primary/50' : 'border-destructive focus:ring-destructive/50'"
           />
@@ -69,12 +69,12 @@
         </div>
         <div v-if="!isValid && userInput" class="text-center text-destructive text-sm mt-2">{{ errorMessage }}</div>
         <div v-if="isValid" class="mt-8 space-y-3">
-          <h2 class="text-lg font-semibold text-center mb-4">转换结果</h2>
+          <h2 class="text-lg font-semibold text-center mb-4">{{ $t('tools.timestamp.result.title') }}</h2>
           <div v-for="(item, index) in outputFormats" :key="item.label" class="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
-            <span class="text-sm text-muted-foreground">{{ item.label }}</span>
+            <span class="text-sm text-muted-foreground">{{ $t(item.labelKey) }}</span>
             <div class="flex items-center space-x-3">
               <span class="font-mono text-foreground">{{ item.value }}</span>
-              <button @click="copyToClipboard(item.value)" :title="`复制 (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="copyToClipboard(item.value)" :title="`${$t('ui.copy')} (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
             </div>
           </div>
         </div>
@@ -109,13 +109,13 @@ const outputFormats = computed(() => {
   if (!isValid.value || !parsedDate.value) return [];
   const d = parsedDate.value;
   return [
-    { label: '本地时间 (UTC+8)', value: d.format('YYYY-MM-DD HH:mm:ss') },
-    { label: '本地日期', value: d.format('YYYY-MM-DD') },
-    { label: '时间戳 (秒)', value: d.unix() },
-    { label: '时间戳 (毫秒)', value: d.valueOf() },
-    { label: 'UTC 时间 (ISO 8601)', value: d.toISOString() },
-    { label: 'RFC 2822', value: d.format('ddd, DD MMM YYYY HH:mm:ss ZZ') },
-    { label: '相对时间', value: d.fromNow() },
+    { labelKey: 'tools.timestamp.result.localTime', value: d.format('YYYY-MM-DD HH:mm:ss') },
+    { labelKey: 'tools.timestamp.result.localDate', value: d.format('YYYY-MM-DD') },
+    { labelKey: 'tools.timestamp.result.timestamp', value: d.unix() },
+    { labelKey: 'tools.timestamp.result.timestampMs', value: d.valueOf() },
+    { labelKey: 'tools.timestamp.result.utcTime', value: d.toISOString() },
+    { labelKey: 'tools.timestamp.result.rfc2822', value: d.format('ddd, DD MMM YYYY HH:mm:ss ZZ') },
+    { labelKey: 'tools.timestamp.result.relative', value: d.fromNow() },
   ];
 });
 

@@ -260,60 +260,153 @@ export default {
 
     // URL 编解码
     url: {
-      name: 'URL 编解码',
-      description: 'URL 编码和解码工具',
-      encode: '编码',
-      decode: '解码',
-      encodeComponent: 'encodeURIComponent',
-      encodeUri: 'encodeURI',
-      decodeComponent: 'decodeURIComponent',
-      decodeUri: 'decodeURI',
-      input: '输入 URL',
-      output: '输出结果'
-    },
+        name: 'URL 编解码',
+        description: 'URL 编解码说明',
+        intro: 'URL 编解码工具，支持 Component 和 URI 两种模式的编码解码。',
+        modes: {
+          title: '模式说明:',
+          encode: 'Encode (编码): 将特殊字符转换为%xx格式。',
+          decode: 'Decode (解码): 将%xx格式还原为原始字符。',
+          component: 'Component: 用于编码URL的组成部分 (如查询参数)，它会编码所有保留字符。',
+          uri: 'URI: 用于编码完整的URL，它不会编码协议、主机等部分。'
+        },
+        example: {
+          title: '示例 (Component模式):',
+          input: '输入:',
+          output: '输出:'
+        },
+        actions: {
+          clear: '清空',
+          encode: '编码',
+          decode: '解码',
+          mode: '模式:',
+          autoProcess: '自动处理',
+          wordWrap: '自动换行',
+          input: '输入',
+          result: '结果',
+          paste: '粘贴',
+          copy: '复制',
+          useAsInput: '作为输入'
+        },
+        encode: '编码',
+        decode: '解码',
+        encodeComponent: 'encodeURIComponent',
+        encodeUri: 'encodeURI',
+        decodeComponent: 'decodeURIComponent',
+        decodeUri: 'decodeURI',
+        input: '输入 URL',
+        output: '输出结果',
+        help: {
+          title: 'URL 编解码工具说明',
+          description: '这是一个专业的URL编解码工具，支持多种编码模式和智能处理。',
+          modes: {
+            title: '🔧 编码模式',
+            encode: 'Encode (编码)',
+            encodeDesc: '将特殊字符转换为URL安全格式',
+            component: 'Component',
+            componentDesc: '编码URL组件，保留路径分隔符',
+            uri: 'URI',
+            uriDesc: '完整URI编码，适用于整个URL'
+          },
+          decode: {
+            title: '🔄 Decode (解码)',
+            auto: '自动识别',
+            autoDesc: '智能识别编码格式并解码',
+            multi: '多层解码',
+            multiDesc: '支持多次编码的URL解码',
+            error: '错误处理',
+            errorDesc: '优雅处理格式错误的URL'
+          },
+          example: {
+            title: '📝 示例 (Component模式)',
+            input: '输入',
+            inputValue: 'https://example.com/search?q=hello world&lang=中文',
+            output: '输出',
+            outputValue: 'https://example.com/search?q=hello%20world&lang=%E4%B8%AD%E6%96%87'
+          }
+         },
+         options: {
+           mode: '模式',
+           encode: '编码',
+           decode: '解码',
+           autoProcess: '自动处理',
+           wordWrap: '自动换行'
+         },
+         buttons: {
+           encode: '编码',
+           decode: '解码',
+           useAsInput: '作为输入'
+         },
+         sections: {
+           input: '输入',
+           result: '结果'
+         }
+      },
 
     // 时间戳转换
     timestamp: {
-      name: '时间戳转换',
-      description: '时间戳与日期格式相互转换',
-      input: '输入时间',
-      timestamp: '时间戳',
-      datetime: '日期时间',
-      format: '格式',
-      timezone: '时区',
-      local: '本地时间',
-      utc: 'UTC 时间',
-      iso: 'ISO 8601',
-      rfc2822: 'RFC 2822',
-      relative: '相对时间',
-      currentTime: '当前时间',
-      setCurrent: '设为当前时间',
-      milliseconds: '毫秒',
-      seconds: '秒',
-      intelligent: '智能识别',
-      formats: {
-        local: '本地时间',
-        utc: 'UTC 时间',
-        timestamp: '时间戳（秒）',
-        timestampMs: '时间戳（毫秒）',
-        iso: 'ISO 8601',
-        rfc2822: 'RFC 2822',
-        relative: '相对时间'
-      },
-      help: {
-        title: '智能时间戳转换工具说明',
-        description: '一个智能的时间转换工具，支持多种输入格式并实时显示多种输出结果。',
+        name: '时间戳转换',
+        description: '智能时间戳转换工具说明',
+        intro: '一个智能的时间转换工具，支持多种输入格式并实时显示多种输出结果。',
         inputSupport: {
+          title: '输入支持:',
           timestamp: '时间戳: 10位 (秒) 或 13位 (毫秒) 纯数字，自动识别。',
           dateString: '日期字符串: 如 "2025-08-01 23:56:17"。',
           iso8601: 'ISO 8601: 如 "2025-08-01T15:56:17Z"。',
           naturalLanguage: '自然语言日期: 如 "August 1, 2025 11:56 PM" (英文)。'
         },
         outputFormats: {
-          description: '本地时间 (UTC+8), 本地日期, 时间戳 (秒/毫秒), UTC时间 (ISO 8601), RFC 2822, 相对时间。'
+          title: '输出格式:',
+          description: '本地时间 (UTC+8), 本地日期, 时间戳 (秒/毫秒), UTC时间 (ISO 8601), 相对时间。'
         },
         buttons: {
+          title: '按钮说明:',
           pasteAndParse: '粘贴并解析: 从剪贴板粘贴内容并自动解析。',
+          setCurrent: '设为当前时间: 将输入框设置为当前时间戳。'
+        },
+        actions: {
+          pasteAndParse: '粘贴并解析',
+          setCurrent: '设为当前时间'
+        },
+        placeholder: '输入时间戳、日期字符串或自然语言...',
+        resultTitle: '转换结果',
+        formats: {
+          localTime: '本地时间 (UTC+8)',
+          localDate: '本地日期',
+          timestampSec: '时间戳 (秒)',
+          timestampMs: '时间戳 (毫秒)',
+          utcTime: 'UTC 时间 (ISO 8601)',
+          relative: '相对时间'
+        },
+        input: '输入时间',
+        timestamp: '时间戳',
+        datetime: '日期时间',
+        format: '格式',
+        timezone: '时区',
+        local: '本地时间',
+        utc: 'UTC 时间',
+        iso: 'ISO 8601',
+        rfc2822: 'RFC 2822',
+        relative: '相对时间',
+        currentTime: '当前时间',
+        setCurrent: '设为当前时间',
+        milliseconds: '毫秒',
+        seconds: '秒',
+        intelligent: '智能识别',
+        help: {
+          title: '智能时间戳转换工具说明',
+          description: '一个智能的时间转换工具，支持多种输入格式并实时显示多种输出结果。',
+          inputSupport: {
+            timestamp: '时间戳: 10位 (秒) 或 13位 (毫秒) 纯数字，自动识别。',
+            dateString: '日期字符串: 如 "2025-08-01 23:56:17"。',
+            iso8601: 'ISO 8601: 如 "2025-08-01T15:56:17Z"。',
+            naturalLanguage: '自然语言日期: 如 "August 1, 2025 11:56 PM" (英文)。'
+          },
+          outputFormats: {
+            description: '本地时间 (UTC+8), 本地日期, 时间戳 (秒/毫秒), UTC时间 (ISO 8601), RFC 2822, 相对时间。'
+          },
+          buttons: {
+            pasteAndParse: '粘贴并解析: 从剪贴板粘贴内容并自动解析。',
           setCurrentTime: '设为当前时间: 将输入框设置为当前时间并解析。',
           copy: '复制: 复制对应行的结果到剪贴板。'
         },
@@ -361,36 +454,61 @@ export default {
 
     // 文本分析
     textAnalyzer: {
-      name: '字符统计工具',
-      description: '统计文本的字符数、行数等信息',
-      input: '输入文本',
-      stats: '统计信息',
-      characters: '字符数',
-      charactersNoSpaces: '字符数（不含空格）',
-      words: '单词数',
-      wordsZh: '中文字数',
-      lines: '行数',
-      paragraphs: '段落数',
-      bytes: '字节数',
-      readingTime: '阅读时间',
-      minute: '分钟',
-      seconds: '秒',
-      help: {
-        title: '字符统计工具说明',
-        description: '实时统计文本的字数、字符数、行数、段落数等信息。',
+        name: '字符统计工具',
+        description: '字符统计工具说明',
+        intro: '实时统计文本的字数、字符数、行数、段落数等信息。',
         features: {
-          charactersWithSpaces: '字符数 (含空格): 统计所有字符，包括空格和换行符。',
-          charactersNoSpaces: '字符数 (不含空格): 统计非空白字符。',
+          title: '功能说明:',
+          charsWithSpaces: '字符数 (含空格): 统计所有字符，包括空格和换行符。',
+          charsWithoutSpaces: '字符数 (不含空格): 统计非空白字符。',
           words: '字数: 统计英文单词数量和中文汉字数量。',
           lines: '行数: 统计文本行数。',
           paragraphs: '段落数: 统计段落数量 (以连续换行符分隔)。'
         },
-        buttons: {
+        actions: {
           paste: '粘贴',
           clear: '清空'
+        },
+        input: '输入文本',
+         stats: {
+          charsWithSpaces: '字符数 (含空格)',
+          charsWithoutSpaces: '字符数 (不含空格)',
+          words: '字数',
+          lines: '行数',
+          paragraphs: '段落数'
+         },
+        characters: '字符数',
+        charactersNoSpaces: '字符数（不含空格）',
+        words: '单词数',
+        wordsZh: '中文字数',
+        lines: '行数',
+        paragraphs: '段落数',
+        bytes: '字节数',
+        readingTime: '阅读时间',
+        minute: '分钟',
+        seconds: '秒',
+        help: {
+          title: '字符统计工具说明',
+          description: '实时统计文本的字数、字符数、行数、段落数等信息。',
+          features: {
+            title: '功能说明',
+            charsWithSpaces: '字符数 (含空格)',
+            charsWithSpacesDesc: '统计所有字符，包括空格和换行符。',
+            charsWithoutSpaces: '字符数 (不含空格)',
+            charsWithoutSpacesDesc: '统计非空白字符。',
+            words: '字数',
+            wordsDesc: '统计英文单词数量和中文汉字数量。',
+            lines: '行数',
+            linesDesc: '统计文本行数。',
+            paragraphs: '段落数',
+            paragraphsDesc: '统计段落数量 (以连续换行符分隔)。'
+          },
+          buttons: {
+            paste: '粘贴',
+            clear: '清空'
+          }
         }
-      }
-    },
+      },
 
     // 哈希生成器
     hash: {
@@ -431,7 +549,18 @@ export default {
       input: '输入 SQL',
       output: '格式化结果',
       format: '格式化',
-      database: '数据库类型',
+      minify: '压缩',
+      escape: '转义',
+      unescape: '去转义',
+      database: '数据库',
+      indent: '缩进',
+      indent2: '2空格',
+      indent3: '3空格',
+      indent4: '4空格',
+      wordWrap: '自动换行',
+      editor: 'SQL 编辑器',
+      importFile: '导入文件',
+      downloadSql: '下载SQL',
       indentSize: '缩进大小',
       keywordCase: '关键字大小写',
       uppercase: '大写',
@@ -440,43 +569,42 @@ export default {
       help: {
         title: 'SQL 格式化工具说明',
         description: '这是一个专业的SQL格式化工具，支持多种数据库语法的美化和处理。',
-        features: {
-          editor: 'SQL编辑器: 支持SQL语法高亮、实时编辑和代码折叠。',
-          multiDatabase: '多数据库支持: 支持MySQL、PostgreSQL、TiDB、SQLite等。'
+        editor: {
+          title: 'SQL编辑器',
+          description: '支持SQL语法高亮、实时编辑和代码折叠。'
         },
-        coreFunctions: {
-          format: '格式化: 一键美化SQL语句，提升可读性。',
-          minify: '压缩: 一键移除多余空白字符，生成紧凑SQL。',
-          escape: '转义/去转义: 一键处理字符串转义字符。'
+        database: {
+          title: '多数据库支持',
+          description: '支持MySQL、PostgreSQL、TiDB、SQLite等。'
+        },
+        features: {
+          title: '核心功能',
+          format: '格式化',
+          formatDesc: '一键美化SQL语句，提升可读性。',
+          minify: '压缩',
+          minifyDesc: '一键移除多余空白字符，生成紧凑SQL。',
+          escape: '转义/去转义',
+          escapeDesc: '一键处理字符串转义字符。'
         },
         buttons: {
-          format: '格式化: 美化选中文本或全部SQL语句。',
-          minify: '压缩: 压缩选中文本或全部SQL，多段SQL各自压缩。',
-          escape: '转义/去转义: 处理选中文本或全部内容的转义字符。',
-          importFile: '导入文件: 从本地.sql文件加载内容到编辑器。',
-          downloadSql: '下载SQL: 将编辑器内容下载为.sql文件。'
-        },
-        smartProcessing: {
-          title: '智能处理',
-          selectedText: '选中文本优先: 有选中文本时仅处理选中部分。',
-          multiSql: '多段SQL压缩: 自动识别多个SQL语句，各自压缩。'
-        },
-        controls: {
-          database: '数据库',
-          indent: '缩进',
-          spaces2: '2空格',
-          spaces3: '3空格',
-          spaces4: '4空格',
-          wordWrap: '自动换行'
-        },
-        editor: {
-          title: 'SQL 编辑器',
-          paste: '粘贴',
-          copy: '复制',
+          title: '按钮说明',
           format: '格式化',
+          formatDesc: '美化选中文本或全部SQL语句。',
           minify: '压缩',
-          escape: '转义',
-          unescape: '去转义'
+          minifyDesc: '压缩选中文本或全部SQL，多段SQL各自压缩。',
+          escape: '转义/去转义',
+          escapeDesc: '处理选中文本或全部内容的转义字符。',
+          import: '导入文件',
+          importDesc: '从本地.sql文件加载内容到编辑器。',
+          download: '下载SQL',
+          downloadDesc: '将编辑器内容下载为.sql文件。'
+        },
+        smart: {
+          title: '智能处理',
+          selection: '选中文本优先',
+          selectionDesc: '有选中文本时仅处理选中部分。',
+          multiSql: '多段SQL压缩',
+          multiSqlDesc: '自动识别多个SQL语句，各自压缩。'
         }
       }
     },

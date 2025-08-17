@@ -12,27 +12,27 @@
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">字符统计工具</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.textAnalyzer.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">字符统计工具说明</p>
-                  <p class="mb-1">实时统计文本的字数、字符数、行数、段落数等信息。</p>
-                  <p class="font-bold mb-1">功能说明:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.textAnalyzer.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.textAnalyzer.help.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.textAnalyzer.help.features.title') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">字符数 (含空格):</strong> 统计所有字符，包括空格和换行符。</li>
-                    <li><strong class="font-semibold">字符数 (不含空格):</strong> 统计非空白字符。</li>
-                    <li><strong class="font-semibold">字数:</strong> 统计英文单词数量和中文汉字数量。</li>
-                    <li><strong class="font-semibold">行数:</strong> 统计文本行数。</li>
-                    <li><strong class="font-semibold">段落数:</strong> 统计段落数量 (以连续换行符分隔)。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.charsWithSpaces') }}:</strong> {{ $t('tools.textAnalyzer.help.features.charsWithSpacesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.charsWithoutSpaces') }}:</strong> {{ $t('tools.textAnalyzer.help.features.charsWithoutSpacesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.words') }}:</strong> {{ $t('tools.textAnalyzer.help.features.wordsDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.lines') }}:</strong> {{ $t('tools.textAnalyzer.help.features.linesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.paragraphs') }}:</strong> {{ $t('tools.textAnalyzer.help.features.paragraphsDesc') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">粘贴</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('ui.paste') }}</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.clear') }}</button>
             <ThemeToggleButton />
           </div>
         </div>
@@ -51,23 +51,23 @@
       <div class="mt-4 bg-card border border-border rounded-lg p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-primary">{{ stats.charsWithSpaces }}</div>
-          <div class="text-sm text-muted-foreground">字符数 (含空格)</div>
+          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}</div>
         </div>
         <div class="text-center">
           <div class="text-2xl font-bold text-primary">{{ stats.charsWithoutSpaces }}</div>
-          <div class="text-sm text-muted-foreground">字符数 (不含空格)</div>
+          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}</div>
         </div>
         <div class="text-center">
           <div class="text-2xl font-bold text-primary">{{ stats.words }}</div>
-          <div class="text-sm text-muted-foreground">字数</div>
+          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.words') }}</div>
         </div>
         <div class="text-center">
           <div class="text-2xl font-bold text-primary">{{ stats.lines }}</div>
-          <div class="text-sm text-muted-foreground">行数</div>
+          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.lines') }}</div>
         </div>
         <div class="text-center">
           <div class="text-2xl font-bold text-primary">{{ stats.paragraphs }}</div>
-          <div class="text-sm text-muted-foreground">段落数</div>
+          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.paragraphs') }}</div>
         </div>
       </div>
     </main>

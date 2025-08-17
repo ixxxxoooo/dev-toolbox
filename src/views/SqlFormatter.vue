@@ -12,43 +12,43 @@
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">SQL 格式化</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.sql.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">SQL 格式化工具说明</p>
-                  <p class="mb-1">这是一个专业的SQL格式化工具，支持多种数据库语法的美化和处理。</p>
+                  <p class="font-bold mb-2">{{ $t('tools.sql.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.sql.help.description') }}</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">SQL编辑器:</strong> 支持SQL语法高亮、实时编辑和代码折叠。</li>
-                    <li><strong class="font-semibold">多数据库支持:</strong> 支持MySQL、PostgreSQL、TiDB、SQLite等。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.editor.title') }}:</strong> {{ $t('tools.sql.help.editor.description') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.database.title') }}:</strong> {{ $t('tools.sql.help.database.description') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">核心功能:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.sql.help.features.title') }}:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">格式化:</strong> 一键美化SQL语句，提升可读性。</li>
-                    <li><strong class="font-semibold">压缩:</strong> 一键移除多余空白字符，生成紧凑SQL。</li>
-                    <li><strong class="font-semibold">转义/去转义:</strong> 一键处理字符串转义字符。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.features.format') }}:</strong> {{ $t('tools.sql.help.features.formatDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.features.minify') }}:</strong> {{ $t('tools.sql.help.features.minifyDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.features.escape') }}:</strong> {{ $t('tools.sql.help.features.escapeDesc') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.sql.help.buttons.title') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">格式化:</strong> 美化选中文本或全部SQL语句。</li>
-                    <li><strong class="font-semibold">压缩:</strong> 压缩选中文本或全部SQL，多段SQL各自压缩。</li>
-                    <li><strong class="font-semibold">转义/去转义:</strong> 处理选中文本或全部内容的转义字符。</li>
-                    <li><strong class="font-semibold">导入文件:</strong> 从本地.sql文件加载内容到编辑器。</li>
-                    <li><strong class="font-semibold">下载SQL:</strong> 将编辑器内容下载为.sql文件。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.buttons.format') }}:</strong> {{ $t('tools.sql.help.buttons.formatDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.buttons.minify') }}:</strong> {{ $t('tools.sql.help.buttons.minifyDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.buttons.escape') }}:</strong> {{ $t('tools.sql.help.buttons.escapeDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.buttons.import') }}:</strong> {{ $t('tools.sql.help.buttons.importDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.buttons.download') }}:</strong> {{ $t('tools.sql.help.buttons.downloadDesc') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">智能处理:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.sql.help.smart.title') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">选中文本优先:</strong> 有选中文本时仅处理选中部分。</li>
-                    <li><strong class="font-semibold">多段SQL压缩:</strong> 自动识别多个SQL语句，各自压缩。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.smart.selection') }}:</strong> {{ $t('tools.sql.help.smart.selectionDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.sql.help.smart.multiSql') }}:</strong> {{ $t('tools.sql.help.smart.multiSqlDesc') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">导入文件</button>
-            <button @click="downloadFile" :disabled="!sqlText.trim()" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">下载SQL</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('tools.sql.importFile') }}</button>
+            <button @click="downloadFile" :disabled="!sqlText.trim()" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">{{ $t('tools.sql.downloadSql') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.clear') }}</button>
             <ThemeToggleButton />
           </div>
         </div>
@@ -60,7 +60,7 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
           <label class="flex items-center space-x-2">
-            <span class="text-sm">数据库:</span>
+            <span class="text-sm">{{ $t('tools.sql.database') }}:</span>
             <select v-model="sqlDialect" class="text-sm px-2 py-1 border border-border rounded bg-background">
               <option value="mysql">MySQL</option>
               <option value="postgresql">PostgreSQL</option>
@@ -75,18 +75,18 @@
             </select>
           </label>
           <label class="flex items-center space-x-2">
-            <span class="text-sm">缩进:</span>
+            <span class="text-sm">{{ $t('tools.sql.indent') }}:</span>
             <select v-model="indentSize" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option :value="2">2空格</option>
-              <option :value="3">3空格</option>
-              <option :value="4">4空格</option>
+              <option :value="2">{{ $t('tools.sql.indent2') }}</option>
+              <option :value="3">{{ $t('tools.sql.indent3') }}</option>
+              <option :value="4">{{ $t('tools.sql.indent4') }}</option>
             </select>
           </label>
         </div>
         <div class="flex items-center space-x-4">
           <label class="flex items-center space-x-2" title="自动换行">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">自动换行</span>
+            <span class="text-sm">{{ $t('tools.sql.wordWrap') }}</span>
           </label>
         </div>
       </div>
@@ -98,14 +98,14 @@
         <!-- SQL编辑器面板 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden flex-1">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">SQL 编辑器</h3>
+            <h3 class="text-sm font-medium">{{ $t('tools.sql.editor') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
-              <button @click="formatSQL" class="text-xs px-2 py-1 btn-primary rounded">格式化</button>
-              <button @click="minifySQL" class="text-xs px-2 py-1 btn-secondary rounded">压缩</button>
-              <button @click="escapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">转义</button>
-              <button @click="unescapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">去转义</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
+              <button @click="formatSQL" class="text-xs px-2 py-1 btn-primary rounded">{{ $t('tools.sql.format') }}</button>
+              <button @click="minifySQL" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.sql.minify') }}</button>
+              <button @click="escapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.sql.escape') }}</button>
+              <button @click="unescapeSQL" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.sql.unescape') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">

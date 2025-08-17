@@ -273,7 +273,46 @@ export default {
       decodeComponent: 'decodeURIComponent',
       decodeUri: 'decodeURI',
       input: 'Input URL',
-      output: 'Output Result'
+      output: 'Output Result',
+      intro: {
+        title: 'URL Encoder/Decoder Guide',
+        description: 'Professional URL encoding and decoding tool supporting multiple encoding modes and automatic processing.',
+        modes: {
+          title: 'Encoding Modes',
+          encode: 'Encode (Encoding)',
+          component: 'Component: Encode URL parameters and query strings, suitable for form data.',
+          uri: 'URI: Encode complete URLs while preserving URL structure characters.',
+          decode: 'Decode (Decoding)',
+          componentDecode: 'Component: Decode URL-encoded parameters back to original text.',
+          uriDecode: 'URI: Decode complete URLs back to readable format.'
+        },
+        example: {
+          title: 'Example (Component Mode)',
+          input: 'Input',
+          inputExample: 'Hello World! 你好世界',
+          output: 'Output',
+          outputExample: 'Hello%20World%21%20%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C'
+        }
+      },
+      actions: {
+        clear: 'Clear',
+        encode: 'Encode',
+        decode: 'Decode'
+      },
+      options: {
+        mode: 'Mode',
+        autoProcess: 'Auto Process',
+        autoWrap: 'Auto Wrap'
+      },
+      sections: {
+        input: 'Input',
+        result: 'Result'
+      },
+      buttons: {
+        paste: 'Paste',
+        copy: 'Copy',
+        useAsInput: 'Use as Input'
+      }
     },
 
     // Timestamp Converter
@@ -295,6 +334,44 @@ export default {
       milliseconds: 'Milliseconds',
       seconds: 'Seconds',
       intelligent: 'Smart Recognition',
+      intro: {
+        title: 'Smart Timestamp Converter Tool Guide',
+        inputSupport: {
+          title: 'Input Support',
+          timestamp: 'Unix Timestamp: Supports both second and millisecond precision.',
+          dateString: 'Date String: Standard date formats like YYYY-MM-DD, MM/DD/YYYY, etc.',
+          naturalLanguage: 'Natural Language: "now", "today", "yesterday", "1 hour ago", etc.',
+          iso: 'ISO 8601: International standard format with timezone information.'
+        },
+        outputFormats: {
+          title: 'Output Formats',
+          local: 'Local Time (UTC+8): Time in your current timezone.',
+          localDate: 'Local Date: Date portion only.',
+          timestampSec: 'Timestamp (seconds): Unix timestamp in seconds.',
+          timestampMs: 'Timestamp (milliseconds): Unix timestamp in milliseconds.',
+          utcIso: 'UTC Time (ISO 8601): International standard UTC format.',
+          relative: 'Relative Time: Human-readable relative time description.'
+        },
+        buttons: {
+          title: 'Button Guide',
+          pasteAndParse: 'Paste and Parse: Paste from clipboard and automatically parse the time format.',
+          setCurrent: 'Set Current Time: Use the current system time as input for conversion.'
+        }
+      },
+      actions: {
+        pasteAndParse: 'Paste and Parse',
+        setCurrent: 'Set Current Time'
+      },
+      placeholder: 'Enter timestamp, date string or natural language...',
+      result: {
+        title: 'Conversion Result',
+        localTime: 'Local Time (UTC+8)',
+        localDate: 'Local Date',
+        timestampSec: 'Timestamp (seconds)',
+        timestampMs: 'Timestamp (milliseconds)',
+        utcTime: 'UTC Time (ISO 8601)',
+        relativeTime: 'Relative Time'
+      },
       formats: {
         local: 'Local Time',
         utc: 'UTC Time',
@@ -355,11 +432,10 @@ export default {
     // Text Analyzer
     textAnalyzer: {
       name: 'Text Analyzer',
-      description: 'Count characters, lines and other text statistics',
+      description: 'Analyze text statistics and information',
       input: 'Input Text',
-      stats: 'Statistics',
       characters: 'Characters',
-      charactersNoSpaces: 'Characters (no spaces)',
+      charactersNoSpaces: 'Characters (No Spaces)',
       words: 'Words',
       wordsZh: 'Chinese Words',
       lines: 'Lines',
@@ -368,6 +444,28 @@ export default {
       readingTime: 'Reading Time',
       minute: 'minute',
       seconds: 'seconds',
+      intro: {
+        title: 'Text Statistics Tool Guide',
+        description: 'Comprehensive text analysis tool that provides detailed statistics on characters, words, and document structure.',
+        features: {
+          title: 'Feature Description',
+          realtime: 'Real-time Analysis: Statistics update automatically as you type.',
+          comprehensive: 'Comprehensive Metrics: Character count, word count, line count, paragraph count and more.',
+          multilingual: 'Multi-language Support: Accurate analysis for both English and Chinese text.',
+          readingTime: 'Reading Time Estimation: Calculate estimated reading time based on average reading speed.'
+        }
+      },
+      actions: {
+        paste: 'Paste',
+        clear: 'Clear'
+      },
+      stats: {
+        charactersWithSpaces: 'Characters (with spaces)',
+        charactersNoSpaces: 'Characters (no spaces)',
+        words: 'Words',
+        lines: 'Lines',
+        paragraphs: 'Paragraphs'
+      },
       help: {
         title: 'Text Analyzer Guide',
         description: 'Comprehensive text statistics analysis tool that provides detailed character, word, and structure information.',
@@ -431,6 +529,54 @@ export default {
       uppercase: 'Uppercase',
       lowercase: 'Lowercase',
       preserve: 'Preserve',
+      intro: {
+        title: 'SQL Formatter Tool Guide',
+        description: 'Professional SQL statement formatting tool that supports multiple database dialects and provides intelligent formatting capabilities.',
+        features: {
+          title: 'Core Features',
+          multiDatabase: 'Multi-Database Support: Compatible with MySQL, PostgreSQL, SQLite, SQL Server and other mainstream databases.',
+          smartFormatting: 'Smart Formatting: Automatic indentation, line breaks, and keyword alignment for better readability.',
+          customOptions: 'Custom Options: Adjustable indent size, keyword case, and formatting style to meet different coding standards.',
+          syntaxHighlight: 'Syntax Highlighting: Clear visual distinction of keywords, strings, comments and other SQL elements.'
+        },
+        buttons: {
+          title: 'Button Guide',
+          clear: 'Clear: Clear all input content.',
+          paste: 'Paste: Paste content from clipboard.',
+          copy: 'Copy: Copy formatted result to clipboard.',
+          format: 'Format: Beautify and organize SQL statements.',
+          compress: 'Compress: Remove unnecessary whitespace and line breaks.',
+          escape: 'Escape: Escape special characters in SQL strings.',
+          unescape: 'Unescape: Remove escape characters from SQL strings.'
+        },
+        smartProcessing: {
+          title: 'Smart Processing',
+          autoDetect: 'Automatic detection of SQL dialect and intelligent formatting.',
+          preserveComments: 'Preserve comments and maintain original semantic structure.',
+          errorHandling: 'Robust error handling for malformed SQL statements.'
+        }
+      },
+      actions: {
+        clear: 'Clear',
+        paste: 'Paste',
+        copy: 'Copy',
+        format: 'Format',
+        compress: 'Compress',
+        escape: 'Escape',
+        unescape: 'Unescape'
+      },
+      options: {
+        database: 'Database',
+        indent: 'Indent',
+        spaces2: '2 Spaces',
+        spaces3: '3 Spaces',
+        spaces4: '4 Spaces',
+        autoWrap: 'Auto Wrap'
+      },
+      editor: {
+        title: 'SQL Editor',
+        placeholder: 'Enter your SQL statement here...'
+      },
       help: {
         title: 'SQL Formatter Guide',
         description: 'Professional SQL statement formatting tool that supports multiple database dialects and customizable formatting options.',
