@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-background">
     <!-- 顶部导航栏 -->
     <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="container mx-auto px-4 py-4">
+      <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
@@ -14,7 +14,7 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                :placeholder="$t('home.searchPlaceholder')"
+                :placeholder="$t('common.placeholders.searchTools')"
                 class="w-64 px-4 py-2 pl-10 bg-secondary rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <svg class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +98,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { modules, searchModules } from '../utils/modules'
 import type { ToolModule } from '../types'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
@@ -108,7 +107,6 @@ import { FileText, Clock, Link, Binary, Braces, Key, TextCursor, Hash, Database,
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils'
 
 const router = useRouter()
-const { t } = useI18n()
 
 const searchQuery = ref('')
 const recentTools = ref<ToolModule[]>([])
@@ -117,7 +115,7 @@ const filteredModules = computed(() => {
   if (!searchQuery.value.trim()) {
     return modules
   }
-  return searchModules(searchQuery.value, t)
+  return searchModules(searchQuery.value)
 })
 
 const navigateToTool = async (tool: ToolModule) => {

@@ -15,34 +15,20 @@
               <h1 class="text-xl font-semibold">{{ $t('tools.base64.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.base64.help.title') }}</p>
-                  <p class="mb-1">{{ $t('tools.base64.help.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.base64.help.features.encoding') }}</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">{{ $t('ui.labels.encode') }}:</strong> {{ $t('tools.base64.help.features.encoding') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.labels.decode') }}:</strong> {{ $t('tools.base64.help.features.decoding') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.labels.urlSafe') }}:</strong> {{ $t('tools.base64.help.features.urlSafe') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.labels.autoProcess') }}:</strong> {{ $t('tools.base64.help.features.utf8') }}</li>
-                  </ul>
-                  <p class="font-bold mb-1">{{ $t('app.help') }}:</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">{{ $t('ui.buttons.importFile') }}:</strong> {{ $t('tools.base64.help.features.encoding') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.buttons.downloadResult') }}:</strong> {{ $t('tools.base64.help.features.decoding') }}</li>
-                    <li><strong class="font-semibold">{{ $t('app.clear') }}:</strong> {{ $t('ui.buttons.clearAll') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.buttons.useAsInput') }}:</strong> {{ $t('tools.base64.help.features.urlSafe') }}</li>
-                  </ul>
+                <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                  <p class="font-bold mb-2">{{ $t('tools.base64.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.base64.description') }}</p>
                   <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('ui.labels.input') }}: <span class="text-red-400">Hello 世界!</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('ui.titles.conversionResult') }}: <span class="text-green-400">SGVsbG8g5L2g5aW9IQ==</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.input') }}: <span class="text-red-400">Hello 世界!</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: <span class="text-green-400">SGVsbG8g5L2g5aW9IQ==</span></p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('ui.buttons.importFile') }}</button>
-            <button @click="downloadFile" :disabled="!outputText" class="px-3 py-1.5 text-sm rounded-md btn-secondary disabled:opacity-50">{{ $t('ui.buttons.downloadResult') }}</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('app.clear') }}</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('common.buttons.importFile') }}</button>
+            <button @click="downloadFile" :disabled="!outputText" class="px-3 py-1.5 text-sm rounded-md btn-secondary disabled:opacity-50">{{ $t('common.buttons.downloadResult') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('common.clear') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -54,21 +40,21 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('ui.labels.encode') }}</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('ui.labels.decode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('common.labels.encode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('common.labels.decode') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
           <label class="flex items-center space-x-2" :title="$t('tools.base64.help.features.urlSafe')">
             <input type="checkbox" v-model="urlSafe" class="rounded">
-            <span class="text-sm">{{ $t('ui.labels.urlSafe') }}</span>
+            <span class="text-sm">{{ $t('common.labels.urlSafe') }}</span>
           </label>
           <label class="flex items-center space-x-2">
             <input type="checkbox" v-model="autoProcess" class="rounded">
-            <span class="text-sm">{{ $t('ui.labels.autoProcess') }}</span>
+            <span class="text-sm">{{ $t('common.labels.autoProcess') }}</span>
           </label>
-          <label class="flex items-center space-x-2" :title="$t('ui.labels.autoWrap')">
+          <label class="flex items-center space-x-2" :title="$t('common.labels.autoWrap')">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">{{ $t('ui.labels.autoWrap') }}</span>
+            <span class="text-sm">{{ $t('common.labels.autoWrap') }}</span>
           </label>
         </div>
       </div>
@@ -80,10 +66,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.paste') }}</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -94,10 +80,10 @@
         <!-- 输出编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('ui.labels.result') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.result') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="copyOutput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
-              <button @click="useAsInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('ui.buttons.useAsInput') }}</button>
+              <button @click="copyOutput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.copy') }}</button>
+              <button @click="useAsInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.buttons.useAsInput') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">

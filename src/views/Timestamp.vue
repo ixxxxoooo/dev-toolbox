@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -16,28 +16,22 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">智能时间戳转换工具说明</p>
-                  <p class="mb-1">一个智能的时间转换工具，支持多种输入格式并实时显示多种输出结果。</p>
+                  <p class="font-bold mb-2">{{ $t('tools.timestamp.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.timestamp.description') }}</p>
                   <p class="font-bold mb-1">输入支持:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">时间戳:</strong> 10位 (秒) 或 13位 (毫秒) 纯数字，自动识别。</li>
-                    <li><strong class="font-semibold">日期字符串:</strong> 如 "2025-08-01 23:56:17"。</li>
-                    <li><strong class="font-semibold">ISO 8601:</strong> 如 "2025-08-01T15:56:17Z"。</li>
-                    <li><strong class="font-semibold">自然语言日期:</strong> 如 "August 1, 2025 11:56 PM" (英文)。</li>
+                    <li><strong>时间戳:</strong> 10位秒或13位毫秒</li>
+                    <li><strong>日期字符串:</strong> 2023-01-01, YYYYMMDD</li>
+                    <li><strong>ISO 8601:</strong> 2023-01-01T00:00:00Z</li>
+                    <li><strong>自然语言:</strong> 今天, 明天等</li>
                   </ul>
                   <p class="font-bold mb-1">输出格式:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li>本地时间 (UTC+8), 本地日期, 时间戳 (秒/毫秒), UTC时间 (ISO 8601), RFC 2822, 相对时间。</li>
+                    <li>本地时间、UTC时间、相对时间等</li>
                   </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">粘贴并解析:</strong> 从剪贴板粘贴内容并自动解析。</li>
-                    <li><strong class="font-semibold">设为当前时间:</strong> 将输入框设置为当前时间并解析。</li>
-                    <li><strong class="font-semibold">复制:</strong> 复制对应行的结果到剪贴板。</li>
-                  </ul>
-                  <p class="mt-2"><strong class="text-primary">示例:</strong></p>
+                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
                   <p class="text-xs font-mono bg-muted p-1 rounded">输入: <span class="text-red-400">1754063777432</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输出 (本地时间): <span class="text-green-400">2025-08-01 23:56:17</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">输出: <span class="text-green-400">2025-08-01 23:56:17</span></p>
                 </div>
               </div>
             </div>
@@ -60,21 +54,21 @@
             type="text"
             v-model="userInput"
             @input="parseInput"
-            :placeholder="$t('tools.timestamp.placeholder')"
+            :placeholder="$t('common.placeholders.enterTimestamp')"
             class="w-full text-center text-xl font-mono p-4 pr-10 bg-transparent border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
             :class="isValid ? 'border-primary focus:ring-primary/50' : 'border-destructive focus:ring-destructive/50'"
           />
           <span v-if="isValid" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
           <span v-else-if="userInput" class="absolute right-3 top-1/2 -translate-y-1/2 text-destructive">✗</span>
         </div>
-        <div v-if="!isValid && userInput" class="text-center text-destructive text-sm mt-2">{{ errorMessage }}</div>
+        <div v-if="!isValid && userInput" class="text-center text-destructive text-sm mt-2">{{ $t('errors.invalidTimestamp') }}</div>
         <div v-if="isValid" class="mt-8 space-y-3">
           <h2 class="text-lg font-semibold text-center mb-4">{{ $t('tools.timestamp.result.title') }}</h2>
-          <div v-for="(item, index) in outputFormats" :key="item.label" class="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
+          <div v-for="(item, index) in outputFormats" :key="item.labelKey" class="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
             <span class="text-sm text-muted-foreground">{{ $t(item.labelKey) }}</span>
             <div class="flex items-center space-x-3">
               <span class="font-mono text-foreground">{{ item.value }}</span>
-              <button @click="copyToClipboard(item.value)" :title="`${$t('ui.copy')} (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
+              <button @click="copyToClipboard(item.value)" :title="`${$t('common.copy')} (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
             </div>
           </div>
         </div>
@@ -85,6 +79,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -93,6 +88,9 @@ import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
+
+// 获取 i18n 实例
+const { t: $t } = useI18n();
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
@@ -111,11 +109,11 @@ const outputFormats = computed(() => {
   return [
     { labelKey: 'tools.timestamp.result.localTime', value: d.format('YYYY-MM-DD HH:mm:ss') },
     { labelKey: 'tools.timestamp.result.localDate', value: d.format('YYYY-MM-DD') },
-    { labelKey: 'tools.timestamp.result.timestamp', value: d.unix() },
+    { labelKey: 'tools.timestamp.result.timestampSec', value: d.unix() },
     { labelKey: 'tools.timestamp.result.timestampMs', value: d.valueOf() },
     { labelKey: 'tools.timestamp.result.utcTime', value: d.toISOString() },
     { labelKey: 'tools.timestamp.result.rfc2822', value: d.format('ddd, DD MMM YYYY HH:mm:ss ZZ') },
-    { labelKey: 'tools.timestamp.result.relative', value: d.fromNow() },
+    { labelKey: 'tools.timestamp.result.relativeTime', value: d.fromNow() },
   ];
 });
 
@@ -158,7 +156,7 @@ const parseInput = () => {
     errorMessage.value = '';
   } else {
     parsedDate.value = null;
-    errorMessage.value = '无法识别的日期格式';
+    errorMessage.value = $t('errors.invalidTimestamp');
   }
 };
 
@@ -172,7 +170,7 @@ const pasteAndParse = async () => {
     userInput.value = await navigator.clipboard.readText();
     parseInput();
   } catch (e) {
-    errorMessage.value = '无法读取剪贴板';
+    errorMessage.value = $t('common.messages.cannotReadClipboard');
   }
 };
 

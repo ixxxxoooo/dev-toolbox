@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.back')">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -15,31 +15,20 @@
               <h1 class="text-xl font-semibold">{{ $t('tools.diff.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.diff.help.title') }}</p>
-                  <p class="mb-1">{{ $t('tools.diff.help.description') }}</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.help.features.sideBySide') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.help.features.inline') }}</li>
-                  </ul>
-                  <p class="font-bold mb-1">{{ $t('tools.diff.help.coreFeatures') }}:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.help.features.ignoreWhitespace') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.diff.showLineNumbers') }}:</strong> {{ $t('tools.diff.help.features.lineNumbers') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.diff.theme') }}:</strong> {{ $t('tools.diff.help.features.theme') }}</li>
-                  </ul>
-                  <p class="font-bold mb-1">{{ $t('tools.diff.help.buttons.title') }}:</p>
+                <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                  <p class="font-bold mb-2">{{ $t('tools.diff.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.diff.description') }}</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">{{ $t('tools.diff.previousDiff') }}/{{ $t('tools.diff.nextDiff') }}:</strong> {{ $t('tools.diff.help.buttons.navigation') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.diff.swapContent') }}:</strong> {{ $t('tools.diff.help.buttons.swap') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.diff.clearAll') }}:</strong> {{ $t('tools.diff.help.buttons.clear') }}</li>
-                    <li><strong class="font-semibold">{{ $t('ui.buttons.paste') }}/{{ $t('ui.buttons.copy') }}:</strong> {{ $t('tools.diff.help.buttons.clipboard') }}</li>
+                    <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
+                    <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
+                    <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -135,6 +124,7 @@ import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';

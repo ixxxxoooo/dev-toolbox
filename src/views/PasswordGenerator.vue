@@ -16,23 +16,24 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.password.help.title') }}</p>
-                  <p class="mb-2">{{ $t('tools.password.help.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.password.help.coreFeatures') }}:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.password.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.password.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.password.passwordType') }}:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong>{{ $t('tools.password.types.strong') }}:</strong> {{ $t('tools.password.help.features.strong') }}</li>
-                    <li><strong>{{ $t('tools.password.types.readable') }}:</strong> {{ $t('tools.password.help.features.readable') }}</li>
-                    <li><strong>{{ $t('tools.password.types.pin') }}:</strong> {{ $t('tools.password.help.features.pin') }}</li>
-                    <li><strong>{{ $t('tools.password.types.memorable') }}:</strong> {{ $t('tools.password.help.features.memorable') }}</li>
+                    <li><strong>{{ $t('tools.password.types.strong') }}:</strong> {{ $t('tools.password.types.strongDesc') }}</li>
+                    <li><strong>{{ $t('tools.password.types.readable') }}:</strong> {{ $t('tools.password.types.readableDesc') }}</li>
+                    <li><strong>{{ $t('tools.password.types.pin') }}:</strong> {{ $t('tools.password.types.pinDesc') }}</li>
+                    <li><strong>{{ $t('tools.password.types.memorable') }}:</strong> {{ $t('tools.password.types.memorableDesc') }}</li>
                   </ul>
-                  <p class="text-xs text-muted-foreground">{{ $t('tools.password.help.recommendation') }}</p>
+                  <p class="text-xs text-muted-foreground">{{ $t('tools.password.securityAdvice') }}</p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="generatePassword" class="px-3 py-1.5 text-sm rounded-md btn-primary">{{ $t('tools.password.generate') }}</button>
-            <button @click="clearPasswords" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('app.clear') }}</button>
+            <button @click="generatePassword" class="px-3 py-1.5 text-sm rounded-md btn-primary">{{ $t('common.generate') }}</button>
+            <button @click="clearPasswords" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('common.clear') }}</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -118,7 +119,7 @@
             <div class="space-y-2">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" v-model="memorableOptions.includeNumbers" @change="generatePassword" class="form-checkbox text-primary" />
-                <span class="text-sm">{{ $t('tools.password.includeNumbers') }}</span>
+                <span class="text-sm">{{ $t('tools.password.numbers') }}</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" v-model="memorableOptions.capitalizeWords" @change="generatePassword" class="form-checkbox text-primary" />
@@ -146,7 +147,7 @@
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-sm font-semibold">{{ $t('tools.password.generatedPasswords') }}</h3>
               <div class="flex items-center space-x-2">
-                <button @click="generatePassword" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('tools.password.regenerate') }}</button>
+                <button @click="generatePassword" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.buttons.regenerate') }}</button>
               </div>
             </div>
             <div class="space-y-3">
@@ -182,7 +183,7 @@
               </div>
               <div class="space-y-2 text-xs text-muted-foreground">
                 <div>{{ $t('tools.password.entropy') }}: {{ Math.round(calculateEntropy()) }} bits</div>
-                <div>{{ $t('tools.password.crackTime') }}: {{ getEstimatedCrackTime() }}</div>
+                <div>{{ $t('tools.password.crackTimeDesc') }}: {{ getEstimatedCrackTime() }}</div>
                 <div>{{ $t('tools.password.charsetSize') }}: {{ getCharsetSize() }}</div>
               </div>
             </div>
@@ -209,6 +210,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 import { useI18n } from 'vue-i18n';

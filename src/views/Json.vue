@@ -16,34 +16,26 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.json.help.title') }}</p>
-                  <p class="mb-1">{{ $t('tools.json.help.description') }}</p>
+                  <p class="font-bold mb-2">{{ $t('tools.json.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.json.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.json.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.editor') }}:</strong> {{ $t('tools.json.help.features.editorDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.treeView') }}:</strong> {{ $t('tools.json.help.features.treeViewDesc') }}</li>
+                    <li><strong>{{ $t('common.labels.format') }}:</strong> {{ $t('tools.json.formatDescription') }}</li>
+                    <li><strong>{{ $t('common.labels.minify') }}:</strong> {{ $t('tools.json.minifyDescription') }}</li>
+                    <li><strong>{{ $t('common.labels.convert') }}:</strong> {{ $t('tools.json.convertDescription') }}</li>
+                    <li><strong>{{ $t('common.labels.treeView') }}:</strong> {{ $t('tools.json.treeViewDescription') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">{{ $t('tools.json.help.coreFeatures') }}:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.format') }}:</strong> {{ $t('tools.json.help.features.formatDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.minify') }}:</strong> {{ $t('tools.json.help.features.minifyDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.convert') }}:</strong> {{ $t('tools.json.help.features.convertDesc') }}</li>
-                  </ul>
-                  <p class="font-bold mb-1">{{ $t('tools.json.help.buttons.title') }}:</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.importFile') }}:</strong> {{ $t('tools.json.help.buttons.importFileDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.downloadJson') }}:</strong> {{ $t('tools.json.help.buttons.downloadJsonDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.clear') }}:</strong> {{ $t('tools.json.help.buttons.clearDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.toggleTreeView') }}:</strong> {{ $t('tools.json.help.buttons.toggleTreeViewDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.autoProcess') }}:</strong> {{ $t('tools.json.help.buttons.autoProcessDesc') }}</li>
-                  </ul>
+                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.input') }}: {"hello":"world"}</p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: {\n  "hello": "world"\n}</p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('ui.buttons.importFile') }}</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('common.buttons.importFile') }}</button>
             <button @click="downloadFile" :disabled="!isValidJson" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">{{ $t('tools.json.downloadJson') }}</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.buttons.clearAll') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.buttons.clearAll') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -55,25 +47,25 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="format" class="rounded"><span class="text-sm">{{ $t('tools.json.format') }}</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="minify" class="rounded"><span class="text-sm">{{ $t('tools.json.minify') }}</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="convert" class="rounded"><span class="text-sm">{{ $t('tools.json.convert') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="format" class="rounded"><span class="text-sm">{{ $t('common.labels.format') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="minify" class="rounded"><span class="text-sm">{{ $t('common.labels.minify') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="convert" class="rounded"><span class="text-sm">{{ $t('common.labels.convert') }}</span></label>
           <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="escape" class="rounded"><span class="text-sm">{{ $t('tools.json.escape') }}</span></label>
           <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="unescape" class="rounded"><span class="text-sm">{{ $t('tools.json.unescape') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ showTreeView ? $t('ui.buttons.hideTreeView') : $t('ui.buttons.showTreeView') }}{{ $t('tools.json.treeView') }}</button>
-          <label class="flex items-center space-x-2" :title="$t('ui.labels.autoWrap')">
+          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ showTreeView ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</button>
+          <label class="flex items-center space-x-2" :title="$t('common.labels.autoWrap')">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">{{ $t('ui.labels.autoWrap') }}</span>
+            <span class="text-sm">{{ $t('common.labels.autoWrap') }}</span>
           </label>
-          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('ui.labels.indent') }}:</span>
+          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('common.labels.indent') }}:</span>
             <select v-model="indentSize" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option :value="2">{{ $t('ui.labels.spaces2') }}</option>
-              <option :value="4">{{ $t('ui.labels.spaces4') }}</option>
+              <option :value="2">{{ $t('common.labels.spaces2') }}</option>
+              <option :value="4">{{ $t('common.labels.spaces4') }}</option>
             </select>
           </label>
-          <label class="flex items-center space-x-2"><input type="checkbox" v-model="autoProcess" class="rounded"><span class="text-sm">{{ $t('ui.labels.autoProcess') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="checkbox" v-model="autoProcess" class="rounded"><span class="text-sm">{{ $t('common.labels.autoProcess') }}</span></label>
         </div>
       </div>
       <div v-if="operation === 'convert'" class="mt-4 pt-4 border-t border-border flex items-center space-x-4">
@@ -98,10 +90,10 @@
       <div class="grid gap-4 flex-1" :class="showTreeView ? 'grid-cols-3' : 'grid-cols-2'">
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.paste') }}</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.copy') }}</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -110,17 +102,17 @@
         </div>
         <div v-if="showTreeView" class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('tools.json.treeView') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.treeView') }}</h3>
           </div>
           <div class="flex-1 relative overflow-auto">
             <JsonTreeView v-if="isValidJson && parsedJson" :data="parsedJson" />
-            <div v-else class="p-4 text-sm text-muted-foreground">{{ $t('tools.json.invalidJsonTreeView') }}</div>
+            <div v-else class="p-4 text-sm text-muted-foreground">{{ $t('common.messages.invalidJson') }}</div>
           </div>
         </div>
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('ui.labels.result') }}</h3>
-            <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.copy') }}</button>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.result') }}</h3>
+            <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
           </div>
           <div class="flex-1 relative">
             <div ref="outputEditorRef" class="absolute inset-0"></div>

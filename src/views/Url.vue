@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -16,22 +16,26 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">URL 编解码说明</p>
-                  <p><strong class="text-primary">Encode (编码):</strong> 将特殊字符转换为%xx格式。</p>
-                  <ul class="list-disc list-inside my-1 text-xs">
-                    <li><strong class="font-semibold">Component:</strong> 用于编码URL的组成部分 (如查询参数)，它会编码所有保留字符。</li>
-                    <li><strong class="font-semibold">URI:</strong> 用于编码完整的URL，它不会编码协议、主机等部分。</li>
+                  <p class="font-bold mb-2">{{ $t('tools.url.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.url.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.url.encodeMode') }}:</p>
+                  <ul class="list-disc list-inside text-xs mb-2">
+                    <li><strong>Component:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
+                    <li><strong>URI:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
                   </ul>
-                  <p><strong class="text-primary">Decode (解码):</strong> 将%xx格式还原为原始字符。</p>
-                  <p class="mt-2"><strong class="text-primary">示例 (Component模式):</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输入: <span class="text-red-400">name=你好</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输出: <span class="text-green-400">name%3D%E4%BD%A0%E5%A5%BD</span></p>
+                  <p class="font-bold mb-1">{{ $t('tools.url.decodeMode') }}:</p>
+                  <ul class="list-disc list-inside text-xs mb-2">
+                    <li>{{ $t('tools.url.decodeModeDescription') }}</li>
+                  </ul>
+                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.input') }}: <span class="text-red-400">name=你好</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: <span class="text-green-400">name%3D%E4%BD%A0%E5%A5%BD</span></p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.clear') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.clear') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -43,11 +47,11 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('tools.url.options.encode') }}</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('tools.url.options.decode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('common.labels.encode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('common.labels.decode') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('tools.url.options.mode') }}:</span>
+          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('common.labels.mode') }}:</span>
             <select v-model="mode" class="text-sm px-2 py-1 border border-border rounded bg-background">
               <option v-if="operation === 'encode'" value="encodeURIComponent">Component</option>
               <option v-if="operation === 'encode'" value="encodeURI">URI</option>
@@ -57,11 +61,11 @@
           </label>
           <label class="flex items-center space-x-2">
             <input type="checkbox" v-model="autoProcess" class="rounded">
-            <span class="text-sm">{{ $t('tools.url.options.autoProcess') }}</span>
+            <span class="text-sm">{{ $t('common.labels.autoProcess') }}</span>
           </label>
-          <label class="flex items-center space-x-2" title="自动换行">
+          <label class="flex items-center space-x-2" :title="$t('common.labels.autoWrap')">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">{{ $t('tools.url.options.wordWrap') }}</span>
+            <span class="text-sm">{{ $t('common.labels.autoWrap') }}</span>
           </label>
         </div>
       </div>
@@ -73,10 +77,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('tools.url.sections.input') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.paste') }}</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -87,10 +91,10 @@
         <!-- 输出编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('tools.url.sections.result') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.result') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('ui.copy') }}</button>
-              <button @click="useAsInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.url.buttons.useAsInput') }}</button>
+              <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
+              <button @click="useAsInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.buttons.useAsInput') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">

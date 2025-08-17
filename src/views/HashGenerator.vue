@@ -16,22 +16,26 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.hash.help.title') }}</p>
-                  <p class="mb-1">{{ $t('tools.hash.help.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.hash.help.coreFeatures') }}:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.hash.name') }}</p>
+                  <p class="mb-2">{{ $t('tools.hash.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.hash.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">MD5:</strong> {{ $t('tools.hash.help.features.md5') }}</li>
-                    <li><strong class="font-semibold">SHA-1:</strong> {{ $t('tools.hash.help.features.sha1') }}</li>
-                    <li><strong class="font-semibold">SHA-256:</strong> {{ $t('tools.hash.help.features.sha256') }}</li>
-                    <li><strong class="font-semibold">SHA-512:</strong> {{ $t('tools.hash.help.features.sha512') }}</li>
+                    <li><strong>MD5:</strong> {{ $t('tools.hash.md5Description') }}</li>
+                    <li><strong>SHA-1:</strong> {{ $t('tools.hash.sha1Description') }}</li>
+                    <li><strong>SHA-256:</strong> {{ $t('tools.hash.sha256Description') }}</li>
+                    <li><strong>SHA-512:</strong> {{ $t('tools.hash.sha512Description') }}</li>
                   </ul>
+                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.input') }}: Hello World!</p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: ed076287532e86365e841e92bfc50d8c</p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('app.paste') }}</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('app.clear') }}</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('common.paste') }}</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('common.clear') }}</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -44,10 +48,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
+            <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.paste') }}</button>
-              <button @click="clearInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.clear') }}</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.paste') }}</button>
+              <button @click="clearInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.clear') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -64,7 +68,7 @@
             <div v-for="hashType in hashTypes" :key="hashType.key" class="bg-card border border-border rounded-md p-3">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-semibold">{{ hashType.label }}</span>
-                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
+                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('common.copy') }}</button>
               </div>
               <div class="font-mono text-sm break-all text-muted-foreground">{{ hashes[hashType.key as HashKey] || '-' }}</div>
             </div>
@@ -80,6 +84,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';

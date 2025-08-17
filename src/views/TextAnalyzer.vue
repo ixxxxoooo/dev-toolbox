@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -16,23 +16,24 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.textAnalyzer.help.title') }}</p>
-                  <p class="mb-1">{{ $t('tools.textAnalyzer.help.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.textAnalyzer.help.features.title') }}:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.textAnalyzer.name') }}</p>
+                  <p class="mb-1">{{ $t('tools.textAnalyzer.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.textAnalyzer.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.charsWithSpaces') }}:</strong> {{ $t('tools.textAnalyzer.help.features.charsWithSpacesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.charsWithoutSpaces') }}:</strong> {{ $t('tools.textAnalyzer.help.features.charsWithoutSpacesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.words') }}:</strong> {{ $t('tools.textAnalyzer.help.features.wordsDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.lines') }}:</strong> {{ $t('tools.textAnalyzer.help.features.linesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.help.features.paragraphs') }}:</strong> {{ $t('tools.textAnalyzer.help.features.paragraphsDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithSpacesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithoutSpacesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.words') }}:</strong> {{ $t('tools.textAnalyzer.stats.wordsDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.lines') }}:</strong> {{ $t('tools.textAnalyzer.stats.linesDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.paragraphs') }}:</strong> {{ $t('tools.textAnalyzer.stats.paragraphsDesc') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('ui.paste') }}</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.clear') }}</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('common.paste') }}</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.clear') }}</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -79,6 +80,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
