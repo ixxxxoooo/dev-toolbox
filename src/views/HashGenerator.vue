@@ -6,32 +6,32 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">哈希生成器</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.hash.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">哈希生成器说明</p>
-                  <p class="mb-1">用于生成文本的各种哈希值，如MD5、SHA-1、SHA-256等。</p>
-                  <p class="font-bold mb-1">功能说明:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.hash.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.hash.help.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.hash.help.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">MD5:</strong> 广泛使用的哈希算法，生成128位哈希值。</li>
-                    <li><strong class="font-semibold">SHA-1:</strong> 160位哈希算法，安全性低于SHA-256。</li>
-                    <li><strong class="font-semibold">SHA-256:</strong> 256位哈希算法，安全性较高。</li>
-                    <li><strong class="font-semibold">SHA-512:</strong> 512位哈希算法，安全性最高。</li>
+                    <li><strong class="font-semibold">MD5:</strong> {{ $t('tools.hash.help.features.md5') }}</li>
+                    <li><strong class="font-semibold">SHA-1:</strong> {{ $t('tools.hash.help.features.sha1') }}</li>
+                    <li><strong class="font-semibold">SHA-256:</strong> {{ $t('tools.hash.help.features.sha256') }}</li>
+                    <li><strong class="font-semibold">SHA-512:</strong> {{ $t('tools.hash.help.features.sha512') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm rounded-md btn-secondary">粘贴</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm rounded-md btn-destructive">清空</button>
+            <button @click="pasteInput" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('app.paste') }}</button>
+            <button @click="clearInput" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('app.clear') }}</button>
             <ThemeToggleButton />
           </div>
         </div>
@@ -44,10 +44,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">输入文本</h3>
+            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">粘贴</button>
-              <button @click="clearInput" class="text-xs px-2 py-1 rounded btn-secondary">清空</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.paste') }}</button>
+              <button @click="clearInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.clear') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -58,13 +58,13 @@
         <!-- 哈希结果 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">哈希结果</h3>
+            <h3 class="text-sm font-medium">{{ $t('tools.hash.result') }}</h3>
           </div>
           <div class="flex-1 p-4 space-y-4 overflow-y-auto">
             <div v-for="hashType in hashTypes" :key="hashType.key" class="bg-card border border-border rounded-md p-3">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-semibold">{{ hashType.label }}</span>
-                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 rounded btn-secondary">复制</button>
+                <button @click="copyHash(hashType.key as HashKey)" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
               </div>
               <div class="font-mono text-sm break-all text-muted-foreground">{{ hashes[hashType.key as HashKey] || '-' }}</div>
             </div>
@@ -93,7 +93,7 @@ const editorRef = ref<HTMLElement | null>(null);
 // Monaco Editor Instance
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 
-// 主题监听器清理函数
+// Theme watcher cleanup function
 let themeWatcher: (() => void) | null = null;
 
 // State
@@ -137,11 +137,11 @@ const initEditor = async () => {
       inputText.value = editor?.getValue() || '';
       generateHashes();
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    // Disable save shortcut (Ctrl+S / Cmd+S)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
+      // Disable default save behavior, do nothing
     });
-    // 设置主题监听器
+    // Set theme watcher
     themeWatcher = watchThemeChange(editor);
   }
   generateHashes(); // Initial generation
@@ -152,7 +152,7 @@ const pasteInput = async () => {
     const text = await navigator.clipboard.readText();
     editor?.setValue(text);
   } catch (err) {
-    console.error('无法读取剪贴板:', err);
+    console.error('Failed to read clipboard:', err);
   }
 };
 
@@ -167,9 +167,9 @@ const copyHash = (key: HashKey) => {
 // Lifecycle
 onMounted(initEditor);
 onBeforeUnmount(() => {
-  // 清理主题监听器
+  // Clean up theme watcher
   themeWatcher?.();
-  // 销毁编辑器实例
+  // Destroy editor instance
   editor?.dispose();
 });
 </script>

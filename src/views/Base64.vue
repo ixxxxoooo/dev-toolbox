@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -16,33 +16,33 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">Base64 编解码工具说明</p>
-                  <p class="mb-1">一个符合RFC 4648标准的Base64编解码工具，能正确处理包括中文在内的UTF-8字符。</p>
-                  <p class="font-bold mb-1">核心功能:</p>
+                  <p class="font-bold mb-2">{{ $t('tools.base64.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.base64.help.description') }}</p>
+                  <p class="font-bold mb-1">{{ $t('tools.base64.help.features.encoding') }}</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">编码:</strong> 将文本转换为Base64格式。</li>
-                    <li><strong class="font-semibold">解码:</strong> 将Base64字符串还原为原始文本。</li>
-                    <li><strong class="font-semibold">URL安全:</strong> 生成适合在URL中传输的Base64编码，它将'+'替换为'-'，'/'替换为'_'，并移除'='填充。</li>
-                    <li><strong class="font-semibold">自动处理:</strong> 勾选后，输入内容变化时自动进行处理。</li>
+                    <li><strong class="font-semibold">{{ $t('ui.labels.encode') }}:</strong> {{ $t('tools.base64.help.features.encoding') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.labels.decode') }}:</strong> {{ $t('tools.base64.help.features.decoding') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.labels.urlSafe') }}:</strong> {{ $t('tools.base64.help.features.urlSafe') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.labels.autoProcess') }}:</strong> {{ $t('tools.base64.help.features.utf8') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
+                  <p class="font-bold mb-1">{{ $t('app.help') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">导入文件:</strong> 从本地文件加载内容到输入框。</li>
-                    <li><strong class="font-semibold">下载结果:</strong> 将输出内容下载为文本文件。</li>
-                    <li><strong class="font-semibold">清空:</strong> 清空所有输入和输出内容。</li>
-                    <li><strong class="font-semibold">作为输入:</strong> 将输出内容复制到输入框，并切换操作模式。</li>
+                    <li><strong class="font-semibold">{{ $t('ui.buttons.importFile') }}:</strong> {{ $t('tools.base64.help.features.encoding') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.buttons.downloadResult') }}:</strong> {{ $t('tools.base64.help.features.decoding') }}</li>
+                    <li><strong class="font-semibold">{{ $t('app.clear') }}:</strong> {{ $t('ui.buttons.clearAll') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.buttons.useAsInput') }}:</strong> {{ $t('tools.base64.help.features.urlSafe') }}</li>
                   </ul>
-                  <p class="mt-2"><strong class="text-primary">示例:</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输入: <span class="text-red-400">Hello 世界!</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">编码结果: <span class="text-green-400">SGVsbG8g5L2g5aW9IQ==</span></p>
+                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('ui.labels.input') }}: <span class="text-red-400">Hello 世界!</span></p>
+                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('ui.titles.conversionResult') }}: <span class="text-green-400">SGVsbG8g5L2g5aW9IQ==</span></p>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm rounded-md btn-secondary">导入文件</button>
-            <button @click="downloadFile" :disabled="!outputText" class="px-3 py-1.5 text-sm rounded-md btn-secondary disabled:opacity-50">下载结果</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm rounded-md btn-destructive">清空</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm rounded-md btn-secondary">{{ $t('ui.buttons.importFile') }}</button>
+            <button @click="downloadFile" :disabled="!outputText" class="px-3 py-1.5 text-sm rounded-md btn-secondary disabled:opacity-50">{{ $t('ui.buttons.downloadResult') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm rounded-md btn-destructive">{{ $t('app.clear') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -54,21 +54,21 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">编码</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">解码</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('ui.labels.encode') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('ui.labels.decode') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2" title="生成对URL安全无特殊字符的Base64编码">
+          <label class="flex items-center space-x-2" :title="$t('tools.base64.help.features.urlSafe')">
             <input type="checkbox" v-model="urlSafe" class="rounded">
-            <span class="text-sm">URL安全</span>
+            <span class="text-sm">{{ $t('ui.labels.urlSafe') }}</span>
           </label>
           <label class="flex items-center space-x-2">
             <input type="checkbox" v-model="autoProcess" class="rounded">
-            <span class="text-sm">自动处理</span>
+            <span class="text-sm">{{ $t('ui.labels.autoProcess') }}</span>
           </label>
-          <label class="flex items-center space-x-2" title="自动换行">
+          <label class="flex items-center space-x-2" :title="$t('ui.labels.autoWrap')">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">自动换行</span>
+            <span class="text-sm">{{ $t('ui.labels.autoWrap') }}</span>
           </label>
         </div>
       </div>
@@ -80,10 +80,10 @@
         <!-- 输入编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">输入</h3>
+            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 rounded btn-secondary">复制</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -94,10 +94,10 @@
         <!-- 输出编辑器 -->
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">结果</h3>
+            <h3 class="text-sm font-medium">{{ $t('ui.labels.result') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="copyOutput" class="text-xs px-2 py-1 rounded btn-secondary">复制</button>
-              <button @click="useAsInput" class="text-xs px-2 py-1 rounded btn-secondary">作为输入</button>
+              <button @click="copyOutput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('app.copy') }}</button>
+              <button @click="useAsInput" class="text-xs px-2 py-1 rounded btn-secondary">{{ $t('ui.buttons.useAsInput') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -129,11 +129,11 @@ const fileInput = ref<HTMLInputElement | null>(null);
 let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 
-// 主题监听器清理函数
+// Theme watcher cleanup functions
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
 
-// 本地存储键名
+// Local storage keys
 const STORAGE_KEYS = {
   inputText: 'base64-input-text',
   operation: 'base64-operation',
@@ -142,7 +142,7 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'base64-word-wrap-enabled'
 };
 
-// State - 从本地存储加载初始值
+// State - Load initial values from local storage
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'Hello World! 你好，世界！'));
 const outputText = ref('');
 const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
@@ -206,11 +206,11 @@ const initEditors = async () => {
       saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    // Disable save shortcut (Ctrl+S / Cmd+S)
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
+      // Disable default save behavior, do nothing
     });
-    // 设置主题监听器
+    // Set theme watcher
     inputThemeWatcher = watchThemeChange(inputEditor);
   }
   if (outputEditorRef.value) {
@@ -219,11 +219,11 @@ const initEditors = async () => {
       readOnly: true,
       ...editorOptions,
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    // Disable save shortcut (Ctrl+S / Cmd+S)
     outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
+      // Disable default save behavior, do nothing
     });
-    // 设置主题监听器
+    // Set theme watcher
     outputThemeWatcher = watchThemeChange(outputEditor);
   }
   processText();
@@ -267,7 +267,7 @@ const useAsInput = () => {
 };
 
 // Watchers
-// 监听状态变化并保存到本地存储
+// Watch state changes and save to local storage
 watch(operation, (newValue: string) => {
   saveToStorage(STORAGE_KEYS.operation, newValue);
   if (autoProcess.value) processText();
@@ -292,10 +292,10 @@ watch(wordWrapEnabled, (newValue: boolean) => {
 // Lifecycle
 onMounted(initEditors);
 onBeforeUnmount(() => {
-  // 清理主题监听器
+  // Clean up theme watchers
   inputThemeWatcher?.();
   outputThemeWatcher?.();
-  // 销毁编辑器实例
+  // Destroy editor instances
   inputEditor?.dispose();
   outputEditor?.dispose();
 });

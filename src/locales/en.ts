@@ -30,7 +30,8 @@ export default {
     next: 'Next',
     help: 'Help',
     back: 'Back',
-    home: 'Home'
+    home: 'Home',
+    backToHome: 'Back to Home'
   },
 
   // Navigation and Menu
@@ -40,6 +41,74 @@ export default {
     settings: 'Settings',
     about: 'About',
     language: 'Language'
+  },
+
+  // Common UI Text
+  ui: {
+    buttons: {
+      importFile: 'Import File',
+      downloadResult: 'Download Result',
+      downloadFile: 'Download File',
+      clearAll: 'Clear All',
+      pasteAndParse: 'Paste and Parse',
+      setCurrentTime: 'Set Current Time',
+      generateUuid: 'Generate UUID',
+      generatePassword: 'Generate Password',
+      useAsInput: 'Use as Input',
+      showTreeView: 'Show',
+      hideTreeView: 'Hide',
+      regenerate: 'Regenerate',
+      pasteFromClipboard: 'Paste from Clipboard',
+      copyToClipboard: 'Copy to Clipboard'
+    },
+    labels: {
+      input: 'Input',
+      output: 'Output',
+      result: 'Result',
+      mode: 'Mode',
+      encode: 'Encode',
+      decode: 'Decode',
+      format: 'Format',
+      minify: 'Minify',
+      convert: 'Convert',
+      escape: 'Escape',
+      unescape: 'Unescape',
+      autoProcess: 'Auto Process',
+      autoWrap: 'Auto Wrap',
+      urlSafe: 'URL Safe',
+      treeView: 'Tree View',
+      indent: 'Indent',
+      spaces2: '2 Spaces',
+      spaces4: '4 Spaces'
+    },
+    titles: {
+      topBar: 'Top Bar',
+      topHeader: 'Top Header',
+      mainContent: 'Main Content',
+      mainContentArea: 'Main Content Area',
+      toolbar: 'Toolbar',
+      inputEditor: 'Input Editor',
+      outputEditor: 'Output Editor',
+      generatedResult: 'Generated Result',
+      conversionResult: 'Conversion Result',
+      statisticsResult: 'Statistics Result'
+    },
+    placeholders: {
+      searchTools: 'Search tools...',
+      clickToGenerate: 'Click generate button',
+      enterText: 'Please enter text...',
+      enterTimestamp: 'Enter timestamp, date string or natural language...'
+    },
+    messages: {
+      invalidJson: 'Invalid JSON, cannot generate tree view',
+      cannotReadClipboard: 'Cannot read clipboard',
+      formatFailed: 'Format failed',
+      minifyFailed: 'Minify failed',
+      unrecognizedDateFormat: 'Unrecognized date format',
+      processingError: 'Processing Error',
+      fileImported: 'File Imported',
+      resultDownloaded: 'Result Downloaded'
+    }
   },
 
   // Home Page
@@ -55,33 +124,34 @@ export default {
   tools: {
     // Text Diff
     diff: {
-      name: 'Text Diff',
-      description: 'Compare differences between two texts',
-      leftPanel: 'Left Text',
-      rightPanel: 'Right Text',
-      sideBySide: 'Side by Side',
-      inline: 'Inline',
-      ignoreWhitespace: 'Ignore Whitespace',
-      wordWrap: 'Word Wrap',
-      darkTheme: 'Dark Theme',
-      lightTheme: 'Light Theme',
-      uploadFile: 'Upload File',
-      downloadDiff: 'Download Diff',
-      mode: 'Mode',
-      theme: 'Theme',
-      showLineNumbers: 'Show Line Numbers',
-      showWhitespace: 'Show Whitespace',
-      previousDiff: 'Previous Difference',
-      nextDiff: 'Next Difference',
-      swapContent: 'Swap Content',
-      clearAll: 'Clear All',
-      pasteLeft: 'Paste to Left',
-      pasteRight: 'Paste to Right',
-      copyLeft: 'Copy Left',
-      copyRight: 'Copy Right',
+       name: 'Text Diff',
+       description: 'Compare differences between two texts',
+       leftPanel: 'Left Text',
+       rightPanel: 'Right Text',
+       sideBySide: 'Side by Side',
+       inline: 'Inline',
+       ignoreWhitespace: 'Ignore Whitespace',
+       wordWrap: 'Word Wrap',
+       darkTheme: 'Dark Theme',
+       lightTheme: 'Light Theme',
+       uploadFile: 'Upload File',
+       downloadDiff: 'Download Diff',
+       mode: 'Mode',
+       theme: 'Theme',
+       showLineNumbers: 'Show Line Numbers',
+       showWhitespace: 'Show Whitespace',
+       previousDiff: 'Previous Diff',
+       nextDiff: 'Next Diff',
+       swapContent: 'Swap Content',
+       clearAll: 'Clear All',
+       pasteLeft: 'Paste Left',
+       pasteRight: 'Paste Right',
+       copyLeft: 'Copy Left',
+       copyRight: 'Copy Right',
       help: {
         title: 'Text Diff Tool Guide',
         description: 'Powerful text comparison tool based on Monaco Editor, supports real-time editing and highlighted differences.',
+        coreFeatures: 'Core Features',
         features: {
           sideBySide: 'Side by Side: Display in two columns for easy line-by-line comparison.',
           inline: 'Inline: Highlight differences within the same text flow.',
@@ -90,6 +160,7 @@ export default {
           theme: 'Theme: Switch editor display theme (dark/light).'
         },
         buttons: {
+          title: 'Button Guide',
           navigation: 'Previous/Next: Quickly jump to difference points.',
           swap: 'Swap Content: Exchange text between left and right editors.',
           clear: 'Clear All: Clear all text content.',
@@ -134,16 +205,23 @@ export default {
 
     // JSON Tools
     json: {
-      name: 'JSON Tools',
-      description: 'JSON formatting, minifying and conversion',
+      name: 'JSON Tool',
+      description: 'JSON formatting, minification and conversion tool',
       format: 'Format',
       minify: 'Minify',
       validate: 'Validate',
+      convert: 'Convert',
+      escape: 'Escape',
+      unescape: 'Unescape',
+      treeView: 'Tree View',
+      from: 'From',
+      to: 'To',
+      downloadJson: 'Download JSON',
+      invalidJsonTreeView: 'Invalid JSON, cannot generate tree view',
       toYaml: 'To YAML',
       toXml: 'To XML',
       fromYaml: 'From YAML',
       fromXml: 'From XML',
-      treeView: 'Tree View',
       jsonPath: 'JSONPath Query',
       input: 'Input JSON',
       output: 'Output Result',
@@ -151,7 +229,37 @@ export default {
       queryResult: 'Query Result',
       valid: 'JSON is valid',
       invalid: 'JSON is invalid',
-      error: 'Parse error'
+      error: 'Parse error',
+      help: {
+        title: 'JSON Tool Help',
+        description: 'This is a multi-functional JSON processing tool that supports formatting, minification and various data format conversions.',
+        coreFeatures: 'Core Features',
+        features: {
+          editor: 'Input/Output Editor',
+          editorDesc: 'Supports syntax highlighting, real-time validation and code folding.',
+          treeView: 'Tree View',
+          treeViewDesc: 'Intuitively displays JSON structure for easy browsing of complex data.',
+          format: 'Format',
+          formatDesc: 'Beautify JSON layout with 2 or 4 space indentation support.',
+          minify: 'Minify',
+          minifyDesc: 'Remove all whitespace characters from JSON to reduce size.',
+          convert: 'Convert',
+          convertDesc: 'Support mutual conversion between JSON, YAML, and XML.'
+        },
+        buttons: {
+          title: 'Button Description',
+          importFile: 'Import File',
+          importFileDesc: 'Load content from local file to input box.',
+          downloadJson: 'Download JSON',
+          downloadJsonDesc: 'Download result as .json file.',
+          clear: 'Clear',
+          clearDesc: 'Clear all input and output content.',
+          toggleTreeView: 'Show/Hide Tree View',
+          toggleTreeViewDesc: 'Toggle the display state of the middle tree view.',
+          autoProcess: 'Auto Process',
+          autoProcessDesc: 'When checked, automatically process when input content changes.'
+        }
+      }
     },
 
     // URL Encoder/Decoder
@@ -195,6 +303,28 @@ export default {
         iso: 'ISO 8601',
         rfc2822: 'RFC 2822',
         relative: 'Relative Time'
+      },
+      help: {
+        title: 'Timestamp Converter Guide',
+        description: 'Powerful time conversion tool supporting multiple formats and intelligent recognition of various time inputs.',
+        features: {
+          intelligent: 'Smart Recognition: Automatically detect timestamp, date strings, and natural language time expressions.',
+          multiFormat: 'Multiple Formats: Support Unix timestamp, ISO 8601, RFC 2822, and custom formats.',
+          timezone: 'Timezone Support: Convert between local time and UTC, with timezone awareness.',
+          relative: 'Relative Time: Display human-readable relative time (e.g., "2 hours ago").'
+        },
+        formats: {
+          timestamp: 'Unix Timestamp: Seconds since January 1, 1970 UTC.',
+          timestampMs: 'Millisecond Timestamp: Milliseconds since January 1, 1970 UTC.',
+          iso: 'ISO 8601: International standard date-time format (YYYY-MM-DDTHH:mm:ss.sssZ).',
+          rfc2822: 'RFC 2822: Email and HTTP header date format.',
+          local: 'Local Time: Time in your current timezone.',
+          utc: 'UTC Time: Coordinated Universal Time.'
+        },
+        buttons: {
+          setCurrent: 'Set Current: Use the current system time as input.',
+          convert: 'Convert: Transform between different time formats.'
+        }
       }
     },
 
@@ -205,7 +335,21 @@ export default {
       generate: 'Generate UUID',
       version4: 'UUID v4 (Random)',
       output: 'Generated UUID',
-      copySuccess: 'UUID copied to clipboard'
+      copySuccess: 'UUID copied to clipboard',
+      help: {
+        title: 'UUID Generator Guide',
+        description: 'Generate RFC 4122 compliant Universally Unique Identifiers (UUID), ensuring global uniqueness.',
+        features: {
+          version4: 'UUID v4: Uses random or pseudo-random numbers, providing 122 bits of entropy.',
+          format: 'Standard Format: 8-4-4-4-12 hexadecimal digits, e.g., 550e8400-e29b-41d4-a716-446655440000.',
+          uniqueness: 'Global Uniqueness: Extremely low probability of collision, suitable for distributed systems.',
+          applications: 'Common Uses: Database primary keys, session IDs, file names, API request IDs.'
+        },
+        buttons: {
+          generate: 'Generate: Create a new UUID v4.',
+          copy: 'Copy: Copy the generated UUID to clipboard for easy use.'
+        }
+      }
     },
 
     // Text Analyzer
@@ -223,7 +367,21 @@ export default {
       bytes: 'Bytes',
       readingTime: 'Reading Time',
       minute: 'minute',
-      seconds: 'seconds'
+      seconds: 'seconds',
+      help: {
+        title: 'Text Analyzer Guide',
+        description: 'Comprehensive text statistics analysis tool that provides detailed character, word, and structure information.',
+        features: {
+          characters: 'Character Count: Total characters including spaces and special characters.',
+          charactersNoSpaces: 'Characters (No Spaces): Character count excluding spaces and line breaks.',
+          words: 'Word Count: English words separated by spaces or punctuation.',
+          wordsZh: 'Chinese Words: Chinese character count, each character counted as one word.',
+          lines: 'Line Count: Total number of lines including empty lines.',
+          paragraphs: 'Paragraph Count: Text blocks separated by empty lines.',
+          bytes: 'Byte Count: UTF-8 encoded byte size, useful for storage calculations.',
+          readingTime: 'Reading Time: Estimated reading time based on average reading speed (200 words/minute).'
+        }
+      }
     },
 
     // Hash Generator
@@ -237,7 +395,27 @@ export default {
       sha256: 'SHA-256',
       sha512: 'SHA-512',
       result: 'Hash Result',
-      copyHash: 'Copy Hash'
+      copyHash: 'Copy Hash',
+      help: {
+        title: 'Hash Generator Guide',
+        description: 'Generate cryptographic hash values using multiple algorithms, suitable for data integrity verification and security applications.',
+        coreFeatures: 'Core Features',
+        algorithms: {
+          md5: 'MD5: 128-bit hash, fast but not cryptographically secure, suitable for checksums.',
+          sha1: 'SHA-1: 160-bit hash, better than MD5 but deprecated for security applications.',
+          sha256: 'SHA-256: 256-bit hash, part of SHA-2 family, currently secure and widely used.',
+          sha512: 'SHA-512: 512-bit hash, highest security level, suitable for high-security requirements.'
+        },
+        applications: {
+          integrity: 'Data Integrity: Verify file or data hasn\'t been tampered with.',
+          passwords: 'Password Storage: Hash passwords before storing (recommend adding salt).',
+          fingerprinting: 'Digital Fingerprinting: Create unique identifiers for data.',
+          blockchain: 'Blockchain: Used in cryptocurrency and distributed ledger systems.'
+        },
+        buttons: {
+          copy: 'Copy Hash: Copy the generated hash value to clipboard.'
+        }
+      }
     },
 
     // SQL Formatter
@@ -252,7 +430,26 @@ export default {
       keywordCase: 'Keyword Case',
       uppercase: 'Uppercase',
       lowercase: 'Lowercase',
-      preserve: 'Preserve'
+      preserve: 'Preserve',
+      help: {
+        title: 'SQL Formatter Guide',
+        description: 'Professional SQL statement formatting tool that supports multiple database dialects and customizable formatting options.',
+        features: {
+          multiDatabase: 'Multi-Database Support: Compatible with MySQL, PostgreSQL, SQLite, SQL Server and other databases.',
+          formatting: 'Smart Formatting: Automatic indentation, line breaks, and keyword alignment.',
+          customization: 'Custom Options: Adjustable indent size, keyword case, and formatting style.',
+          syntax: 'Syntax Highlighting: Clear visual distinction of keywords, strings, and comments.'
+        },
+        options: {
+          indentSize: 'Indent Size: Control the number of spaces for each indentation level.',
+          keywordCase: 'Keyword Case: Choose between uppercase, lowercase, or preserve original case.',
+          database: 'Database Type: Select specific database dialect for optimal formatting.'
+        },
+        buttons: {
+          format: 'Format: Beautify and organize your SQL statements.',
+          copy: 'Copy: Copy the formatted SQL to clipboard.'
+        }
+      }
     },
 
     // Password Generator
@@ -285,7 +482,81 @@ export default {
       days: 'days',
       months: 'months',
       years: 'years',
-      centuries: 'centuries'
+      centuries: 'centuries',
+      types: {
+        strong: 'Strong Password (Recommended)',
+        strongDesc: 'High-strength passwords containing uppercase, lowercase, numbers and symbols',
+        readable: 'Readable Password',
+        readableDesc: 'Passwords excluding confusing characters, easy for manual input',
+        pin: 'PIN Code',
+        pinDesc: 'Numeric-only passwords, suitable for PIN scenarios',
+        memorable: 'Memorable Password',
+        memorableDesc: 'Easy-to-remember passwords based on common word combinations'
+      },
+      passwordType: 'Password Type',
+      passwordLength: 'Password Length',
+      recommendedLength: 'Recommended Length',
+      characters: 'characters',
+      characterTypes: 'Character Types',
+      uppercase: 'Uppercase Letters',
+      lowercase: 'Lowercase Letters',
+      numbers: 'Numbers',
+      symbols: 'Symbols',
+      excludeAmbiguous: 'Exclude Ambiguous Characters',
+      configOptions: 'Configuration Options',
+      capitalizeWords: 'Capitalize Words',
+      wordCount: 'Word Count',
+      generatedPasswords: 'Generated Passwords',
+      regenerate: 'Regenerate',
+      copyPassword: 'Copy Password',
+      strengthAnalysis: 'Password Strength Analysis',
+      strengthLevel: 'Strength Level',
+      charsetSize: 'Character Set Size',
+      securityAdvice: 'Security Advice',
+      crackTimeValues: {
+        lessThanMinute: 'Less than 1 minute',
+        minutesFormat: '{count} minutes',
+        hoursFormat: '{count} hours',
+        daysFormat: '{count} days',
+        yearsFormat: '{count} years',
+        centuriesFormat: 'Tens of thousands of years'
+      },
+      advice: {
+        lengthAdvice: 'Use passwords with 12+ characters for security',
+        unique: 'Do not use the same password for multiple accounts',
+        regular: 'Regularly change passwords for important accounts',
+        manager: 'Use a password manager to store passwords',
+        twoFactor: 'Enable two-factor authentication for enhanced security'
+      },
+      help: {
+        title: 'Password Generator Guide',
+        description: 'Advanced password generator with multiple types and security analysis to create strong, secure passwords.',
+        types: {
+          strong: 'Strong Password: Mix of uppercase, lowercase, numbers, and symbols for maximum security.',
+          readable: 'Readable Password: Excludes ambiguous characters (0, O, l, I) for easier typing.',
+          pin: 'PIN Code: Numeric-only passwords for PIN requirements.',
+          memorable: 'Memorable Password: Uses common words and patterns for easier memorization.'
+        },
+        options: {
+          length: 'Length: Longer passwords provide exponentially better security.',
+          uppercase: 'Uppercase Letters: Include A-Z characters.',
+          lowercase: 'Lowercase Letters: Include a-z characters.',
+          numbers: 'Numbers: Include 0-9 digits.',
+          symbols: 'Symbols: Include special characters (!@#$%^&*).',
+          excludeSimilar: 'Exclude Similar: Remove confusing characters like 0/O, l/I/1.'
+        },
+        security: {
+          entropy: 'Entropy: Measures password randomness and unpredictability.',
+          strength: 'Strength Meter: Visual indicator of password security level.',
+          crackTime: 'Crack Time: Estimated time for brute-force attacks.',
+          recommendations: 'Use at least 12 characters, mix character types, avoid personal information.'
+        },
+        buttons: {
+          generate: 'Generate: Create a new password with current settings.',
+          regenerate: 'Regenerate: Create another password with same settings.',
+          copy: 'Copy: Copy the generated password to clipboard.'
+        }
+      }
     }
   },
 

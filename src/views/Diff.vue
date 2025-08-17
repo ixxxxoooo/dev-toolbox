@@ -16,24 +16,24 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">文本对比工具说明</p>
-                  <p class="mb-1">基于Monaco Editor的强大文本对比工具，支持实时编辑和高亮差异。</p>
+                  <p class="font-bold mb-2">{{ $t('tools.diff.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.diff.help.description') }}</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">分屏对比:</strong> 左右两栏显示，便于逐行比较。</li>
-                    <li><strong class="font-semibold">内联对比:</strong> 在同一文本流中高亮显示差异。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.help.features.sideBySide') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.help.features.inline') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">核心功能:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.diff.help.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">忽略空白:</strong> 忽略行首、行尾的空格和制表符差异，专注于内容变更。</li>
-                    <li><strong class="font-semibold">显示行号:</strong> 控制编辑器是否显示行号。</li>
-                    <li><strong class="font-semibold">主题:</strong> 切换编辑器显示主题（深色/浅色）。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.help.features.ignoreWhitespace') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.showLineNumbers') }}:</strong> {{ $t('tools.diff.help.features.lineNumbers') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.theme') }}:</strong> {{ $t('tools.diff.help.features.theme') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.diff.help.buttons.title') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">上一个/下一个:</strong> 快速跳转到差异点。</li>
-                    <li><strong class="font-semibold">交换内容:</strong> 交换左右两边编辑器的文本。</li>
-                    <li><strong class="font-semibold">清空全部:</strong> 清空所有文本内容。</li>
-                    <li><strong class="font-semibold">粘贴/复制:</strong> 独立操作左右编辑器的内容。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.previousDiff') }}/{{ $t('tools.diff.nextDiff') }}:</strong> {{ $t('tools.diff.help.buttons.navigation') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.swapContent') }}:</strong> {{ $t('tools.diff.help.buttons.swap') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.diff.clearAll') }}:</strong> {{ $t('tools.diff.help.buttons.clear') }}</li>
+                    <li><strong class="font-semibold">{{ $t('ui.buttons.paste') }}/{{ $t('ui.buttons.copy') }}:</strong> {{ $t('tools.diff.help.buttons.clipboard') }}</li>
                   </ul>
                 </div>
               </div>
@@ -53,44 +53,44 @@
           <div class="flex items-center space-x-2" title="切换分屏或内联对比模式">
             <label class="text-sm font-medium">{{ $t('tools.diff.mode') }}:</label>
             <select v-model="diffMode" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option value="split">分屏对比</option>
-              <option value="inline">内联对比</option>
+              <option value="split">{{ $t('tools.diff.sideBySide') }}</option>
+              <option value="inline">{{ $t('tools.diff.inline') }}</option>
             </select>
           </div>
           <div class="flex items-center space-x-2" title="切换编辑器的主题颜色">
-            <label class="text-sm font-medium">主题:</label>
+            <label class="text-sm font-medium">{{ $t('tools.diff.theme') }}:</label>
             <select v-model="theme" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option value="vs-dark">深色</option>
-              <option value="vs">浅色</option>
+              <option value="vs-dark">{{ $t('tools.diff.darkTheme') }}</option>
+              <option value="vs">{{ $t('tools.diff.lightTheme') }}</option>
             </select>
           </div>
           <div class="flex items-center space-x-4">
             <label class="flex items-center space-x-2" title="忽略每行开头和结尾的空格和制表符。用于专注于内容本身的变更。">
               <input type="checkbox" v-model="ignoreWhitespace" class="rounded" />
-              <span class="text-sm">忽略空白</span>
+              <span class="text-sm">{{ $t('tools.diff.ignoreWhitespace') }}</span>
             </label>
             <label class="flex items-center space-x-2" title="显示或隐藏行号">
               <input type="checkbox" v-model="showLineNumbers" id="showLineNumbers" class="rounded" />
-              <label for="showLineNumbers" class="text-sm">显示行号</label>
+              <label for="showLineNumbers" class="text-sm">{{ $t('tools.diff.showLineNumbers') }}</label>
             </label>
             <label class="flex items-center space-x-2" title="自动换行">
               <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-              <span class="text-sm">自动换行</span>
+              <span class="text-sm">{{ $t('tools.diff.wordWrap') }}</span>
             </label>
           </div>
         </div>
         <div class="flex items-center space-x-2">
           <button @click="goToPrevDiff" title="跳转到上一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            &uarr; 上一个
+            &uarr; {{ $t('tools.diff.previousDiff') }}
           </button>
           <button @click="goToNextDiff" title="跳转到下一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            &darr; 下一个
+            &darr; {{ $t('tools.diff.nextDiff') }}
           </button>
           <button @click="swapContent" title="交换左右两边的文本内容" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            交换内容
+            {{ $t('tools.diff.swapContent') }}
           </button>
           <button @click="clearAll" title="清空两边的所有文本" class="px-3 py-1.5 text-sm btn-destructive rounded-md">
-            清空全部
+            {{ $t('tools.diff.clearAll') }}
           </button>
         </div>
       </div>
@@ -102,23 +102,23 @@
         <!-- Headers for split view -->
         <div v-if="diffMode === 'split'" class="grid grid-cols-2">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-r border-border">
-            <span class="text-sm font-medium">原始文本</span>
+            <span class="text-sm font-medium">{{ $t('tools.diff.leftPanel') }}</span>
             <div class="flex items-center space-x-2">
-              <button @click="pasteTo('original')" title="粘贴内容到左侧" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
-              <button @click="copyFrom('original')" title="复制左侧内容" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="pasteTo('original')" title="粘贴内容到左侧" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.pasteLeft') }}</button>
+              <button @click="copyFrom('original')" title="复制左侧内容" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.copyLeft') }}</button>
             </div>
           </div>
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <span class="text-sm font-medium">修改文本</span>
+            <span class="text-sm font-medium">{{ $t('tools.diff.rightPanel') }}</span>
             <div class="flex items-center space-x-2">
-              <button @click="pasteTo('modified')" title="粘贴内容到右侧" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
-              <button @click="copyFrom('modified')" title="复制右侧内容" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="pasteTo('modified')" title="粘贴内容到右侧" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.pasteRight') }}</button>
+              <button @click="copyFrom('modified')" title="复制右侧内容" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.copyRight') }}</button>
             </div>
           </div>
         </div>
         <!-- Header for inline view -->
         <div v-else class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-          <span class="text-sm font-medium">差异对比 (内联模式)</span>
+          <span class="text-sm font-medium">{{ $t('tools.diff.name') }} ({{ $t('tools.diff.inline') }})</span>
         </div>
 
         <!-- The actual editor container -->
@@ -142,13 +142,13 @@ import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 // Refs
 const diffEditorRef = ref<HTMLElement | null>(null);
 
-// Monaco 编辑器实例
+// Monaco editor instance
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
 
-// 主题监听器清理函数
+// Theme watcher cleanup function
 let themeWatcher: (() => void) | null = null;
 
-// 本地存储键名
+// Local storage keys
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
   rightContent: 'diff-right-content',
@@ -161,7 +161,7 @@ const STORAGE_KEYS = {
 
 
 
-// State - 从本地存储加载初始值
+// State - Load initial values from local storage
 const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent,
 `function sayHello() {
   console.log("Hello, world!");
@@ -184,7 +184,7 @@ const initMonacoDiffEditor = async () => {
   await nextTick();
   if (!diffEditorRef.value) return;
 
-  // 销毁旧实例
+  // Destroy old instance
   diffEditor?.dispose();
 
   const originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
@@ -214,21 +214,21 @@ const initMonacoDiffEditor = async () => {
     modified: modifiedModel,
   });
 
-  // 设置主题监听器
+  // Set theme watcher
   themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
 
-  // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+  // Disable save shortcut (Ctrl+S / Cmd+S)
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();
 
   originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-    // 禁用默认保存行为，什么都不做
+    // Disable default save behavior, do nothing
   });
   modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
     // 禁用默认保存行为，什么都不做
   });
 
-  // 监听内容变化以保持状态同步并保存到本地存储
+  // Listen to content changes to keep state synchronized and save to local storage
   diffEditor.getOriginalEditor().onDidChangeModelContent(() => {
     leftContent.value = diffEditor?.getOriginalEditor().getValue() || '';
     saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
@@ -239,7 +239,7 @@ const initMonacoDiffEditor = async () => {
   });
 };
 
-// --- 工具栏操作 ---
+// --- Toolbar operations ---
 
 const swapContent = () => {
   const originalValue = diffEditor?.getOriginalEditor().getValue() || '';
@@ -318,7 +318,7 @@ const goToPrevDiff = () => {
   }
 };
 
-// --- 剪贴板操作 ---
+// --- Clipboard operations ---
 const pasteTo = async (side: 'original' | 'modified') => {
   try {
     const text = await navigator.clipboard.readText();
@@ -328,7 +328,7 @@ const pasteTo = async (side: 'original' | 'modified') => {
       diffEditor?.getModifiedEditor().setValue(text);
     }
   } catch (err) {
-    console.error('无法读取剪贴板:', err);
+    console.error('Cannot read clipboard:', err);
   }
 };
 
@@ -341,23 +341,23 @@ const copyFrom = async (side: 'original' | 'modified') => {
       await navigator.clipboard.writeText(text);
     }
   } catch (err) {
-    console.error('无法复制到剪贴板:', err);
+    console.error('Cannot copy to clipboard:', err);
   }
 };
 
 
-// --- 生命周期与监听 ---
+// --- Lifecycle and watchers ---
 
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
-  // 清理主题监听器
+  // Clean up theme watcher
   themeWatcher?.();
-  // 销毁编辑器实例
+  // Destroy editor instance
   diffEditor?.dispose();
 });
 
-// 监听配置变化并保存到本地存储
+// Watch configuration changes and save to local storage
 watch(diffMode, (newMode: 'split' | 'inline') => {
   diffEditor?.updateOptions({
     renderSideBySide: newMode === 'split',

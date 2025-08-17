@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
+            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -16,34 +16,34 @@
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">JSON 工具说明</p>
-                  <p class="mb-1">这是一个多功能的JSON处理工具，支持格式化、压缩和多种数据格式转换。</p>
+                  <p class="font-bold mb-2">{{ $t('tools.json.help.title') }}</p>
+                  <p class="mb-1">{{ $t('tools.json.help.description') }}</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">输入/输出编辑器:</strong> 支持语法高亮、实时校验和代码折叠。</li>
-                    <li><strong class="font-semibold">树状视图:</strong> 直观展示JSON结构，便于浏览复杂数据。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.editor') }}:</strong> {{ $t('tools.json.help.features.editorDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.treeView') }}:</strong> {{ $t('tools.json.help.features.treeViewDesc') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">核心功能:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.json.help.coreFeatures') }}:</p>
                   <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">格式化:</strong> 将JSON美化排版，支持2或4空格缩进。</li>
-                    <li><strong class="font-semibold">压缩:</strong> 移除JSON中的所有空白字符，减小体积。</li>
-                    <li><strong class="font-semibold">转换:</strong> 支持JSON与YAML、XML之间的相互转换。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.format') }}:</strong> {{ $t('tools.json.help.features.formatDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.minify') }}:</strong> {{ $t('tools.json.help.features.minifyDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.features.convert') }}:</strong> {{ $t('tools.json.help.features.convertDesc') }}</li>
                   </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
+                  <p class="font-bold mb-1">{{ $t('tools.json.help.buttons.title') }}:</p>
                   <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">导入文件:</strong> 从本地文件加载内容到输入框。</li>
-                    <li><strong class="font-semibold">下载JSON:</strong> 将结果下载为.json文件。</li>
-                    <li><strong class="font-semibold">清空:</strong> 清空所有输入和输出内容。</li>
-                    <li><strong class="font-semibold">显示/隐藏树状视图:</strong> 切换中间树状视图的显示状态。</li>
-                    <li><strong class="font-semibold">自动处理:</strong> 勾选后，输入内容变化时自动进行处理。</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.importFile') }}:</strong> {{ $t('tools.json.help.buttons.importFileDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.downloadJson') }}:</strong> {{ $t('tools.json.help.buttons.downloadJsonDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.clear') }}:</strong> {{ $t('tools.json.help.buttons.clearDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.toggleTreeView') }}:</strong> {{ $t('tools.json.help.buttons.toggleTreeViewDesc') }}</li>
+                    <li><strong class="font-semibold">{{ $t('tools.json.help.buttons.autoProcess') }}:</strong> {{ $t('tools.json.help.buttons.autoProcessDesc') }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">导入文件</button>
-            <button @click="downloadFile" :disabled="!isValidJson" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">下载JSON</button>
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <button @click="loadFile" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('ui.buttons.importFile') }}</button>
+            <button @click="downloadFile" :disabled="!isValidJson" class="px-3 py-1.5 text-sm btn-secondary rounded-md disabled:opacity-50">{{ $t('tools.json.downloadJson') }}</button>
+            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('ui.buttons.clearAll') }}</button>
             <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
@@ -55,36 +55,36 @@
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="format" class="rounded"><span class="text-sm">格式化</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="minify" class="rounded"><span class="text-sm">压缩</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="convert" class="rounded"><span class="text-sm">转换</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="escape" class="rounded"><span class="text-sm">转义</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="unescape" class="rounded"><span class="text-sm">去转义</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="format" class="rounded"><span class="text-sm">{{ $t('tools.json.format') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="minify" class="rounded"><span class="text-sm">{{ $t('tools.json.minify') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="convert" class="rounded"><span class="text-sm">{{ $t('tools.json.convert') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="escape" class="rounded"><span class="text-sm">{{ $t('tools.json.escape') }}</span></label>
+          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="unescape" class="rounded"><span class="text-sm">{{ $t('tools.json.unescape') }}</span></label>
         </div>
         <div class="flex items-center space-x-4">
-          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ showTreeView ? '隐藏' : '显示' }}树状视图</button>
-          <label class="flex items-center space-x-2" title="自动换行">
+          <button @click="showTreeView = !showTreeView" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ showTreeView ? $t('ui.buttons.hideTreeView') : $t('ui.buttons.showTreeView') }}{{ $t('tools.json.treeView') }}</button>
+          <label class="flex items-center space-x-2" :title="$t('ui.labels.autoWrap')">
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">自动换行</span>
+            <span class="text-sm">{{ $t('ui.labels.autoWrap') }}</span>
           </label>
-          <label class="flex items-center space-x-2"><span class="text-sm">缩进:</span>
+          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('ui.labels.indent') }}:</span>
             <select v-model="indentSize" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option :value="2">2空格</option>
-              <option :value="4">4空格</option>
+              <option :value="2">{{ $t('ui.labels.spaces2') }}</option>
+              <option :value="4">{{ $t('ui.labels.spaces4') }}</option>
             </select>
           </label>
-          <label class="flex items-center space-x-2"><input type="checkbox" v-model="autoProcess" class="rounded"><span class="text-sm">自动处理</span></label>
+          <label class="flex items-center space-x-2"><input type="checkbox" v-model="autoProcess" class="rounded"><span class="text-sm">{{ $t('ui.labels.autoProcess') }}</span></label>
         </div>
       </div>
       <div v-if="operation === 'convert'" class="mt-4 pt-4 border-t border-border flex items-center space-x-4">
-        <label class="flex items-center space-x-2"><span class="text-sm">从:</span>
+        <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('tools.json.from') }}:</span>
           <select v-model="convertFrom" class="text-sm px-2 py-1 border border-border rounded bg-background">
             <option value="json">JSON</option>
             <option value="yaml">YAML</option>
             <option value="xml">XML</option>
           </select>
         </label>
-        <label class="flex items-center space-x-2"><span class="text-sm">到:</span>
+        <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('tools.json.to') }}:</span>
           <select v-model="convertTo" class="text-sm px-2 py-1 border border-border rounded bg-background">
             <option value="json">JSON</option>
             <option value="yaml">YAML</option>
@@ -98,10 +98,10 @@
       <div class="grid gap-4 flex-1" :class="showTreeView ? 'grid-cols-3' : 'grid-cols-2'">
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">输入</h3>
+            <h3 class="text-sm font-medium">{{ $t('ui.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">粘贴</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.paste') }}</button>
+              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.copy') }}</button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -110,17 +110,17 @@
         </div>
         <div v-if="showTreeView" class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">树状视图</h3>
+            <h3 class="text-sm font-medium">{{ $t('tools.json.treeView') }}</h3>
           </div>
           <div class="flex-1 relative overflow-auto">
             <JsonTreeView v-if="isValidJson && parsedJson" :data="parsedJson" />
-            <div v-else class="p-4 text-sm text-muted-foreground">无效的JSON，无法生成树状视图</div>
+            <div v-else class="p-4 text-sm text-muted-foreground">{{ $t('tools.json.invalidJsonTreeView') }}</div>
           </div>
         </div>
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
           <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">结果</h3>
-            <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">复制</button>
+            <h3 class="text-sm font-medium">{{ $t('ui.labels.result') }}</h3>
+            <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('app.copy') }}</button>
           </div>
           <div class="flex-1 relative">
             <div ref="outputEditorRef" class="absolute inset-0"></div>
@@ -154,11 +154,11 @@ const fileInput = ref<HTMLInputElement | null>(null);
 let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 
-// 主题监听器清理函数
+// Theme watcher cleanup functions
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
 
-// 本地存储键名
+// Local storage keys
 const STORAGE_KEYS = {
   inputText: 'json-input-text',
   operation: 'json-operation',
@@ -170,7 +170,7 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'json-word-wrap-enabled'
 };
 
-// State - 从本地存储加载初始值
+// State - Load initial values from local storage
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
 const outputText = ref('');
 const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
@@ -211,12 +211,12 @@ const processData = () => {
       } catch {
         // Manual unescape for non-JSON strings
         resultData = inputText.value
-          .replace(/\\n/g, '\n')   // 去转义换行
-          .replace(/\\r/g, '\r')   // 去转义回车
-          .replace(/\\t/g, '\t')   // 去转义制表符
-          .replace(/\\"/g, '"')    // 去转义双引号
-          .replace(/\\'/g, "'")    // 去转义单引号
-          .replace(/\\\\/g, '\\')  // 去转义反斜杠
+          .replace(/\\n/g, '\n')   // Unescape newline
+          .replace(/\\r/g, '\r')   // Unescape carriage return
+          .replace(/\\t/g, '\t')   // Unescape tab
+          .replace(/\\"/g, '"')    // Unescape double quote
+          .replace(/\\'/g, "'")    // Unescape single quote
+          .replace(/\\\\/g, '\\')  // Unescape backslash
       }
     } else {
       // Parse input data for other operations
@@ -280,9 +280,9 @@ const initEditors = async () => {
       saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processData();
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    // Disable save shortcut (Ctrl+S / Cmd+S)
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
+      // Disable default save behavior, do nothing
     });
     // 设置主题监听器
     inputThemeWatcher = watchThemeChange(inputEditor);
@@ -293,9 +293,9 @@ const initEditors = async () => {
       readOnly: true,
       ...editorOptions,
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
+    // Disable save shortcut (Ctrl+S / Cmd+S)
     outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
+      // Disable default save behavior, do nothing
     });
     // 设置主题监听器
     outputThemeWatcher = watchThemeChange(outputEditor);
@@ -331,7 +331,7 @@ const pasteInput = async () => inputEditor?.setValue(await navigator.clipboard.r
 const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
 const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
 
-// Watchers - 监听状态变化并保存到本地存储
+// Watchers - Watch state changes and save to local storage
 watch(operation, (newValue: string) => {
   saveToStorage(STORAGE_KEYS.operation, newValue);
   if (autoProcess.value) processData();
@@ -370,10 +370,10 @@ watch(wordWrapEnabled, (newValue: boolean) => {
 // Lifecycle
 onMounted(initEditors);
 onBeforeUnmount(() => {
-  // 清理主题监听器
+  // Clean up theme watchers
   inputThemeWatcher?.();
   outputThemeWatcher?.();
-  // 销毁编辑器实例
+  // Dispose editor instances
   inputEditor?.dispose();
   outputEditor?.dispose();
 });
