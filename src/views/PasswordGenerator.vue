@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
