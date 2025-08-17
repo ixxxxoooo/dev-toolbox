@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![Dev Toolbox Logo](public/favicon.ico)
-
 **A Modern Desktop Application with Essential Developer Tools**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -42,9 +40,9 @@ English | [简体中文](README_ZH.md)
 
 ## 📸 Preview
 
-![Dev Toolbox Interface](https://via.placeholder.com/800x500?text=Dev+Toolbox+Screenshot)
+![Dev Toolbox Interface](./public/image.png)
+![Dev Toolbox json](./public/json.png)
 
-> Note: Please add actual application screenshots
 
 ## 🛠️ Tech Stack
 

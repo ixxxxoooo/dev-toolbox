@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![Dev Toolbox Logo](public/favicon.ico)
-
 **一个集成常用开发者工具的现代化桌面应用**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -42,9 +40,8 @@
 
 ## 📸 预览
 
-![Dev Toolbox 主界面](https://via.placeholder.com/800x500?text=Dev+Toolbox+Screenshot)
-
-> 注：请添加实际的应用截图
+![Dev Toolbox 主界面](./public/image.png)
+![Dev Toolbox json](./public/json.png)
 
 ## 🛠️ 技术栈
 
