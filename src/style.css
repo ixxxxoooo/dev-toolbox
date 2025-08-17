@@ -169,3 +169,7 @@ button:disabled:active {
 .btn-icon:active {
   @apply scale-90 bg-secondary/80;
 }
+
+.monaco-editor {
+  --vscode-focusBorder: transparent !important;
+}
