@@ -1,0 +1,105 @@
+name: 🐛 Bug 报告
+description: 报告一个应用中的问题或错误
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您花时间报告这个问题！为了更好地帮助您，请填写以下信息。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 简洁明了地描述遇到的问题
+      placeholder: 请描述您遇到的问题...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 重现步骤
+      description: 详细说明如何重现这个问题
+      placeholder: |
+        1. 进入 '...'
+        2. 点击 '....'
+        3. 滚动到 '....'
+        4. 看到错误
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 描述您期望发生的情况
+      placeholder: 应该发生什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 描述实际发生的情况
+      placeholder: 实际发生了什么？
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      description: 您在哪个平台上遇到了这个问题？
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Web 浏览器
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 您使用的 Dev Toolbox 版本
+      placeholder: 例如：1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: 操作系统版本
+      description: 您的操作系统版本
+      placeholder: 例如：macOS 14.0, Windows 11, Ubuntu 22.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 附加信息
+      description: |
+        添加任何其他可能有助于解决问题的信息：
+        - 错误日志
+        - 截图
+        - 相关配置信息
+        - 其他上下文
+      placeholder: 请提供更多详细信息...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 确认
+      description: 在提交之前，请确认以下事项
+      options:
+        - label: 我已经搜索了现有的 issues，确认这个问题没有被报告过
+          required: true
+        - label: 我已经使用最新版本测试过这个问题
+          required: true
+        - label: 我提供了足够的信息来重现这个问题
+          required: true

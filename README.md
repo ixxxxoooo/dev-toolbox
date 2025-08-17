@@ -1,233 +1,210 @@
 # Dev Toolbox
 
-一个集成常用开发者工具的桌面应用，基于 Electron + Vue 3 + TypeScript 构建。
+<div align="center">
 
-## 功能特性
+![Dev Toolbox Logo](public/favicon.ico)
 
-- 📝 **文本对比工具** - 基于 Monaco Editor，支持分屏/内联对比，高亮差异，忽略空白，主题切换，差异导航，自动换行。
-- 🔤 **Base64 编解码** - 基于 Monaco Editor，支持UTF-8安全编解码，URL安全模式，文件导入导出，自动换行。
-- 📄 **JSON 工具** - 基于 Monaco Editor，支持格式化、压缩、JSON与YAML/XML转换，交互式树状视图，JSONPath查询，自动换行。
-- 🔗 **URL 编解码** - 基于 Monaco Editor，支持 `encodeURIComponent`/`encodeURI` 和 `decodeURIComponent`/`decodeURI`，实时转换，自动换行。
-- ⏰ **智能时间戳转换** - 基于 Day.js，智能识别多种时间格式（时间戳、日期字符串、自然语言），输出多种标准格式。
-- 🔑 **UUID 生成器** - 生成全局唯一标识符 (UUID v4)。
-- 📊 **字符统计工具** - 实时统计文本的字数（支持中英文）、字符数、行数、段落数等信息。
-- 🔒 **哈希生成器** - 生成文本的MD5, SHA-1, SHA-256, SHA-512哈希值。
+**一个集成常用开发者工具的现代化桌面应用**
 
-## 核心特性
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Electron](https://img.shields.io/badge/Electron-31+-blue.svg)](https://electronjs.org/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3-green.svg)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
-✅ **统一且专业的UI/UX** - 所有工具模块采用一致的布局、样式和交互，提供流畅的用户体验。
-✅ **强大的编辑器体验** - 集成 Monaco Editor (VS Code核心)，提供语法高亮、实时校验、代码折叠、自动换行等高级功能。
-✅ **详细的帮助提示** - 每个工具模块都提供清晰的说明、示例和按钮功能解释。
-✅ **快速工具切换** - 顶部导航栏提供快速切换工具的入口，带图标显示。
-✅ **统一导航** - 所有工具页面顶部导航栏均显示“Dev Toolbox”标题，点击可返回主页。
-✅ **完整的剪贴板支持** - 所有文本框都支持复制粘贴操作。
-✅ **文件导入导出** - 支持多种文件格式的导入和结果导出。
-✅ **深色模式支持** - 自适应系统主题。
-✅ **响应式设计** - 支持不同窗口大小。
-✅ **实时预览** - 输入即时处理和反馈。
+[English](README_EN.md) | 简体中文
 
-## 技术栈
+</div>
 
-- **前端框架**: Vue 3.4.x + TypeScript 5.x
-- **构建工具**: Vite 5.x
-- **桌面框架**: Electron 31.x
-- **UI框架**: TailwindCSS 3.x
-- **工具库**:
-  - monaco-editor (核心编辑器)
-  - dayjs (日期处理)
-  - js-yaml (YAML转换)
-  - xml-js (XML转换)
-  - crypto-js (哈希算法)
-  - lucide-vue-next (图标库)
-  - @vueuse/core (组合式工具)
-  - electron-store (数据存储)
+## 🚀 功能特性
 
-## 快速开始
+### 核心工具
 
-### 环境要求
+- 📝 **文本对比工具** - 基于 Monaco Editor，支持分屏/内联对比，高亮差异，语法高亮，差异导航
+- 🔤 **Base64 编解码** - 支持标准和URL安全模式，文件处理，实时转换
+- 📄 **JSON 工具** - 格式化、压缩、验证，支持JSON↔YAML↔XML转换，JSONPath查询，树状视图
+- 🔗 **URL 编解码** - 支持多种编码模式，实时处理
+- ⏰ **智能时间戳转换** - 智能识别多种时间格式，输出标准格式
+- 🔑 **UUID 生成器** - 生成标准UUID v4
+- 📊 **文本分析** - 实时统计字符数、行数、段落数等
+- 🔒 **哈希生成器** - 支持MD5、SHA系列算法
+- 🗃️ **SQL 格式化** - 多数据库支持的SQL美化工具
+- 🔐 **密码生成器** - 多种密码类型，安全强度分析
+
+### 产品特色
+
+✨ **现代化界面** - 基于 Monaco Editor，提供专业的代码编辑体验
+🎨 **统一设计** - 一致的UI/UX设计，流畅的交互体验
+🌙 **深色模式** - 自适应系统主题，护眼舒适
+⚡ **高性能** - 实时处理，响应迅速
+💾 **数据持久化** - 自动保存用户设置和历史记录
+🖥️ **跨平台** - 支持 macOS、Windows、Linux
+
+## 📸 预览
+
+![Dev Toolbox 主界面](https://via.placeholder.com/800x500?text=Dev+Toolbox+Screenshot)
+
+> 注：请添加实际的应用截图
+
+## 🛠️ 技术栈
+
+- **前端框架**: Vue 3 + TypeScript
+- **构建工具**: Vite 5
+- **桌面框架**: Electron 31
+- **UI框架**: TailwindCSS 3
+- **编辑器**: Monaco Editor (VS Code 核心)
+- **状态管理**: Pinia
+- **工具库**: dayjs、crypto-js、js-yaml、xml-js 等
+
+## 📦 安装使用
+
+### 预编译版本 (推荐)
+
+前往 [Releases](../../releases) 页面下载适合您平台的安装包：
+
+- **macOS**: `Dev-Toolbox-x.x.x.dmg` (支持 Intel 和 Apple Silicon)
+- **Windows**: `Dev-Toolbox-Setup-x.x.x.exe`
+- **Linux**: `Dev-Toolbox-x.x.x.AppImage`
+
+### 从源码构建
+
+#### 环境要求
 
 - Node.js 18+
 - npm 9+
 
-### 安装依赖
+#### 克隆仓库
+
+```bash
+git clone https://github.com/your-username/dev-toolbox.git
+cd dev-toolbox
+```
+
+#### 安装依赖
 
 ```bash
 npm install
 ```
 
-### 开发模式
+#### 开发模式
 
 ```bash
-# 启动 Web 开发服务器
+# Web 开发模式
 npm run dev
 
-# 启动 Electron 应用开发模式
+# Electron 开发模式
 npm run electron:dev
 ```
 
-### 构建应用
+#### 构建应用
 
 ```bash
-# 完整构建 (包含所有平台)
+# 构建所有平台
 npm run build
 
 # 分平台构建
-mymac: npm run build:mac     # macOS (DMG)
-windows: npm run build:win     # Windows (NSIS)
-linux: npm run build:linux   # Linux (AppImage)
+npm run build:mac     # macOS
+npm run build:win     # Windows
+npm run build:linux   # Linux
 ```
 
-## 项目结构
+#### Web 版本部署
 
-```
-dev-toolbox/
-├── electron/                 # Electron 主进程代码
-│   ├── main.ts              # 主进程入口，负责窗口创建、IPC通信、菜单、右键菜单等
-│   └── preload.ts           # 预加载脚本，安全地将Node.js能力暴露给渲染进程
-├── src/                     # Vue 应用源码
-│   ├── assets/              # 静态资源，如图片、字体
-│   ├── components/          # 可复用 Vue 组件，如 ToolSwitcher, JsonTreeView, JsonNode
-│   ├── stores/              # Pinia 状态管理模块，如 theme.ts (主题切换)
-│   ├── types/               # TypeScript 类型定义文件
-│   ├── utils/               # 工具函数和模块配置，如 modules.ts (工具模块定义)
-│   ├── views/               # 页面视图组件，每个工具对应一个 .vue 文件
-│   │   ├── Home.vue        # 应用首页，展示所有工具卡片
-│   │   ├── Diff.vue        # 文本对比工具页面
-│   │   ├── Base64.vue      # Base64编解码工具页面
-│   │   ├── Json.vue        # JSON处理工具页面
-│   │   ├── Url.vue         # URL编解码工具页面
-│   │   ├── Timestamp.vue   # 时间戳转换工具页面
-│   │   ├── UuidGenerator.vue # UUID生成器页面
-│   │   ├── TextAnalyzer.vue # 字符统计工具页面
-│   │   └── HashGenerator.vue # 哈希生成器页面
-│   ├── App.vue              # Vue 根组件
-│   ├── main.ts              # Vue 应用入口，配置路由、挂载应用
-│   └── style.css            # 全局样式文件
-├── public/                  # 静态资源，直接复制到构建目录
-├── dist/                    # Web构建输出目录
-└── dist-electron/           # Electron构建输出目录 (包含主进程和预加载脚本)
+```bash
+# 构建 Web 版本
+npm run build:web
+
+# 预览构建结果
+npm run preview
 ```
 
-## 功能详解
+## 🎯 使用指南
 
-### 文本对比工具
-- **多种对比模式**: 分屏/内联，字符级、单词级、行级差异
-- **语法高亮**: 清晰标识添加、删除、修改的内容
-- **文件导入**: 支持多种文本文件格式
-- **统计信息**: 实时显示差异统计数据
-- **自动换行**: 可切换编辑器文本自动换行
+### 启动应用
 
-### Base64 编解码工具
-- **双向转换**: 编码/解码自由切换
-- **URL安全模式**: 支持URL Safe Base64格式
-- **文件处理**: 直接处理文件内容
-- **自动处理**: 输入即时转换
-- **自动换行**: 可切换编辑器文本自动换行
+1. 下载并安装对应平台的安装包
+2. 启动 Dev Toolbox
+3. 在主界面选择需要使用的工具
+4. 享受高效的开发体验
 
-### JSON 工具
-- **多种操作**: 格式化、压缩、验证
-- **数据转换**: JSON ↔ YAML ↔ XML
-- **JSONPath查询**: 支持路径查询功能
-- **语法验证**: 实时验证JSON格式
-- **交互式树状视图**: 可切换显示，直观展示JSON结构
-- **自动换行**: 可切换编辑器文本自动换行
+### 快捷操作
 
-### URL 编解码工具
-- **多种模式**: encodeURIComponent/encodeURI/decodeURIComponent/decodeURI
-- **自动处理**: 输入即时处理
-- **自动换行**: 可切换编辑器文本自动换行
+- `Cmd/Ctrl + V`: 粘贴文本
+- `Cmd/Ctrl + C`: 复制结果
+- `Cmd/Ctrl + A`: 全选
+- `Cmd/Ctrl + Z`: 撤销
+- `Cmd/Ctrl + Shift + Z`: 重做
 
-### 智能时间戳转换工具
-- **智能解析**: 自动识别多种时间格式（秒/毫秒时间戳、YYYYMMDD、标准日期字符串、ISO 8601、自然语言日期）
-- **多格式输出**: 本地时间、UTC、时间戳（秒/毫秒）、RFC 2822、相对时间
-- **快捷操作**: 复制当前时间戳，设为当前时间
+### 工具说明
 
-### UUID 生成器
-- **UUID v4**: 生成基于随机数的全局唯一标识符
-- **便捷操作**: 一键生成、复制、清空
+每个工具页面都提供了详细的使用说明和示例，点击 "?" 图标查看帮助信息。
 
-### 字符统计工具
-- **实时统计**: 统计文本的字符数（含/不含空格）、字数（支持中英文）、行数、段落数
-- **Monaco Editor**: 提供流畅的文本输入体验
+## 🌐 在线体验
 
-### 哈希生成器
-- **多种哈希算法**: MD5, SHA-1, SHA-256, SHA-512
-- **实时生成**: 输入文本即时计算哈希值
-- **清晰展示**: 结果按算法分组，易于复制
+您也可以通过浏览器直接体验 Dev Toolbox：
 
-## 构建配置
+- **官方在线版**: [https://dev-toolbox.vercel.app](https://dev-toolbox.vercel.app)
 
-### Electron Builder 配置
+> 在线版本包含完整功能，但文件操作可能受到浏览器限制
 
-应用支持打包为以下格式：
-- **macOS**: DMG 安装包 (支持 x64 和 arm64)
-- **Windows**: NSIS 安装程序
-- **Linux**: AppImage 便携应用
+## 🤝 贡献指南
 
-### 开发环境配置
+我们欢迎任何形式的贡献！请查看 [贡献指南](CONTRIBUTING.md) 了解详细信息。
 
-```json
-{
-  "scripts": {
-    "dev": "vite",                          // Web开发服务器
-    "electron:dev": "...",                  // Electron开发模式
-    "build": "...",                         // 完整构建
-    "build:mac": "...",                     // macOS构建
-    "build:win": "...",                     // Windows构建
-    "build:linux": "..."                   // Linux构建
-  }
-}
-```
+### 快速开始贡献
 
-## 故障排除
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
 
-### 常见问题
+### 报告问题
 
-1. **剪贴板权限问题**
-   - 应用已集成 Electron 剪贴板 API，无需额外权限
+如果您发现了 Bug 或有功能建议，请：
 
-2. **构建失败**
-   - 确保 Node.js 版本 >= 18
-   - 删除 node_modules 重新安装依赖
+1. 查看 [已有 Issues](../../issues) 确认问题未被报告
+2. 使用合适的 [Issue 模板](../../issues/new/choose) 创建新问题
+3. 提供详细的重现步骤和环境信息
 
-3. **开发模式启动失败**
-   - 检查端口 3000 是否被占用
-   - 确保所有依赖正确安装
+## 📝 更新日志
 
-### 技术支持
+查看 [CHANGELOG.md](CHANGELOG.md) 了解版本更新详情。
 
-如遇到问题，请检查：
-1. Node.js 和 npm 版本
-2. 依赖安装是否完整
-3. 系统权限设置
+### 最新版本亮点
 
-## 更新日志
+- ✨ 全新的 Monaco Editor 集成
+- 🎨 统一的 UI/UX 设计
+- 🚀 性能优化和稳定性提升
+- 🛠️ 新增多个实用工具
 
-### v1.0.0 (2025-01-01)
+## 📄 许可证
 
-- ✅ 初始版本发布
-- ✅ 实现所有核心功能
-- ✅ 完善剪贴板支持
-- ✅ 优化用户体验
-- ✅ 完整的构建配置
+本项目基于 [MIT License](LICENSE) 开源。
 
-### v1.1.0 (最新)
+## 🙏 致谢
 
-- ✨ **全面升级核心工具模块**：
-  - **文本对比**: 集成 Monaco Editor，支持分屏/内联对比，高亮差异，忽略空白，主题切换，差异导航，自动换行。
-  - **Base64 编解码**: 集成 Monaco Editor，支持UTF-8安全编解码，URL安全模式，文件导入导出，自动换行。
-  - **JSON 工具**: 集成 Monaco Editor，支持格式化、压缩、JSON与YAML/XML转换，交互式树状视图，JSONPath查询，自动换行。
-  - **URL 编解码**: 集成 Monaco Editor，支持 `encodeURIComponent`/`encodeURI` 和 `decodeURIComponent`/`decodeURI`，实时转换，自动换行。
-  - **智能时间戳转换**: 集成 Day.js，智能识别多种时间格式（时间戳、日期字符串、自然语言），输出多种标准格式。
-  - **UUID 生成器**: 生成全局唯一标识符 (UUID v4)。
-  - **字符统计工具**: 实时统计文本的字数（支持中英文）、字符数、行数、段落数等信息。
-  - **哈希生成器**: 生成文本的MD5, SHA-1, SHA-256, SHA-512哈希值。
-- 🎨 **统一且专业的UI/UX**：所有工具模块采用一致的布局、样式和交互，提供流畅的用户体验。
-- 💡 **详细的帮助提示**：每个工具模块都提供清晰的说明、示例和按钮功能解释。
-- 🚀 **快速工具切换**：顶部导航栏提供快速切换工具的入口，带图标显示。
-- 🏠 **统一导航**：所有工具页面顶部导航栏均显示“Dev Toolbox”标题，点击可返回主页。
-- 🐞 **修复**：解决了时间戳工具无法识别 `YYYYMMDD` 格式的问题。
+感谢以下开源项目的支持：
 
-## 许可证
+- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
+- [Electron](https://electronjs.org/) - 跨平台桌面应用框架
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/) - 强大的代码编辑器
+- [TailwindCSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
+- [Vite](https://vitejs.dev/) - 快速的构建工具
 
-MIT License
+## 📞 支持
+
+如果您喜欢这个项目，请考虑：
+
+- ⭐ 给项目点个星标
+- 🐛 报告问题和建议
+- 🔧 贡献代码
+- 📢 推荐给其他开发者
+
+---
+
+<div align="center">
+
+**让开发更高效，让工具更好用**
+
+</div>

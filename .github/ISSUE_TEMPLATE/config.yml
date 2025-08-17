@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 讨论区
+    url: https://github.com/your-username/dev-toolbox/discussions
+    about: 一般问题讨论、使用帮助、想法交流
+  - name: 📖 文档
+    url: https://github.com/your-username/dev-toolbox#readme
+    about: 查看项目文档和使用指南
+  - name: 🌐 在线体验
+    url: https://dev-toolbox.vercel.app
+    about: 在浏览器中直接体验 Dev Toolbox

@@ -1,0 +1,104 @@
+name: 💡 功能建议
+description: 为 Dev Toolbox 建议新功能或改进
+title: "[Feature] "
+labels: ["enhancement", "needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您的功能建议！我们重视每一个改进建议，请详细描述您的想法。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 这个功能建议是为了解决什么问题？
+      placeholder: 目前遇到的问题或不便之处...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 解决方案
+      description: 详细描述您希望的功能实现方式
+      placeholder: 您希望这个功能如何工作？
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案
+      description: 描述您考虑过的其他解决方案
+      placeholder: 还有哪些其他的实现方式？
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      description: 您认为这个功能的重要性如何？
+      options:
+        - 高（重要且紧急）
+        - 中（重要但不紧急）
+        - 低（有用但非必需）
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 功能类别
+      description: 这个功能属于哪个类别？
+      options:
+        - 新工具模块
+        - 现有工具改进
+        - 用户界面改进
+        - 性能优化
+        - 跨平台支持
+        - 数据导入导出
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: 使用场景
+      description: 详细描述这个功能的使用场景
+      placeholder: |
+        什么时候会使用这个功能？
+        谁会使用这个功能？
+        预期的使用频率如何？
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: 界面设计或示例
+      description: 如果可能，请提供界面设计图、流程图或使用示例
+      placeholder: 可以粘贴图片或描述界面布局...
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: 实现意愿
+      description: 您是否愿意参与实现这个功能？
+      options:
+        - label: 我愿意提交 Pull Request 来实现这个功能
+        - label: 我可以提供设计或技术支持
+        - label: 我可以参与测试这个功能
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 确认
+      description: 在提交之前，请确认以下事项
+      options:
+        - label: 我已经搜索了现有的 issues，确认这个功能没有被建议过
+          required: true
+        - label: 这个功能符合 Dev Toolbox 的产品定位
+          required: true
+        - label: 我提供了足够的信息来理解这个功能需求
+          required: true
