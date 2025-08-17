@@ -3,82 +3,82 @@ import type { ToolModule } from '../types'
 export const modules: ToolModule[] = [
   {
     id: 'diff',
-    name: '文本对比',
-    description: '比较两个文本的差异，支持字符级和行级高亮',
+    name: 'tools.diff.name',
+    description: 'tools.diff.description',
     icon: 'file-text',
-    category: '文本处理',
+    category: 'categories.text',
     route: '/diff'
   },
   {
     id: 'timestamp',
-    name: '时间戳转换',
-    description: '毫秒/秒时间戳与日期格式的相互转换',
+    name: 'tools.timestamp.name',
+    description: 'tools.timestamp.description',
     icon: 'clock',
-    category: '时间工具',
+    category: 'categories.time',
     route: '/timestamp'
   },
   {
     id: 'url',
-    name: 'URL 编解码',
-    description: 'URL 编码和解码，支持批量处理',
+    name: 'tools.url.name',
+    description: 'tools.url.description',
     icon: 'link',
-    category: '编码工具',
+    category: 'categories.encoding',
     route: '/url'
   },
   {
     id: 'base64',
-    name: 'Base64 编解码',
-    description: '文本和文件的 Base64 编码与解码',
+    name: 'tools.base64.name',
+    description: 'tools.base64.description',
     icon: 'binary',
-    category: '编码工具',
+    category: 'categories.encoding',
     route: '/base64'
   },
   {
     id: 'json',
-    name: 'JSON 格式化',
-    description: 'JSON 格式化和压缩，错误提示与定位',
+    name: 'tools.json.name',
+    description: 'tools.json.description',
     icon: 'braces',
-    category: '数据格式',
+    category: 'categories.data',
     route: '/json'
   },
   {
     id: 'uuid',
-    name: 'UUID 生成器',
-    description: '生成全局唯一标识符 (UUID v4)',
+    name: 'tools.uuid.name',
+    description: 'tools.uuid.description',
     icon: 'key',
-    category: '开发工具',
+    category: 'categories.development',
     route: '/uuid'
   },
   {
     id: 'text-analyzer',
-    name: '字符统计',
-    description: '统计文本的字数、字符数、行数、段落数等',
+    name: 'tools.textAnalyzer.name',
+    description: 'tools.textAnalyzer.description',
     icon: 'text-cursor',
-    category: '文本处理',
+    category: 'categories.text',
     route: '/text-analyzer'
   },
   {
     id: 'hash-generator',
-    name: '哈希生成器',
-    description: '生成文本的MD5, SHA-1, SHA-256, SHA-512哈希值',
+    name: 'tools.hash.name',
+    description: 'tools.hash.description',
     icon: 'hash',
-    category: '编码工具',
+    category: 'categories.encoding',
     route: '/hash-generator'
   },
   {
     id: 'sql-formatter',
-    name: 'SQL 格式化',
-    description: '格式化SQL语句，支持MySQL、PostgreSQL、TiDB等多种数据库语法',
+    name: 'tools.sql.name',
+    description: 'tools.sql.description',
     icon: 'database',
-    category: '数据格式',
+    category: 'categories.data',
     route: '/sql-formatter'
   },
   {
     id: 'password-generator',
-    name: '密码生成器',
-    description: '基于业界最佳实践生成安全密码，支持多种密码类型和强度分析',
+    name: 'tools.password.name',
+    description: 'tools.password.description',
     icon: 'shield',
-    category: '开发工具',
+    category: 'categories.development',
     route: '/password-generator'
   }
 ]
@@ -87,11 +87,22 @@ export const getModuleByRoute = (route: string) => {
   return modules.find(module => module.route === route)
 }
 
-export const searchModules = (query: string) => {
+export const searchModules = (query: string, t?: any) => {
   const lowercaseQuery = query.toLowerCase()
-  return modules.filter(module => 
-    module.name.toLowerCase().includes(lowercaseQuery) ||
-    module.description.toLowerCase().includes(lowercaseQuery) ||
-    module.category.toLowerCase().includes(lowercaseQuery)
-  )
+  return modules.filter(module => {
+    // 如果有翻译函数，使用翻译后的文本进行搜索
+    if (t) {
+      const translatedName = t(module.name).toLowerCase()
+      const translatedDescription = t(module.description).toLowerCase()
+      const translatedCategory = t(module.category).toLowerCase()
+      return translatedName.includes(lowercaseQuery) ||
+             translatedDescription.includes(lowercaseQuery) ||
+             translatedCategory.includes(lowercaseQuery)
+    }
+
+    // 否则使用原始 key 进行搜索
+    return module.name.toLowerCase().includes(lowercaseQuery) ||
+           module.description.toLowerCase().includes(lowercaseQuery) ||
+           module.category.toLowerCase().includes(lowercaseQuery)
+  })
 }

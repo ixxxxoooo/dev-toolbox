@@ -12,7 +12,7 @@
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">UUID 生成器</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.uuid.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
@@ -34,6 +34,7 @@
           <div class="flex items-center space-x-2">
             <button @click="generateUuid" class="px-3 py-1.5 text-sm rounded-md btn-primary">生成 UUID</button>
             <button @click="clearUuid" :disabled="!uuid" class="px-3 py-1.5 text-sm rounded-md btn-destructive transition-colors disabled:opacity-50">清空</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -75,6 +76,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 const uuid = ref('');

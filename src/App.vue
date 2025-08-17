@@ -5,10 +5,20 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useThemeStore } from './stores/theme'
+import { useLocaleStore } from './stores/locale'
 
 // 主题存储会在创建时自动初始化，无需手动调用
 useThemeStore()
+
+// 语言存储初始化
+const localeStore = useLocaleStore()
+
+onMounted(() => {
+  // 设置 HTML lang 属性
+  document.documentElement.setAttribute('lang', localeStore.currentLocale)
+})
 </script>
 
 <style>

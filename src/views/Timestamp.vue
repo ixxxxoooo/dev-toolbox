@@ -12,7 +12,7 @@
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">智能时间戳转换</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.timestamp.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
@@ -45,6 +45,7 @@
           <div class="flex items-center space-x-2">
             <button @click="pasteAndParse" class="px-3 py-1.5 text-sm btn-secondary rounded-md">粘贴并解析</button>
             <button @click="setCurrentTime" class="px-3 py-1.5 text-sm btn-primary rounded-md">设为当前时间</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -90,6 +91,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 dayjs.extend(customParseFormat);

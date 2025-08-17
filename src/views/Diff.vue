@@ -1,57 +1,14 @@
 <template>
   <div class="h-screen flex flex-col bg-background text-foreground">
     <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" title="返回主页">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">文本对比工具</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">文本对比工具说明</p>
-                  <p class="mb-1">基于Monaco Editor的强大文本对比工具，支持实时编辑和高亮差异。</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">分屏对比:</strong> 左右两栏显示，便于逐行比较。</li>
-                    <li><strong class="font-semibold">内联对比:</strong> 在同一文本流中高亮显示差异。</li>
-                  </ul>
-                  <p class="font-bold mb-1">核心功能:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong class="font-semibold">忽略空白:</strong> 忽略行首、行尾的空格和制表符差异，专注于内容变更。</li>
-                    <li><strong class="font-semibold">显示行号:</strong> 控制编辑器是否显示行号。</li>
-                    <li><strong class="font-semibold">主题:</strong> 切换编辑器显示主题（深色/浅色）。</li>
-                  </ul>
-                  <p class="font-bold mb-1">按钮说明:</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">上一个/下一个:</strong> 快速跳转到差异点。</li>
-                    <li><strong class="font-semibold">交换内容:</strong> 交换左右两边编辑器的文本。</li>
-                    <li><strong class="font-semibold">清空全部:</strong> 清空所有文本内容。</li>
-                    <li><strong class="font-semibold">粘贴/复制:</strong> 独立操作左右编辑器的内容。</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <ThemeToggleButton />
-          </div>
-        </div>
-      </div>
-    </header>
+    <ToolHeader :title="$t('tools.diff.name')" />
 
     <!-- 工具栏 -->
     <div class="container mx-auto px-4 py-3 border-b border-border">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-6">
           <div class="flex items-center space-x-2" title="切换分屏或内联对比模式">
-            <label class="text-sm font-medium">模式:</label>
+            <label class="text-sm font-medium">{{ $t('tools.diff.mode') }}:</label>
             <select v-model="diffMode" class="text-sm px-2 py-1 border border-border rounded bg-background">
               <option value="split">分屏对比</option>
               <option value="inline">内联对比</option>
@@ -133,9 +90,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import ToolHeader from '../components/ToolHeader.vue';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 

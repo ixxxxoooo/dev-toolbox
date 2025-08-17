@@ -12,7 +12,7 @@
               </svg>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">URL 编解码</h1>
+              <h1 class="text-xl font-semibold">{{ $t('tools.url.name') }}</h1>
               <div class="relative group">
                 <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
                 <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
@@ -32,6 +32,7 @@
           </div>
           <div class="flex items-center space-x-2">
             <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">清空</button>
+            <LanguageSwitcher />
             <ThemeToggleButton />
           </div>
         </div>
@@ -107,6 +108,7 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle } from 'lucide-vue-next';
 import ToolSwitcher from '../components/ToolSwitcher.vue';
 import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 

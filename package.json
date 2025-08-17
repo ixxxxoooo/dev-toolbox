@@ -55,8 +55,10 @@
     "js-yaml": "^4.1.0",
     "lucide-vue-next": "^0.408.0",
     "monaco-editor": "^0.52.2",
+    "pinia": "^3.0.3",
     "sql-formatter": "^15.6.6",
     "vue": "^3.4.31",
+    "vue-i18n": "^9.14.5",
     "vue-router": "^4.4.0",
     "xml-js": "^1.6.11"
   },

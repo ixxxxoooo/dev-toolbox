@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <ToolSwitcher />
-            <h1 class="text-2xl font-bold text-foreground">Dev Toolbox</h1>
+            <h1 class="text-2xl font-bold text-foreground">{{ $t('app.title') }}</h1>
           </div>
           <div class="flex items-center space-x-4">
             <!-- 搜索框 -->
@@ -14,13 +14,16 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="搜索工具..."
+                :placeholder="$t('home.searchPlaceholder')"
                 class="w-64 px-4 py-2 pl-10 bg-secondary rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <svg class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
+
+            <!-- 语言切换 -->
+            <LanguageSwitcher />
 
             <!-- 主题切换按钮 -->
             <ThemeToggleButton />
@@ -33,7 +36,7 @@
     <main class="container mx-auto px-4 py-8">
       <!-- 最近使用 -->
       <section v-if="recentTools.length > 0" class="mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-4">最近使用</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-4">{{ $t('home.recentTools') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <div
             v-for="tool in recentTools"
@@ -46,8 +49,8 @@
                 <component :is="getIconComponent(tool.icon)" class="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 class="font-medium text-foreground">{{ tool.name }}</h3>
-                <p class="text-sm text-muted-foreground">{{ tool.category }}</p>
+                <h3 class="font-medium text-foreground">{{ $t(tool.name) }}</h3>
+                <p class="text-sm text-muted-foreground">{{ $t(tool.category) }}</p>
               </div>
             </div>
           </div>
@@ -56,7 +59,7 @@
 
       <!-- 所有工具 -->
       <section>
-        <h2 class="text-lg font-semibold text-foreground mb-4">所有工具</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-4">{{ $t('home.allTools') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <div
             v-for="module in filteredModules"
@@ -69,11 +72,11 @@
                 <component :is="getIconComponent(module.icon)" class="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h3 class="font-semibold text-foreground">{{ module.name }}</h3>
-                <p class="text-sm text-muted-foreground mt-1">{{ module.description }}</p>
+                <h3 class="font-semibold text-foreground">{{ $t(module.name) }}</h3>
+                <p class="text-sm text-muted-foreground mt-1">{{ $t(module.description) }}</p>
               </div>
               <span class="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
-                {{ module.category }}
+                {{ $t(module.category) }}
               </span>
             </div>
           </div>
@@ -85,8 +88,8 @@
         <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.5-1.01-6-2.657m14 0A11.953 11.953 0 0012 21c-3.716 0-7.066-1.397-9.6-3.686M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-foreground">没有找到结果</h3>
-        <p class="mt-1 text-sm text-muted-foreground">尝试调整搜索关键词</p>
+        <h3 class="mt-2 text-sm font-medium text-foreground">{{ $t('errors.noResults') }}</h3>
+        <p class="mt-1 text-sm text-muted-foreground">{{ $t('errors.tryAdjustKeywords') }}</p>
       </div>
     </main>
   </div>
@@ -95,14 +98,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { modules, searchModules } from '../utils/modules'
 import type { ToolModule } from '../types'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { FileText, Clock, Link, Binary, Braces, Key, TextCursor, Hash, Database, Shield } from 'lucide-vue-next'
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const searchQuery = ref('')
 const recentTools = ref<ToolModule[]>([])
@@ -111,7 +117,7 @@ const filteredModules = computed(() => {
   if (!searchQuery.value.trim()) {
     return modules
   }
-  return searchModules(searchQuery.value)
+  return searchModules(searchQuery.value, t)
 })
 
 const navigateToTool = async (tool: ToolModule) => {

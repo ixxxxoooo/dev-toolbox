@@ -45,41 +45,42 @@ function createWindow() {
 
   // 添加右键上下文菜单
   mainWindow.webContents.on('context-menu', (event: Event, params: ContextMenuParams) => {
+    const texts = getMenuTexts()
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: '撤销',
+        label: texts.undo,
         accelerator: 'CmdOrCtrl+Z',
         role: 'undo',
         enabled: params.editFlags.canUndo
       },
       {
-        label: '重做',
+        label: texts.redo,
         accelerator: 'Shift+CmdOrCtrl+Z',
         role: 'redo',
         enabled: params.editFlags.canRedo
       },
       { type: 'separator' },
       {
-        label: '剪切',
+        label: texts.cut,
         accelerator: 'CmdOrCtrl+X',
         role: 'cut',
         enabled: params.editFlags.canCut
       },
       {
-        label: '复制',
+        label: texts.copy,
         accelerator: 'CmdOrCtrl+C',
         role: 'copy',
         enabled: params.editFlags.canCopy
       },
       {
-        label: '粘贴',
+        label: texts.paste,
         accelerator: 'CmdOrCtrl+V',
         role: 'paste',
         enabled: params.editFlags.canPaste
       },
       { type: 'separator' },
       {
-        label: '全选',
+        label: texts.selectAll,
         accelerator: 'CmdOrCtrl+A',
         role: 'selectAll',
         enabled: params.editFlags.canSelectAll
@@ -133,40 +134,80 @@ ipcMain.handle('clipboard-read', () => {
   return clipboard.readText()
 })
 
+// 菜单本地化文本
+const getMenuTexts = () => {
+  // 简单的语言检测，基于系统语言
+  const locale = app.getLocale().toLowerCase()
+  const isZh = locale.startsWith('zh')
+
+  return {
+    appName: 'Dev Toolbox',
+    about: isZh ? '关于 Dev Toolbox' : 'About Dev Toolbox',
+    services: isZh ? '服务' : 'Services',
+    hide: isZh ? '隐藏 Dev Toolbox' : 'Hide Dev Toolbox',
+    hideOthers: isZh ? '隐藏其他' : 'Hide Others',
+    showAll: isZh ? '显示全部' : 'Show All',
+    quit: isZh ? '退出' : 'Quit',
+    edit: isZh ? '编辑' : 'Edit',
+    undo: isZh ? '撤销' : 'Undo',
+    redo: isZh ? '重做' : 'Redo',
+    cut: isZh ? '剪切' : 'Cut',
+    copy: isZh ? '复制' : 'Copy',
+    paste: isZh ? '粘贴' : 'Paste',
+    selectAll: isZh ? '全选' : 'Select All',
+    view: isZh ? '视图' : 'View',
+    reload: isZh ? '重新加载' : 'Reload',
+    forceReload: isZh ? '强制重新加载' : 'Force Reload',
+    devTools: isZh ? '开发者工具' : 'Developer Tools',
+    actualSize: isZh ? '实际大小' : 'Actual Size',
+    zoomIn: isZh ? '放大' : 'Zoom In',
+    zoomOut: isZh ? '缩小' : 'Zoom Out',
+    fullscreen: isZh ? '全屏' : 'Toggle Fullscreen',
+    window: isZh ? '窗口' : 'Window',
+    minimize: isZh ? '最小化' : 'Minimize',
+    close: isZh ? '关闭' : 'Close',
+    zoom: isZh ? '缩放' : 'Zoom',
+    front: isZh ? '前置所有窗口' : 'Bring All to Front',
+    help: isZh ? '帮助' : 'Help',
+    learnMore: isZh ? '学习更多' : 'Learn More'
+  }
+}
+
 // 创建应用菜单
 const createMenu = () => {
+  const texts = getMenuTexts()
   const template: MenuItemConstructorOptions[] = [
     {
-      label: 'Dev Toolbox',
+      label: texts.appName,
       submenu: [
         {
-          label: '关于 Dev Toolbox',
+          label: texts.about,
           role: 'about'
         },
         { type: 'separator' },
         {
-          label: '服务',
+          label: texts.services,
           role: 'services',
           submenu: []
         },
         { type: 'separator' },
         {
-          label: '隐藏 Dev Toolbox',
+          label: texts.hide,
           accelerator: 'Command+H',
           role: 'hide'
         },
         {
-          label: '隐藏其他',
+          label: texts.hideOthers,
           accelerator: 'Command+Alt+H',
-          role: 'hideOthers' // 修正大小写
+          role: 'hideOthers'
         },
         {
-          label: '显示全部',
+          label: texts.showAll,
           role: 'unhide'
         },
         { type: 'separator' },
         {
-          label: '退出',
+          label: texts.quit,
           accelerator: process.platform === 'darwin' ? 'Command+Q' : 'Ctrl+Q',
           click: () => {
             app.quit()
@@ -175,109 +216,109 @@ const createMenu = () => {
       ]
     },
     {
-      label: '编辑',
+      label: texts.edit,
       submenu: [
         {
-          label: '撤销',
+          label: texts.undo,
           accelerator: 'CmdOrCtrl+Z',
           role: 'undo'
         },
         {
-          label: '重做',
+          label: texts.redo,
           accelerator: 'Shift+CmdOrCtrl+Z',
           role: 'redo'
         },
         { type: 'separator' },
         {
-          label: '剪切',
+          label: texts.cut,
           accelerator: 'CmdOrCtrl+X',
           role: 'cut'
         },
         {
-          label: '复制',
+          label: texts.copy,
           accelerator: 'CmdOrCtrl+C',
           role: 'copy'
         },
         {
-          label: '粘贴',
+          label: texts.paste,
           accelerator: 'CmdOrCtrl+V',
           role: 'paste'
         },
         {
-          label: '全选',
+          label: texts.selectAll,
           accelerator: 'CmdOrCtrl+A',
           role: 'selectAll'
         }
       ]
     },
     {
-      label: '视图',
+      label: texts.view,
       submenu: [
         {
-          label: '重新加载',
+          label: texts.reload,
           accelerator: 'CmdOrCtrl+R',
           click: (item, focusedWindow) => {
-          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reload() // 修正
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reload()
         }
         },
         {
-          label: '强制重新加载',
+          label: texts.forceReload,
           accelerator: 'CmdOrCtrl+Shift+R',
           click: (item, focusedWindow) => {
-          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reloadIgnoringCache() // 修正
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.reloadIgnoringCache()
         }
         },
         {
-          label: '开发者工具',
+          label: texts.devTools,
           accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
           click: (item, focusedWindow) => {
-          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.toggleDevTools() // 修正
+          if (focusedWindow) (focusedWindow as BrowserWindow).webContents.toggleDevTools()
         }
         },
         { type: 'separator' },
         {
-          label: '实际大小',
+          label: texts.actualSize,
           accelerator: 'CmdOrCtrl+0',
-          role: 'resetZoom' // 修正大小写
+          role: 'resetZoom'
         },
         {
-          label: '放大',
+          label: texts.zoomIn,
           accelerator: 'CmdOrCtrl+Plus',
-          role: 'zoomIn' // 修正大小写
+          role: 'zoomIn'
         },
         {
-          label: '缩小',
+          label: texts.zoomOut,
           accelerator: 'CmdOrCtrl+-',
-          role: 'zoomOut' // 修正大小写
+          role: 'zoomOut'
         },
         { type: 'separator' },
         {
-          label: '全屏',
+          label: texts.fullscreen,
           accelerator: process.platform === 'darwin' ? 'Ctrl+Command+F' : 'F11',
           role: 'togglefullscreen'
         }
       ]
     },
     {
-      label: '窗口',
+      label: texts.window,
       submenu: [
         {
-          label: '最小化',
+          label: texts.minimize,
           accelerator: 'CmdOrCtrl+M',
           role: 'minimize'
         },
         {
-          label: '关闭',
+          label: texts.close,
           accelerator: 'CmdOrCtrl+W',
           role: 'close'
         }
       ]
     },
     {
-      label: '帮助',
+      label: texts.help,
       submenu: [
         {
-          label: '学习更多',
+          label: texts.learnMore,
           click: () => {
             // 可以在这里添加帮助链接
           }
@@ -294,22 +335,22 @@ const createMenu = () => {
     // 窗口菜单
     template[3].submenu = [
       {
-        label: '关闭',
+        label: texts.close,
         accelerator: 'CmdOrCtrl+W',
         role: 'close'
       },
       {
-        label: '最小化',
+        label: texts.minimize,
         accelerator: 'CmdOrCtrl+M',
         role: 'minimize'
       },
       {
-        label: '缩放',
+        label: texts.zoom,
         role: 'zoom'
       },
       { type: 'separator' },
       {
-        label: '前置所有窗口',
+        label: texts.front,
         role: 'front'
       }
     ]
