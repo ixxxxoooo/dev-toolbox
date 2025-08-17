@@ -72,9 +72,6 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
-    permissions:
-      contents: write
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -83,11 +80,11 @@ jobs:
       uses: actions/download-artifact@v4
 
     - name: Create Release
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release create ${{ github.ref_name }} \
-          --generate-notes \
-          --draft=false \
-          --prerelease=false \
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
           electron-macos-latest/**/*
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+        GH_TOKEN: ${{ secrets.TOKEN }}
