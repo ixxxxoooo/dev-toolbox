@@ -6,11 +6,10 @@
   "main": "dist-electron/electron/main.cjs",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder",
+    "build": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win --mac",
     "build:web": "vue-tsc && vite build",
     "build:win": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win",
     "build:mac": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --mac",
-    "build:linux": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --linux",
     "preview": "vite preview",
     "electron:dev": "vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && npx electron .",
     "rename-electron-files": "cd dist-electron/electron && if [ -f main.js ]; then mv main.js main.cjs; fi && if [ -f preload.js ]; then mv preload.js preload.cjs; fi",
@@ -41,6 +40,7 @@
     "electron-builder": "^24.13.3",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.6",
+    "terser": "^5.43.1",
     "typescript": "^5.9.2",
     "vite": "^5.4.19",
     "vue-tsc": "^2.0.26"
@@ -51,7 +51,6 @@
     "dayjs": "^1.11.13",
     "diff-match-patch": "^1.0.5",
     "electron-store": "^8.2.0",
-    "framer-motion": "^11.3.2",
     "js-yaml": "^4.1.0",
     "lucide-vue-next": "^0.408.0",
     "monaco-editor": "^0.52.2",
@@ -70,8 +69,12 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "!dist/**/*.map",
+      "!dist/**/node_modules"
     ],
+    "extraResources": [],
+    "compression": "maximum",
     "icon": "src/icon.icns",
     "mac": {
       "category": "public.app-category.developer-tools",
@@ -84,29 +87,21 @@
             "arm64"
           ]
         }
-      ]
+      ],
+      "compression": "maximum",
+      "minimumSystemVersion": "10.14.0"
     },
     "win": {
       "icon": "src/icon.icns",
       "target": [
         {
-          "target": "nsis",
+          "target": "portable",
           "arch": [
             "x64"
           ]
         }
-      ]
-    },
-    "linux": {
-      "icon": "src/icon.icns",
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
+      ],
+      "compression": "maximum"
     }
   }
 }
