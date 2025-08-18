@@ -76,20 +76,28 @@
     "extraResources": [],
     "compression": "maximum",
     "icon": "src/icon.icns",
+    "asar": true,
+    "asarUnpack": [],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "src/icon.icns",
       "target": [
         {
           "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
+          "arch": "x64"
+        },
+        {
+          "target": "dmg",
+          "arch": "arm64"
         }
       ],
       "compression": "maximum",
-      "minimumSystemVersion": "10.14.0"
+      "minimumSystemVersion": "10.14.0",
+      "mergeASARs": false
     },
     "win": {
       "icon": "src/icon.icns",
@@ -101,7 +109,8 @@
           ]
         }
       ],
-      "compression": "maximum"
+      "compression": "maximum",
+      "requestedExecutionLevel": "asInvoker"
     }
   }
 }
