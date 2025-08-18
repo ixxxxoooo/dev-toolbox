@@ -38,7 +38,7 @@ jobs:
     name: Build Electron Apps
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -86,6 +86,27 @@ jobs:
         # 提供给 electron-builder 的 GitHub Token（即使 publish=never，一些插件也可能读取该变量）
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Build Electron app (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # 构建 Vue 应用（输出到 dist/）
+        npm run build:web
+        # 编译 Electron 主进程与预加载脚本（输出到 dist-electron/）
+        npx tsc -p tsconfig.node.json
+        # 重命名 Electron 输出为 .cjs（与 main.ts 中的 __dirname 引用一致）
+        cd dist-electron/electron
+        if (Test-Path main.js) { Rename-Item main.js main.cjs }
+        if (Test-Path preload.js) { Rename-Item preload.js preload.cjs }
+        cd ../..
+        # 构建 Electron 应用；publish=never 避免在构建阶段发布，从而不需要 GH_TOKEN
+        npx electron-builder --win --publish=never
+      env:
+        # 禁用自动代码签名，避免 CI 中签名失败
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+        # 提供给 electron-builder 的 GitHub Token（即使 publish=never，一些插件也可能读取该变量）
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+
     - name: Upload Electron build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -108,11 +129,25 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
 
+    - name: Prepare release files
+      run: |
+        # 创建发布文件目录
+        mkdir -p release-files
+        
+        # 复制 macOS DMG 文件
+        find electron-macos-latest -name "*.dmg" -exec cp {} release-files/ \;
+        
+        # 复制 Windows EXE 文件
+        find electron-windows-latest -name "*.exe" -exec cp {} release-files/ \;
+        
+        # 列出将要发布的文件
+        echo "Files to be released:"
+        ls -la release-files/
+
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        files: |
-          electron-macos-latest/**/*
+        files: release-files/*
         generate_release_notes: true
         draft: false
         prerelease: false
