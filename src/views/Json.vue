@@ -318,7 +318,10 @@ const downloadFile = () => {
   a.click();
   URL.revokeObjectURL(url);
 };
-const clearAll = () => inputEditor?.setValue('');
+const clearAll = () => {
+  inputEditor?.setValue('');
+  outputEditor?.setValue('');
+};
 const pasteInput = async () => inputEditor?.setValue(await navigator.clipboard.readText());
 const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
 const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
