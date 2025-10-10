@@ -171,10 +171,17 @@ const replaceTextInEditor = (newText: string, isSelection: boolean, selection: a
 }
 
 const formatSQL = () => {
+  console.log('[SQL格式化] 开始格式化...')
   const { text, isSelection, selection } = getSelectedTextOrAll()
-  if (!text.trim()) return
+  console.log('[SQL格式化] 获取到的文本长度:', text.length, '是否为选中文本:', isSelection)
+  
+  if (!text.trim()) {
+    console.log('[SQL格式化] 文本为空，跳过格式化')
+    return
+  }
 
   try {
+    console.log('[SQL格式化] 使用的数据库类型:', sqlDialect.value, '缩进大小:', indentSize.value)
     const formatted = format(text, {
       language: sqlDialect.value as any,
       tabWidth: indentSize.value,
@@ -182,9 +189,11 @@ const formatSQL = () => {
       functionCase: 'upper',
       dataTypeCase: 'upper'
     })
+    console.log('[SQL格式化] 格式化成功，格式化后文本长度:', formatted.length)
     replaceTextInEditor(formatted, isSelection, selection)
+    console.log('[SQL格式化] 文本替换完成')
   } catch (error: any) {
-    console.error('格式化失败:', error.message)
+    console.error('[SQL格式化] 格式化失败:', error.message)
   }
 }
 
@@ -290,18 +299,63 @@ const initEditor = async () => {
       ...editorOptions,
     })
 
-    sqlEditor.onDidChangeModelContent(() => {
+    // 用于标记是否刚粘贴过
+    let pasteTimer: number | null = null
+    let changeCount = 0
+    let isFormatting = false // 标记是否正在格式化，避免循环
+
+    sqlEditor.onDidChangeModelContent((e) => {
+      changeCount++
+      console.log('[编辑器事件] 内容变化 #' + changeCount, '是否正在格式化:', isFormatting)
+      console.log('[编辑器事件] 变化详情:', e.changes.map(c => ({
+        范围: `${c.range.startLineNumber}:${c.range.startColumn}-${c.range.endLineNumber}:${c.range.endColumn}`,
+        文本长度: c.text.length
+      })))
+      
       sqlText.value = sqlEditor?.getValue() || ''
       saveToStorage(STORAGE_KEYS.sqlText, sqlText.value)
     })
 
+    // 监听粘贴事件
+    sqlEditor.onDidPaste((e) => {
+      console.log('[编辑器事件] ========== 粘贴事件触发！==========')
+      console.log('[编辑器事件] 粘贴范围:', e.range)
+      
+      // 清除之前的定时器
+      if (pasteTimer) {
+        console.log('[编辑器事件] 清除之前的粘贴定时器')
+        clearTimeout(pasteTimer)
+      }
+      
+      // 设置新的定时器，延迟执行格式化
+      pasteTimer = window.setTimeout(() => {
+        console.log('[编辑器事件] ========== 粘贴定时器触发，开始自动格式化 ==========')
+        pasteTimer = null
+        
+        if (!isFormatting) {
+          isFormatting = true
+          formatSQL()
+          // 格式化完成后重置标志
+          setTimeout(() => {
+            isFormatting = false
+            console.log('[编辑器事件] 格式化完成，重置标志')
+          }, 200)
+        } else {
+          console.log('[编辑器事件] 已经在格式化中，跳过')
+        }
+      }, 150)
+    })
+
     // 禁用保存快捷键 (Ctrl+S / Cmd+S)
     sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      console.log('[快捷键] Ctrl+S / Cmd+S 被拦截')
       // 禁用默认保存行为，什么都不做
     })
 
     // 设置主题监听器
     themeWatcher = watchThemeChange(sqlEditor)
+    
+    console.log('[编辑器] SQL编辑器初始化完成')
   }
 }
 
@@ -337,11 +391,18 @@ const clearAll = () => {
 }
 
 const pasteInput = async () => {
+  console.log('[粘贴按钮] 点击粘贴按钮')
   try {
     const text = await navigator.clipboard.readText()
+    console.log('[粘贴按钮] 从剪贴板读取到文本，长度:', text.length)
     sqlEditor?.setValue(text)
+    console.log('[粘贴按钮] 文本已设置到编辑器')
+    // 粘贴后自动格式化
+    await nextTick() // 等待编辑器内容更新
+    console.log('[粘贴按钮] nextTick后，准备自动格式化')
+    formatSQL()
   } catch (error) {
-    console.error('Failed to paste:', error)
+    console.error('[粘贴按钮] 粘贴失败:', error)
   }
 }
 
