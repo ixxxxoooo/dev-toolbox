@@ -29,7 +29,8 @@ export default {
       useAsInput: '作为输入',
       showTreeView: '显示树状视图',
       hideTreeView: '隐藏树状视图',
-      regenerate: '重新生成'
+      regenerate: '重新生成',
+      process: '处理'
     },
     
     // 标签
@@ -125,17 +126,16 @@ export default {
     // JSON 工具
     json: {
       name: 'JSON 工具',
-      description: 'JSON 格式化、压缩和转换',
+      description: 'JSON 格式化、压缩、转义和去转义',
       downloadJson: '下载JSON',
-      from: '从',
-      to: '到',
       coreFeatures: '核心功能',
       formatDescription: '美化JSON格式',
       minifyDescription: '压缩JSON大小',
-      convertDescription: 'JSON/YAML/XML转换',
       treeViewDescription: '树状结构显示',
       escape: '转义',
-      unescape: '去转义'
+      unescape: '去转义',
+      escapeDescription: '转义 JSON 字符串中的特殊字符',
+      unescapeDescription: '去转义 JSON 字符串中的特殊字符'
     },
 
     // URL 编解码

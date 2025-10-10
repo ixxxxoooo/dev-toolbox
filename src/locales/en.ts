@@ -29,7 +29,8 @@ export default {
       useAsInput: 'Use as Input',
       showTreeView: 'Show Tree View',
       hideTreeView: 'Hide Tree View',
-      regenerate: 'Regenerate'
+      regenerate: 'Regenerate',
+      process: 'Process'
     },
     
     // Labels
@@ -129,17 +130,16 @@ export default {
     // JSON Tools
     json: {
       name: 'JSON Tool',
-      description: 'JSON formatting, minification and conversion',
+      description: 'JSON formatting, minification, escape and unescape',
       downloadJson: 'Download JSON',
-      from: 'From',
-      to: 'To',
       coreFeatures: 'Core Features',
       formatDescription: 'Format JSON',
       minifyDescription: 'Minify JSON',
-      convertDescription: 'JSON/YAML/XML Conversion',
       treeViewDescription: 'Tree View',
       escape: 'Escape',
-      unescape: 'Unescape'
+      unescape: 'Unescape',
+      escapeDescription: 'Escape special characters in JSON strings',
+      unescapeDescription: 'Unescape special characters in JSON strings'
     },
 
     // URL Encoder/Decoder
