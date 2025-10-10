@@ -170,6 +170,22 @@ button:disabled:active {
   @apply scale-90 bg-secondary/80;
 }
 
+/* Toast 滑入动画 */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
 .monaco-editor {
   --vscode-focusBorder: transparent !important;
 }

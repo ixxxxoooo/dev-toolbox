@@ -1,5 +1,16 @@
 <template>
   <div class="h-screen flex flex-col bg-background text-foreground">
+    <!-- 错误提示 Toast -->
+    <div 
+      v-if="errorMessage" 
+      class="fixed top-4 right-4 z-50 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-slide-in"
+    >
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+    
     <!-- 顶部标题栏 -->
     <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
       <div class="container mx-auto px-4 py-3">
@@ -135,11 +146,26 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'sql-word-wrap-enabled'
 }
 
+// 数据库方言映射表 - 将不支持的方言映射到兼容的方言
+const DIALECT_MAP: Record<string, string> = {
+  'mysql': 'mysql',
+  'postgresql': 'postgresql',
+  'tidb': 'mysql',  // TiDB 兼容 MySQL 语法，使用 mysql 方言
+  'sqlite': 'sqlite',
+  'mariadb': 'mariadb',
+  'bigquery': 'bigquery',
+  'redshift': 'redshift',
+  'snowflake': 'snowflake',
+  'spark': 'spark',
+  'trino': 'trino'
+}
+
 // State - 从本地存储加载初始值
 const sqlText = ref(loadFromStorage(STORAGE_KEYS.sqlText, `SELECT u.id, u.name, u.email, p.title, p.content, COUNT(c.id) as comment_count FROM users u LEFT JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.created_at >= '2023-01-01' AND u.status = 'active' GROUP BY u.id, p.id ORDER BY u.created_at DESC, comment_count DESC LIMIT 10;`))
 const sqlDialect = ref(loadFromStorage(STORAGE_KEYS.sqlDialect, 'mysql'))
 const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2))
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
+const errorMessage = ref('')
 
 // Functions
 const getSelectedTextOrAll = () => {
@@ -170,6 +196,14 @@ const replaceTextInEditor = (newText: string, isSelection: boolean, selection: a
   }
 }
 
+// 显示错误消息的辅助函数
+const showError = (message: string) => {
+  errorMessage.value = message
+  setTimeout(() => {
+    errorMessage.value = ''
+  }, 3000)
+}
+
 const formatSQL = () => {
   console.log('[SQL格式化] 开始格式化...')
   const { text, isSelection, selection } = getSelectedTextOrAll()
@@ -181,9 +215,12 @@ const formatSQL = () => {
   }
 
   try {
-    console.log('[SQL格式化] 使用的数据库类型:', sqlDialect.value, '缩进大小:', indentSize.value)
+    // 使用方言映射表获取实际的数据库方言
+    const actualDialect = DIALECT_MAP[sqlDialect.value] || 'mysql'
+    console.log('[SQL格式化] 选择的数据库:', sqlDialect.value, '实际使用的方言:', actualDialect, '缩进大小:', indentSize.value)
+    
     const formatted = format(text, {
-      language: sqlDialect.value as any,
+      language: actualDialect as any,
       tabWidth: indentSize.value,
       keywordCase: 'upper',
       functionCase: 'upper',
@@ -193,7 +230,9 @@ const formatSQL = () => {
     replaceTextInEditor(formatted, isSelection, selection)
     console.log('[SQL格式化] 文本替换完成')
   } catch (error: any) {
-    console.error('[SQL格式化] 格式化失败:', error.message)
+    const errorMsg = error.message || '未知错误'
+    console.error('[SQL格式化] 格式化失败:', errorMsg)
+    showError(`SQL 格式化失败: ${errorMsg}`)
   }
 }
 
@@ -208,6 +247,9 @@ const minifySQL = () => {
   if (!text.trim()) return
 
   try {
+    // 使用方言映射表获取实际的数据库方言
+    const actualDialect = DIALECT_MAP[sqlDialect.value] || 'mysql'
+    
     // 检查是否包含多个SQL语句（通过分号判断）
     const hasSemicolon = text.includes(';')
 
@@ -218,7 +260,7 @@ const minifySQL = () => {
         if (!stmt.trim()) return stmt
         try {
           const formatted = format(stmt, {
-            language: sqlDialect.value as any,
+            language: actualDialect as any,
             tabWidth: 0,
             keywordCase: 'upper'
           })
@@ -235,7 +277,7 @@ const minifySQL = () => {
     } else {
       // 单段SQL或选中文本，正常压缩
       const formatted = format(text, {
-        language: sqlDialect.value as any,
+        language: actualDialect as any,
         tabWidth: 0,
         keywordCase: 'upper'
       })
@@ -243,7 +285,9 @@ const minifySQL = () => {
       replaceTextInEditor(minified, isSelection, selection)
     }
   } catch (error: any) {
-    console.error('压缩失败:', error.message)
+    const errorMsg = error.message || '未知错误'
+    console.error('压缩失败:', errorMsg)
+    showError(`SQL 压缩失败: ${errorMsg}`)
   }
 }
 
