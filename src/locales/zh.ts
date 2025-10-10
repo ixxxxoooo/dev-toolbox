@@ -72,6 +72,12 @@ export default {
     }
   },
 
+  // 导航
+  nav: {
+    tools: '工具菜单',
+    language: '语言切换'
+  },
+
   // 首页
   home: {
     title: '选择您需要的工具',

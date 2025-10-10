@@ -72,6 +72,12 @@ export default {
     }
   },
 
+  // Navigation
+  nav: {
+    tools: 'Tools Menu',
+    language: 'Language Switcher'
+  },
+
   // Home Page
   home: {
     title: 'Choose the tools you need',
