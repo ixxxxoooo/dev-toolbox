@@ -42,7 +42,7 @@
     </header>
 
     <!-- 工具栏选项 -->
-    <div class="container mx-auto px-4 py-3 border-b border-border">
+    <div class="container mx-auto px-4 py-3">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center space-x-4">
           <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="format" class="rounded"><span class="text-sm">{{ $t('common.labels.format') }}</span></label>
@@ -69,7 +69,7 @@
     <main class="flex-1 container mx-auto px-4 py-4 flex flex-col">
       <div class="grid gap-4 flex-1" :class="showTreeView ? 'grid-cols-2' : 'grid-cols-1'">
         <div class="flex flex-col border border-border rounded-lg overflow-hidden">
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
+          <div class="flex items-center justify-between px-4 py-3 bg-muted/50">
             <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-2">
               <button @click="undo" class="text-xs px-2 py-1 btn-secondary rounded" title="撤销 (Ctrl+Z)">
@@ -92,7 +92,7 @@
           </div>
         </div>
         <div v-if="showTreeView" class="flex flex-col border border-border rounded-lg overflow-hidden">
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
+          <div class="flex items-center justify-between px-4 py-3 bg-muted/50">
             <h3 class="text-sm font-medium">{{ $t('common.labels.treeView') }}</h3>
           </div>
           <div class="flex-1 relative overflow-auto">

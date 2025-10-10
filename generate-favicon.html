@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>生成 Favicon</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .preview-item {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dev Toolbox Favicon 生成器</h1>
+    <p>点击下面的按钮生成不同尺寸的 favicon 图片</p>
+    
+    <div class="preview" id="preview"></div>
+    
+    <script>
+        // 绘制工具箱图标
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 128;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, size, size);
+            
+            // 创建渐变背景
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#8b5cf6');
+            
+            // 绘制圆角矩形背景
+            ctx.fillStyle = gradient;
+            const radius = 24 * scale;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+            
+            // 移动到中心
+            ctx.save();
+            ctx.translate(size / 2, size / 2);
+            ctx.scale(scale, scale);
+            
+            // 绘制工具箱底部
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(-30, 5, 60, 25, 3);
+            ctx.fill();
+            
+            // 绘制工具箱顶部
+            ctx.beginPath();
+            ctx.roundRect(-30, -15, 60, 18, 3);
+            ctx.fill();
+            
+            // 绘制手柄
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-20, -15);
+            ctx.quadraticCurveTo(-20, -25, -10, -25);
+            ctx.lineTo(10, -25);
+            ctx.quadraticCurveTo(20, -25, 20, -15);
+            ctx.stroke();
+            
+            // 绘制扳手
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
+            ctx.save();
+            ctx.translate(-15, 15);
+            ctx.fillRect(0, -6, 2.5, 6);
+            ctx.fillRect(0, -4, 5, 5);
+            ctx.beginPath();
+            ctx.arc(1.2, -5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            
+            // 绘制螺丝刀
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.8)';
+            ctx.save();
+            ctx.translate(0, 15);
+            ctx.fillRect(-0.8, -6, 1.6, 8);
+            ctx.fillRect(-1.2, 2, 2.4, 5);
+            ctx.beginPath();
+            ctx.moveTo(-1.2, 7);
+            ctx.lineTo(0, 9);
+            ctx.lineTo(1.2, 7);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            // 绘制齿轮
+            ctx.save();
+            ctx.translate(15, 15);
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.8)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.8)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-0.5, -4.5, 1, 2);
+            ctx.fillRect(-0.5, 2.5, 1, 2);
+            ctx.fillRect(-4.5, -0.5, 2, 1);
+            ctx.fillRect(2.5, -0.5, 2, 1);
+            ctx.restore();
+            
+            // 绘制代码符号
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('</>', 0, 42);
+            
+            ctx.restore();
+        }
+        
+        // 生成不同尺寸的图标
+        const sizes = [16, 32, 48, 64, 128, 256, 512];
+        const previewDiv = document.getElementById('preview');
+        
+        sizes.forEach(size => {
+            const container = document.createElement('div');
+            container.className = 'preview-item';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            drawIcon(canvas, size);
+            
+            const label = document.createElement('div');
+            label.textContent = `${size}x${size}`;
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = '下载';
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = `favicon-${size}x${size}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+            
+            container.appendChild(canvas);
+            container.appendChild(label);
+            container.appendChild(downloadBtn);
+            previewDiv.appendChild(container);
+        });
+        
+        // 添加一个下载所有按钮
+        const downloadAllBtn = document.createElement('button');
+        downloadAllBtn.textContent = '下载所有尺寸';
+        downloadAllBtn.style.marginTop = '20px';
+        downloadAllBtn.onclick = () => {
+            document.querySelectorAll('.preview-item button').forEach(btn => btn.click());
+        };
+        document.body.appendChild(downloadAllBtn);
+    </script>
+</body>
+</html>
+
