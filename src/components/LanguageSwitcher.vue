@@ -18,7 +18,7 @@
       v-show="isDropdownOpen"
       class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800
              rounded-lg shadow-lg border border-gray-200 dark:border-gray-700
-             py-1 z-50"
+             py-1 z-[9999]"
       @click.stop
     >
       <button
@@ -48,7 +48,7 @@
     <div
       v-if="isDropdownOpen"
       @click="closeDropdown"
-      class="fixed inset-0 z-40"
+      class="fixed inset-0 z-[9998]"
     ></div>
   </div>
 </template>

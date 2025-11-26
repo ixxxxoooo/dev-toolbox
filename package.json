@@ -5,15 +5,15 @@
   "type": "module",
   "main": "dist-electron/electron/main.cjs",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win --mac",
-    "build:web": "vue-tsc && vite build",
-    "build:win": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win",
-    "build:mac": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --mac",
+    "dev": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite",
+    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win --mac",
+    "build:web": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build",
+    "build:win": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --win",
+    "build:mac": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && electron-builder --mac",
     "preview": "vite preview",
-    "electron:dev": "vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && npx electron .",
+    "electron:dev": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build && npx tsc -p tsconfig.node.json && npm run rename-electron-files && npx electron .",
     "rename-electron-files": "cd dist-electron/electron && if [ -f main.js ]; then mv main.js main.cjs; fi && if [ -f preload.js ]; then mv preload.js preload.cjs; fi",
-    "electron:build": "vue-tsc && vite build && npx tsc -p tsconfig.node.json && electron-builder",
+    "electron:build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build && npx tsc -p tsconfig.node.json && electron-builder",
     "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
@@ -42,7 +42,7 @@
     "tailwindcss": "^3.4.6",
     "terser": "^5.43.1",
     "typescript": "^5.9.2",
-    "vite": "^5.4.19",
+    "vite": "^5.2.9",
     "vue-tsc": "^2.0.26"
   },
   "dependencies": {
