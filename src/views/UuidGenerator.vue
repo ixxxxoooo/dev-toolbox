@@ -1,84 +1,102 @@
 <template>
-  <div class="h-screen flex flex-col bg-background text-foreground">
-    <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="p-2 rounded-lg hover:bg-secondary transition-colors btn-icon" :title="$t('app.backToHome')">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">{{ $t('tools.uuid.name') }}</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.uuid.name') }}</p>
-                  <p class="mb-2">{{ $t('tools.uuid.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.uuid.coreFeatures') }}:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong>{{ $t('tools.uuid.uuidv4') }}:</strong> {{ $t('tools.uuid.uuidv4Description') }}</li>
-                    <li><strong>{{ $t('tools.uuid.format') }}:</strong> {{ $t('tools.uuid.formatDescription') }}</li>
-                  </ul>
-                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: 550e8400-e29b-41d4-a716-446655440000</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="generateUuid" class="px-3 py-1.5 text-sm rounded-md btn-primary">{{ $t('common.buttons.generateUuid') }}</button>
-            <button @click="clearUuid" :disabled="!uuid" class="px-3 py-1.5 text-sm rounded-md btn-destructive transition-colors disabled:opacity-50">{{ $t('common.clear') }}</button>
-            <LanguageSwitcher />
-            <ThemeToggleButton />
-          </div>
+  <div class="h-full flex flex-col bg-background text-foreground">
+    <!-- Compact Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+        <!-- Title & Icon -->
+        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
+          <Fingerprint class="w-5 h-5" />
+          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.uuid.name') }}</span>
         </div>
       </div>
-    </header>
 
-    <!-- 主要内容区域 -->
+      <!-- Right Side Actions -->
+      <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
+        <button @click="generateUuid" class="px-3 py-1.5 text-xs font-medium rounded-md btn-primary flex items-center space-x-1.5 transition-colors">
+          <RefreshCw class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('common.buttons.generateUuid') }}</span>
+        </button>
+        <button @click="clearUuid" :disabled="!uuid" class="px-3 py-1.5 text-xs font-medium rounded-md btn-destructive transition-colors disabled:opacity-50 flex items-center space-x-1.5">
+          <Trash2 class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('common.clear') }}</span>
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <HelpCircle class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-8 flex justify-center items-center">
-      <div class="w-full max-w-xl">
-        <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
-          <div class="relative flex items-center space-x-2">
+      <div class="w-full max-w-xl space-y-8">
+        <div class="bg-card border border-border rounded-xl p-8 shadow-sm text-center">
+          <div class="mb-6">
+             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+               <Fingerprint class="w-8 h-8 text-primary" />
+             </div>
+             <h2 class="text-lg font-medium text-muted-foreground">Generated UUID v4</h2>
+          </div>
+
+          <div class="relative group">
             <input
               type="text"
               readonly
               v-model="uuid"
               :placeholder="$t('common.placeholders.clickToGenerate')"
-              class="flex-1 text-center text-xl font-mono p-4 bg-muted border border-border rounded-lg focus:outline-none"
+              class="w-full text-center text-2xl font-mono p-6 bg-muted/30 border-2 border-border rounded-xl focus:outline-none focus:border-primary transition-colors cursor-text select-all"
             />
-            <button
-              @click="copyUuid"
-              :disabled="!uuid"
-              class="px-4 py-4 rounded-lg btn-secondary disabled:opacity-50 flex items-center justify-center"
-              :title="$t('common.copy') + ' UUID'"
-            >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+               <button
+                @click="copyUuid"
+                :disabled="!uuid"
+                class="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                :title="$t('common.copy')"
+              >
+                <Copy class="w-5 h-5" />
+              </button>
+            </div>
           </div>
+
+          <p class="mt-4 text-xs text-muted-foreground">
+            Click generate to create a new cryptographically strong UUID.
+          </p>
         </div>
       </div>
     </main>
+
+    <!-- Help Modal -->
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">{{ $t('tools.uuid.name') }} Help</h3>
+          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <p>{{ $t('tools.uuid.description') }}</p>
+          <div>
+            <p class="font-bold mb-2">{{ $t('tools.uuid.coreFeatures') }}:</p>
+            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+              <li><strong>{{ $t('tools.uuid.uuidv4') }}:</strong> {{ $t('tools.uuid.uuidv4Description') }}</li>
+              <li><strong>{{ $t('tools.uuid.format') }}:</strong> {{ $t('tools.uuid.formatDescription') }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
-import LanguageSwitcher from '../components/LanguageSwitcher.vue';
+import { HelpCircle, Fingerprint, RefreshCw, Trash2, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
 const uuid = ref('');
+const showHelp = ref(false);
 
-// Function to generate UUID v4
 const generateUuid = () => {
   uuid.value = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0,
@@ -98,13 +116,21 @@ const clearUuid = () => {
 };
 
 onMounted(() => {
-  generateUuid(); // Generate a UUID on component mount
-  // Disable save shortcut
+  generateUuid();
   addDisableSaveShortcut();
 });
 
 onBeforeUnmount(() => {
-  // Remove save shortcut disable
   removeDisableSaveShortcut();
 });
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

@@ -1,99 +1,103 @@
 <template>
-  <div class="h-screen flex flex-col bg-background text-foreground">
-    <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">{{ $t('tools.textAnalyzer.name') }}</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.textAnalyzer.name') }}</p>
-                  <p class="mb-1">{{ $t('tools.textAnalyzer.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.textAnalyzer.coreFeatures') }}:</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithSpacesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithoutSpacesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.words') }}:</strong> {{ $t('tools.textAnalyzer.stats.wordsDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.lines') }}:</strong> {{ $t('tools.textAnalyzer.stats.linesDesc') }}</li>
-                    <li><strong class="font-semibold">{{ $t('tools.textAnalyzer.stats.paragraphs') }}:</strong> {{ $t('tools.textAnalyzer.stats.paragraphsDesc') }}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="pasteInput" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('common.paste') }}</button>
-            <button @click="clearInput" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.clear') }}</button>
-            <LanguageSwitcher />
-            <ThemeToggleButton />
-          </div>
+  <div class="h-full flex flex-col bg-background text-foreground">
+    <!-- Compact Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+        <!-- Title & Icon -->
+        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
+          <FileText class="w-5 h-5" />
+          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.textAnalyzer.name') }}</span>
         </div>
       </div>
-    </header>
 
-    <!-- 主要内容区域 -->
-    <main class="flex-1 container mx-auto px-4 py-4 flex flex-col">
-      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden">
+      <!-- Right Side Actions -->
+      <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
+        <button @click="pasteInput" class="px-3 py-1.5 text-xs font-medium rounded-md btn-secondary flex items-center space-x-1.5 transition-colors">
+          <ClipboardPaste class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('common.paste') }}</span>
+        </button>
+        <button @click="clearInput" class="px-3 py-1.5 text-xs font-medium rounded-md btn-destructive transition-colors flex items-center space-x-1.5">
+          <Trash2 class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('common.clear') }}</span>
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <HelpCircle class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-h-0 p-4">
+      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm mb-4">
         <div class="flex-1 relative">
           <div ref="editorRef" class="absolute inset-0"></div>
         </div>
       </div>
 
-      <!-- 统计结果 -->
-      <div class="mt-4 bg-card border border-border rounded-lg p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div class="text-center">
-          <div class="text-2xl font-bold text-primary">{{ stats.charsWithSpaces }}</div>
-          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}</div>
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div class="bg-card border border-border rounded-lg p-3 flex flex-col items-center justify-center shadow-sm hover:border-primary/50 transition-colors">
+          <span class="text-2xl font-bold text-primary mb-0.5">{{ stats.charsWithSpaces }}</span>
+          <span class="text-[10px] text-muted-foreground uppercase tracking-wider text-center">{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}</span>
         </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-primary">{{ stats.charsWithoutSpaces }}</div>
-          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}</div>
+        <div class="bg-card border border-border rounded-lg p-3 flex flex-col items-center justify-center shadow-sm hover:border-primary/50 transition-colors">
+          <span class="text-2xl font-bold text-primary mb-0.5">{{ stats.charsWithoutSpaces }}</span>
+          <span class="text-[10px] text-muted-foreground uppercase tracking-wider text-center">{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}</span>
         </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-primary">{{ stats.words }}</div>
-          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.words') }}</div>
+        <div class="bg-card border border-border rounded-lg p-3 flex flex-col items-center justify-center shadow-sm hover:border-primary/50 transition-colors">
+          <span class="text-2xl font-bold text-primary mb-0.5">{{ stats.words }}</span>
+          <span class="text-[10px] text-muted-foreground uppercase tracking-wider text-center">{{ $t('tools.textAnalyzer.stats.words') }}</span>
         </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-primary">{{ stats.lines }}</div>
-          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.lines') }}</div>
+        <div class="bg-card border border-border rounded-lg p-3 flex flex-col items-center justify-center shadow-sm hover:border-primary/50 transition-colors">
+          <span class="text-2xl font-bold text-primary mb-0.5">{{ stats.lines }}</span>
+          <span class="text-[10px] text-muted-foreground uppercase tracking-wider text-center">{{ $t('tools.textAnalyzer.stats.lines') }}</span>
         </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-primary">{{ stats.paragraphs }}</div>
-          <div class="text-sm text-muted-foreground">{{ $t('tools.textAnalyzer.stats.paragraphs') }}</div>
+        <div class="bg-card border border-border rounded-lg p-3 flex flex-col items-center justify-center shadow-sm hover:border-primary/50 transition-colors">
+          <span class="text-2xl font-bold text-primary mb-0.5">{{ stats.paragraphs }}</span>
+          <span class="text-[10px] text-muted-foreground uppercase tracking-wider text-center">{{ $t('tools.textAnalyzer.stats.paragraphs') }}</span>
         </div>
       </div>
     </main>
+
+    <!-- Help Modal -->
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">{{ $t('tools.textAnalyzer.name') }} Help</h3>
+          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <p>{{ $t('tools.textAnalyzer.description') }}</p>
+          <div>
+            <p class="font-bold mb-2">{{ $t('tools.textAnalyzer.coreFeatures') }}:</p>
+            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+              <li><strong>{{ $t('tools.textAnalyzer.stats.charsWithSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithSpacesDesc') }}</li>
+              <li><strong>{{ $t('tools.textAnalyzer.stats.charsWithoutSpaces') }}:</strong> {{ $t('tools.textAnalyzer.stats.charsWithoutSpacesDesc') }}</li>
+              <li><strong>{{ $t('tools.textAnalyzer.stats.words') }}:</strong> {{ $t('tools.textAnalyzer.stats.wordsDesc') }}</li>
+              <li><strong>{{ $t('tools.textAnalyzer.stats.lines') }}:</strong> {{ $t('tools.textAnalyzer.stats.linesDesc') }}</li>
+              <li><strong>{{ $t('tools.textAnalyzer.stats.paragraphs') }}:</strong> {{ $t('tools.textAnalyzer.stats.paragraphsDesc') }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import LanguageSwitcher from '../components/LanguageSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { HelpCircle, FileText, ClipboardPaste, Trash2, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 
-// Refs
 const editorRef = ref<HTMLElement | null>(null);
-
-// Monaco Editor Instance
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
-
-// 主题监听器清理函数
 let themeWatcher: (() => void) | null = null;
+const showHelp = ref(false);
 
-// State
 const inputText = ref('');
 const stats = ref({
   charsWithSpaces: 0,
@@ -103,20 +107,13 @@ const stats = ref({
   paragraphs: 0,
 });
 
-// Functions
 const analyzeText = () => {
   const text = inputText.value;
-
   stats.value.charsWithSpaces = text.length;
   stats.value.charsWithoutSpaces = text.replace(/\s/g, '').length;
-
-  // Improved word count for both English and Chinese
-  // Matches English words (sequences of letters/numbers/underscores) OR individual Chinese characters
   const wordsMatch = text.match(/\b\w+\b|[\u4e00-\u9fa5]/gu);
   stats.value.words = wordsMatch ? wordsMatch.length : 0;
-
-  stats.value.lines = text.split(/\r\n|\r|\n/).length;
-  // Filter out empty strings from split to avoid counting empty lines as paragraphs
+  stats.value.lines = text ? text.split(/\r\n|\r|\n/).length : 0;
   stats.value.paragraphs = text.split(/\r\n\r\n|\r\r|\n\n/).filter((p: string) => p.trim() !== '').length;
 };
 
@@ -131,19 +128,18 @@ const initEditor = async () => {
       minimap: { enabled: false },
       wordWrap: 'on',
       scrollBeyondLastLine: false,
+      padding: { top: 16, bottom: 16 },
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
     });
     editor.onDidChangeModelContent(() => {
       inputText.value = editor?.getValue() || '';
       analyzeText();
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
-    });
-    // 设置主题监听器
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     themeWatcher = watchThemeChange(editor);
   }
-  analyzeText(); // Initial analysis
+  analyzeText();
 };
 
 const pasteInput = async () => {
@@ -159,12 +155,19 @@ const clearInput = () => {
   editor?.setValue('');
 };
 
-// Lifecycle
 onMounted(initEditor);
 onBeforeUnmount(() => {
-  // 清理主题监听器
   themeWatcher?.();
-  // 销毁编辑器实例
   editor?.dispose();
 });
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

@@ -1,113 +1,102 @@
 <template>
-  <div class="h-screen flex flex-col bg-background text-foreground">
-    <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">{{ $t('tools.diff.name') }}</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-64 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.diff.name') }}</p>
-                  <p class="mb-2">{{ $t('tools.diff.description') }}</p>
-                  <ul class="list-disc list-inside text-xs">
-                    <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
-                    <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
-                    <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <LanguageSwitcher />
-            <ThemeToggleButton />
-          </div>
+  <div class="h-full flex flex-col bg-background text-foreground">
+    <!-- Compact Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+        <!-- Title & Icon -->
+        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
+          <GitCompare class="w-5 h-5" />
+          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.diff.name') }}</span>
+        </div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Mode Selection -->
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="diffMode = 'split'"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
+            :class="diffMode === 'split' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+          >
+            {{ $t('tools.diff.sideBySide') }}
+          </button>
+          <button
+            @click="diffMode = 'inline'"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
+            :class="diffMode === 'inline' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+          >
+            {{ $t('tools.diff.inline') }}
+          </button>
+        </div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Options -->
+        <div class="flex items-center space-x-3 flex-shrink-0">
+          <label class="flex items-center space-x-2 cursor-pointer group">
+            <input type="checkbox" v-model="ignoreWhitespace" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
+            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.diff.ignoreWhitespace') }}</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer group">
+            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
+            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.diff.wordWrap') }}</span>
+          </label>
         </div>
       </div>
-    </header>
 
-    <!-- 工具栏 -->
-    <div class="container mx-auto px-4 py-3 border-b border-border">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-6">
-          <div class="flex items-center space-x-2" title="切换分屏或内联对比模式">
-            <label class="text-sm font-medium">{{ $t('tools.diff.mode') }}:</label>
-            <select v-model="diffMode" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option value="split">{{ $t('tools.diff.sideBySide') }}</option>
-              <option value="inline">{{ $t('tools.diff.inline') }}</option>
-            </select>
-          </div>
-          <div class="flex items-center space-x-2" title="切换编辑器的主题颜色">
-            <label class="text-sm font-medium">{{ $t('tools.diff.theme') }}:</label>
-            <select v-model="theme" class="text-sm px-2 py-1 border border-border rounded bg-background">
-              <option value="vs-dark">{{ $t('tools.diff.darkTheme') }}</option>
-              <option value="vs">{{ $t('tools.diff.lightTheme') }}</option>
-            </select>
-          </div>
-          <div class="flex items-center space-x-4">
-            <label class="flex items-center space-x-2" title="忽略每行开头和结尾的空格和制表符。用于专注于内容本身的变更。">
-              <input type="checkbox" v-model="ignoreWhitespace" class="rounded" />
-              <span class="text-sm">{{ $t('tools.diff.ignoreWhitespace') }}</span>
-            </label>
-            <label class="flex items-center space-x-2" title="显示或隐藏行号">
-              <input type="checkbox" v-model="showLineNumbers" id="showLineNumbers" class="rounded" />
-              <label for="showLineNumbers" class="text-sm">{{ $t('tools.diff.showLineNumbers') }}</label>
-            </label>
-            <label class="flex items-center space-x-2" title="自动换行">
-              <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-              <span class="text-sm">{{ $t('tools.diff.wordWrap') }}</span>
-            </label>
-          </div>
-        </div>
-        <div class="flex items-center space-x-2">
-          <button @click="goToPrevDiff" title="跳转到上一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            &uarr; {{ $t('tools.diff.previousDiff') }}
-          </button>
-          <button @click="goToNextDiff" title="跳转到下一个差异" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            &darr; {{ $t('tools.diff.nextDiff') }}
-          </button>
-          <button @click="swapContent" title="交换左右两边的文本内容" class="px-3 py-1.5 text-sm btn-secondary rounded-md">
-            {{ $t('tools.diff.swapContent') }}
-          </button>
-          <button @click="clearAll" title="清空两边的所有文本" class="px-3 py-1.5 text-sm btn-destructive rounded-md">
-            {{ $t('tools.diff.clearAll') }}
-          </button>
-        </div>
+      <!-- Right Side Actions -->
+      <div class="flex items-center space-x-1 flex-shrink-0 ml-4">
+        <button @click="goToPrevDiff" :title="$t('tools.diff.previousDiff')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <ArrowUp class="w-4 h-4" />
+        </button>
+        <button @click="goToNextDiff" :title="$t('tools.diff.nextDiff')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <ArrowDown class="w-4 h-4" />
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="swapContent" :title="$t('tools.diff.swapContent')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <ArrowRightLeft class="w-4 h-4" />
+        </button>
+        <button @click="clearAll" :title="$t('tools.diff.clearAll')" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-muted-foreground">
+          <Trash2 class="w-4 h-4" />
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <HelpCircle class="w-4 h-4" />
+        </button>
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <main class="flex-1 container mx-auto px-4 py-4 flex flex-col">
-      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden">
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-h-0 p-4">
+      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
         <!-- Headers for split view -->
-        <div v-if="diffMode === 'split'" class="grid grid-cols-2">
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-r border-border">
-            <span class="text-sm font-medium">{{ $t('tools.diff.leftPanel') }}</span>
-            <div class="flex items-center space-x-2">
-              <button @click="pasteTo('original')" title="粘贴内容到左侧" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.pasteLeft') }}</button>
-              <button @click="copyFrom('original')" title="复制左侧内容" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.copyLeft') }}</button>
+        <div v-if="diffMode === 'split'" class="grid grid-cols-2 bg-muted/30 border-b border-border">
+          <div class="flex items-center justify-between px-3 py-1.5 border-r border-border">
+            <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.leftPanel') }}</span>
+            <div class="flex items-center space-x-1">
+              <button @click="pasteTo('original')" :title="$t('tools.diff.pasteLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <ClipboardPaste class="w-3.5 h-3.5" />
+              </button>
+              <button @click="copyFrom('original')" :title="$t('tools.diff.copyLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Copy class="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <span class="text-sm font-medium">{{ $t('tools.diff.rightPanel') }}</span>
-            <div class="flex items-center space-x-2">
-              <button @click="pasteTo('modified')" title="粘贴内容到右侧" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.pasteRight') }}</button>
-              <button @click="copyFrom('modified')" title="复制右侧内容" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('tools.diff.copyRight') }}</button>
+          <div class="flex items-center justify-between px-3 py-1.5">
+            <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.rightPanel') }}</span>
+            <div class="flex items-center space-x-1">
+              <button @click="pasteTo('modified')" :title="$t('tools.diff.pasteRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <ClipboardPaste class="w-3.5 h-3.5" />
+              </button>
+              <button @click="copyFrom('modified')" :title="$t('tools.diff.copyRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Copy class="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
         <!-- Header for inline view -->
-        <div v-else class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-          <span class="text-sm font-medium">{{ $t('tools.diff.name') }} ({{ $t('tools.diff.inline') }})</span>
+        <div v-else class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
+          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.name') }} ({{ $t('tools.diff.inline') }})</span>
         </div>
 
         <!-- The actual editor container -->
@@ -116,29 +105,41 @@
         </div>
       </div>
     </main>
+
+    <!-- Help Modal -->
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">{{ $t('tools.diff.name') }} Help</h3>
+          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <p>{{ $t('tools.diff.description') }}</p>
+          <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+            <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
+            <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
+            <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import LanguageSwitcher from '../components/LanguageSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
+import { HelpCircle, GitCompare, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
-// Refs
 const diffEditorRef = ref<HTMLElement | null>(null);
-
-// Monaco editor instance
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
-
-// Theme watcher cleanup function
 let themeWatcher: (() => void) | null = null;
+const showHelp = ref(false);
 
-// Local storage keys
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
   rightContent: 'diff-right-content',
@@ -149,32 +150,17 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'diff-word-wrap-enabled'
 };
 
-
-
-// State - Load initial values from local storage
-const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent,
-`function sayHello() {
-  console.log("Hello, world!");
-}`
-));
-const rightContent = ref(loadFromStorage(STORAGE_KEYS.rightContent,
-`  function sayHello() {
-    console.log("Hello, world!");
-  }
-`
-));
+const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'));
+const rightContent = ref(loadFromStorage(STORAGE_KEYS.rightContent, '  function sayHello() {\n    console.log("Hello, world!");\n  }\n'));
 const diffMode = ref<'split' | 'inline'>(loadFromStorage(STORAGE_KEYS.diffMode, 'split'));
 const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, false));
 const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true));
-const theme = ref(loadFromStorage(STORAGE_KEYS.theme, 'vs-dark'));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
-// Functions
 const initMonacoDiffEditor = async () => {
   await nextTick();
   if (!diffEditorRef.value) return;
 
-  // Destroy old instance
   diffEditor?.dispose();
 
   const originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
@@ -191,45 +177,33 @@ const initMonacoDiffEditor = async () => {
     folding: true,
     lineHeight: 20,
     fontSize: 14,
-    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-    // 根据状态初始化
+    fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
     renderSideBySide: diffMode.value === 'split',
     lineNumbers: showLineNumbers.value ? 'on' : 'off',
     ignoreTrimWhitespace: ignoreWhitespace.value,
     minimap: { enabled: diffMode.value === 'split' },
+    padding: { top: 16, bottom: 16 },
   });
 
-  diffEditor.setModel({
-    original: originalModel,
-    modified: modifiedModel,
-  });
+  diffEditor.setModel({ original: originalModel, modified: modifiedModel });
 
-  // Set theme watcher
   themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
 
-  // Disable save shortcut (Ctrl+S / Cmd+S)
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();
 
-  originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-    // Disable default save behavior, do nothing
-  });
-  modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-    // 禁用默认保存行为，什么都不做
-  });
+  originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
+  modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
 
-  // Listen to content changes to keep state synchronized and save to local storage
-  diffEditor.getOriginalEditor().onDidChangeModelContent(() => {
-    leftContent.value = diffEditor?.getOriginalEditor().getValue() || '';
+  originalEditor.onDidChangeModelContent(() => {
+    leftContent.value = originalEditor.getValue() || '';
     saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
   });
-  diffEditor.getModifiedEditor().onDidChangeModelContent(() => {
-    rightContent.value = diffEditor?.getModifiedEditor().getValue() || '';
+  modifiedEditor.onDidChangeModelContent(() => {
+    rightContent.value = modifiedEditor.getValue() || '';
     saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
   });
 };
-
-// --- Toolbar operations ---
 
 const swapContent = () => {
   const originalValue = diffEditor?.getOriginalEditor().getValue() || '';
@@ -243,18 +217,13 @@ const clearAll = () => {
   diffEditor?.getModifiedEditor().setValue('');
 };
 
-// Helper to find next/previous diff
 const findNextDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
   const currentPosition = editor.getPosition();
   if (!currentPosition) return null;
-
   const diffs = diffEditor?.getLineChanges();
   if (!diffs || diffs.length === 0) return null;
-
-  // Filter diffs that are after the current position
   const nextDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalStartLineNumber > currentPosition.lineNumber || d.modifiedStartLineNumber > currentPosition.lineNumber);
   if (nextDiffs.length > 0) {
-    // Find the closest next diff
     return nextDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
       const prevLine = Math.min(prev.originalStartLineNumber, prev.modifiedStartLineNumber);
       const currLine = Math.min(curr.originalStartLineNumber, curr.modifiedStartLineNumber);
@@ -267,14 +236,10 @@ const findNextDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
 const findPrevDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
   const currentPosition = editor.getPosition();
   if (!currentPosition) return null;
-
   const diffs = diffEditor?.getLineChanges();
   if (!diffs || diffs.length === 0) return null;
-
-  // Filter diffs that are before the current position
   const prevDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalEndLineNumber < currentPosition.lineNumber || d.modifiedEndLineNumber < currentPosition.lineNumber);
   if (prevDiffs.length > 0) {
-    // Find the closest previous diff
     return prevDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
       const prevLine = Math.max(prev.originalEndLineNumber, prev.modifiedEndLineNumber);
       const currLine = Math.max(curr.originalEndLineNumber, curr.modifiedEndLineNumber);
@@ -288,7 +253,6 @@ const goToNextDiff = () => {
   if (!diffEditor) return;
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();
-
   const nextDiff = findNextDiff(originalEditor) || findNextDiff(modifiedEditor);
   if (nextDiff) {
     originalEditor.revealLineInCenter(nextDiff.originalStartLineNumber);
@@ -300,7 +264,6 @@ const goToPrevDiff = () => {
   if (!diffEditor) return;
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();
-
   const prevDiff = findPrevDiff(originalEditor) || findPrevDiff(modifiedEditor);
   if (prevDiff) {
     originalEditor.revealLineInCenter(prevDiff.originalEndLineNumber);
@@ -308,15 +271,11 @@ const goToPrevDiff = () => {
   }
 };
 
-// --- Clipboard operations ---
 const pasteTo = async (side: 'original' | 'modified') => {
   try {
     const text = await navigator.clipboard.readText();
-    if (side === 'original') {
-      diffEditor?.getOriginalEditor().setValue(text);
-    } else {
-      diffEditor?.getModifiedEditor().setValue(text);
-    }
+    if (side === 'original') diffEditor?.getOriginalEditor().setValue(text);
+    else diffEditor?.getModifiedEditor().setValue(text);
   } catch (err) {
     console.error('Cannot read clipboard:', err);
   }
@@ -324,31 +283,21 @@ const pasteTo = async (side: 'original' | 'modified') => {
 
 const copyFrom = async (side: 'original' | 'modified') => {
   try {
-    const text = side === 'original'
-      ? diffEditor?.getOriginalEditor().getValue()
-      : diffEditor?.getModifiedEditor().getValue();
-    if (text) {
-      await navigator.clipboard.writeText(text);
-    }
+    const text = side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue();
+    if (text) await navigator.clipboard.writeText(text);
   } catch (err) {
     console.error('Cannot copy to clipboard:', err);
   }
 };
 
-
-// --- Lifecycle and watchers ---
-
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
-  // Clean up theme watcher
   themeWatcher?.();
-  // Destroy editor instance
   diffEditor?.dispose();
 });
 
-// Watch configuration changes and save to local storage
-watch(diffMode, (newMode: 'split' | 'inline') => {
+watch(diffMode, (newMode) => {
   diffEditor?.updateOptions({
     renderSideBySide: newMode === 'split',
     minimap: { enabled: newMode === 'split' }
@@ -356,48 +305,28 @@ watch(diffMode, (newMode: 'split' | 'inline') => {
   saveToStorage(STORAGE_KEYS.diffMode, newMode);
 });
 
-watch(showLineNumbers, (newValue: boolean) => {
+watch(showLineNumbers, (newValue) => {
   diffEditor?.updateOptions({ lineNumbers: newValue ? 'on' : 'off' });
   saveToStorage(STORAGE_KEYS.showLineNumbers, newValue);
 });
 
-watch(ignoreWhitespace, (newValue: boolean) => {
+watch(ignoreWhitespace, (newValue) => {
   diffEditor?.updateOptions({ ignoreTrimWhitespace: newValue });
   saveToStorage(STORAGE_KEYS.ignoreWhitespace, newValue);
 });
 
-watch(theme, (newTheme: string) => {
-  monaco.editor.setTheme(newTheme);
-  saveToStorage(STORAGE_KEYS.theme, newTheme);
-});
-
-watch(wordWrapEnabled, (newValue: boolean) => {
-  const wrapOption = newValue ? 'on' : 'off';
-  diffEditor?.updateOptions({ wordWrap: wrapOption });
+watch(wordWrapEnabled, (newValue) => {
+  diffEditor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
   saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
 });
-
 </script>
 
-<style>
-/* Global Monaco Editor Styling */
-.monaco-editor .margin, .monaco-editor .monaco-editor-background {
-  background-color: transparent;
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent; /* Make track transparent */
-}
-::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #666;
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

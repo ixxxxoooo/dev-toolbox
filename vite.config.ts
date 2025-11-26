@@ -23,7 +23,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
           monaco: ['monaco-editor'],
-          utils: ['dayjs', 'crypto-js', 'js-yaml']
+          utils: ['dayjs', 'js-yaml']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

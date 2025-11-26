@@ -1,79 +1,103 @@
 <template>
-  <div class="h-screen flex flex-col bg-background text-foreground">
-    <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">{{ $t('tools.timestamp.name') }}</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.timestamp.name') }}</p>
-                  <p class="mb-2">{{ $t('tools.timestamp.description') }}</p>
-                  <p class="font-bold mb-1">输入支持:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong>时间戳:</strong> 10位秒或13位毫秒</li>
-                    <li><strong>日期字符串:</strong> 2023-01-01, YYYYMMDD</li>
-                    <li><strong>ISO 8601:</strong> 2023-01-01T00:00:00Z</li>
-                    <li><strong>自然语言:</strong> 今天, 明天等</li>
-                  </ul>
-                  <p class="font-bold mb-1">输出格式:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li>本地时间、UTC时间、相对时间等</li>
-                  </ul>
-                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输入: <span class="text-red-400">1754063777432</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">输出: <span class="text-green-400">2025-08-01 23:56:17</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="pasteAndParse" class="px-3 py-1.5 text-sm btn-secondary rounded-md">{{ $t('tools.timestamp.actions.pasteAndParse') }}</button>
-            <button @click="setCurrentTime" class="px-3 py-1.5 text-sm btn-primary rounded-md">{{ $t('tools.timestamp.actions.setCurrentTime') }}</button>
-            <LanguageSwitcher />
-            <ThemeToggleButton />
-          </div>
+  <div class="h-full flex flex-col bg-background text-foreground">
+    <!-- Compact Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+        <!-- Title & Icon -->
+        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
+          <Clock class="w-5 h-5" />
+          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.timestamp.name') }}</span>
         </div>
       </div>
-    </header>
 
-    <!-- The rest of the template remains the same -->
-    <main class="flex-1 container mx-auto px-4 py-8 flex justify-center">
-      <div class="w-full max-w-3xl">
-        <div class="relative">
-          <input
-            type="text"
-            v-model="userInput"
-            @input="parseInput"
-            :placeholder="$t('common.placeholders.enterTimestamp')"
-            class="w-full text-center text-xl font-mono p-4 pr-10 bg-transparent border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
-            :class="isValid ? 'border-primary focus:ring-primary/50' : 'border-destructive focus:ring-destructive/50'"
-          />
-          <span v-if="isValid" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
-          <span v-else-if="userInput" class="absolute right-3 top-1/2 -translate-y-1/2 text-destructive">✗</span>
+      <!-- Right Side Actions -->
+      <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
+        <button @click="pasteAndParse" class="px-3 py-1.5 text-xs font-medium btn-secondary rounded-md flex items-center space-x-1.5 transition-colors">
+          <ClipboardPaste class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('tools.timestamp.actions.pasteAndParse') }}</span>
+        </button>
+        <button @click="setCurrentTime" class="px-3 py-1.5 text-xs font-medium btn-primary rounded-md flex items-center space-x-1.5 transition-colors">
+          <RefreshCw class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">{{ $t('tools.timestamp.actions.setCurrentTime') }}</span>
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <HelpCircle class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
+    <main class="flex-1 container mx-auto px-4 py-8 flex justify-center overflow-auto">
+      <div class="w-full max-w-3xl space-y-8">
+        <!-- Input Section -->
+        <div class="space-y-2">
+          <div class="relative group">
+            <input
+              type="text"
+              v-model="userInput"
+              @input="parseInput"
+              :placeholder="$t('common.placeholders.enterTimestamp')"
+              class="w-full text-center text-xl font-mono p-4 pr-12 bg-card border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              :class="isValid ? 'border-primary/50 focus:border-primary' : (userInput ? 'border-destructive/50 focus:border-destructive' : 'border-border focus:border-primary')"
+            />
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity duration-200" :class="userInput ? 'opacity-100' : 'opacity-0'">
+              <CheckCircle2 v-if="isValid" class="w-5 h-5 text-green-500" />
+              <AlertCircle v-else class="w-5 h-5 text-destructive" />
+            </div>
+          </div>
+          <p v-if="!isValid && userInput" class="text-center text-destructive text-xs font-medium animate-pulse">{{ $t('errors.invalidTimestamp') }}</p>
+          <p v-else class="text-center text-muted-foreground text-xs">
+            Supports: Unix Timestamp (s/ms), ISO 8601, YYYY-MM-DD, Natural Language
+          </p>
         </div>
-        <div v-if="!isValid && userInput" class="text-center text-destructive text-sm mt-2">{{ $t('errors.invalidTimestamp') }}</div>
-        <div v-if="isValid" class="mt-8 space-y-3">
-          <h2 class="text-lg font-semibold text-center mb-4">{{ $t('tools.timestamp.result.title') }}</h2>
-          <div v-for="(item, index) in outputFormats" :key="item.labelKey" class="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
-            <span class="text-sm text-muted-foreground">{{ $t(item.labelKey) }}</span>
-            <div class="flex items-center space-x-3">
-              <span class="font-mono text-foreground">{{ item.value }}</span>
-              <button @click="copyToClipboard(item.value)" :title="`${$t('common.copy')} (⌘+${index + 1})`" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
+
+        <!-- Results Section -->
+        <div v-if="isValid" class="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-slide-up">
+          <div class="px-4 py-3 border-b border-border bg-muted/30">
+            <h2 class="text-sm font-semibold">{{ $t('tools.timestamp.result.title') }}</h2>
+          </div>
+          <div class="divide-y divide-border">
+            <div v-for="item in outputFormats" :key="item.labelKey" class="flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors group">
+              <span class="text-xs font-medium text-muted-foreground">{{ $t(item.labelKey) }}</span>
+              <div class="flex items-center space-x-3">
+                <span class="font-mono text-foreground text-sm select-all">{{ item.value }}</span>
+                <button
+                  @click="copyToClipboard(item.value)"
+                  class="p-1.5 hover:bg-primary/10 hover:text-primary rounded-md opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                  :title="$t('common.copy')"
+                >
+                  <Copy class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Help Modal -->
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">{{ $t('tools.timestamp.name') }} Help</h3>
+          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <p>{{ $t('tools.timestamp.description') }}</p>
+          <div>
+            <p class="font-bold mb-2">Input Formats:</p>
+            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+              <li><strong>Timestamp:</strong> 10 digits (s) or 13 digits (ms)</li>
+              <li><strong>Date String:</strong> 2023-01-01, YYYYMMDD</li>
+              <li><strong>ISO 8601:</strong> 2023-01-01T00:00:00Z</li>
+              <li><strong>Natural:</strong> now, today, tomorrow</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -83,24 +107,19 @@ import { useI18n } from 'vue-i18n';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
-import LanguageSwitcher from '../components/LanguageSwitcher.vue';
+import { HelpCircle, Clock, ClipboardPaste, RefreshCw, CheckCircle2, AlertCircle, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 
-// 获取 i18n 实例
 const { t: $t } = useI18n();
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
 
-// State
 const userInput = ref('');
 const parsedDate = ref<dayjs.Dayjs | null>(null);
 const errorMessage = ref('');
+const showHelp = ref(false);
 
-// Computed
 const isValid = computed(() => parsedDate.value !== null && parsedDate.value.isValid());
 
 const outputFormats = computed(() => {
@@ -117,7 +136,6 @@ const outputFormats = computed(() => {
   ];
 });
 
-// Functions
 const parseInput = () => {
   const input = userInput.value.trim();
   if (!input) {
@@ -128,7 +146,6 @@ const parseInput = () => {
 
   let d: dayjs.Dayjs | null = null;
 
-  // 优先尝试 YYYYMMDD 格式
   if (/^\d{8}$/.test(input)) {
     d = dayjs(input, 'YYYYMMDD');
     if (d.isValid()) {
@@ -138,7 +155,6 @@ const parseInput = () => {
     }
   }
 
-  // 尝试作为时间戳解析 (秒或毫秒)
   if (/^\d+$/.test(input) && (input.length === 10 || input.length === 13)) {
     const num = Number(input);
     d = input.length === 10 ? dayjs.unix(num) : dayjs(num);
@@ -149,7 +165,6 @@ const parseInput = () => {
     }
   }
 
-  // 尝试作为其他通用日期字符串解析
   d = dayjs(input);
   if (d.isValid()) {
     parsedDate.value = d;
@@ -178,16 +193,37 @@ const copyToClipboard = (text: string | number) => {
   navigator.clipboard.writeText(String(text));
 };
 
-// Lifecycle
 onMounted(() => {
   setCurrentTime();
-  // 禁用保存快捷键
   addDisableSaveShortcut();
 });
 
 onBeforeUnmount(() => {
-  // 移除保存快捷键禁用
   removeDisableSaveShortcut();
 });
-
 </script>
+
+<style scoped>
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

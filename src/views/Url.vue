@@ -1,86 +1,81 @@
 <template>
-  <div class="h-screen flex flex-col bg-background text-foreground">
-    <!-- 顶部标题栏 -->
-    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <ToolSwitcher />
-            <button @click="$router.push('/')" class="btn-icon" :title="$t('app.backToHome')">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-xl font-semibold">{{ $t('tools.url.name') }}</h1>
-              <div class="relative group">
-                <HelpCircle class="h-5 w-5 text-muted-foreground cursor-pointer" />
-                <div class="absolute top-full mt-2 w-80 bg-card border rounded-lg shadow-lg p-3 text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                  <p class="font-bold mb-2">{{ $t('tools.url.name') }}</p>
-                  <p class="mb-2">{{ $t('tools.url.description') }}</p>
-                  <p class="font-bold mb-1">{{ $t('tools.url.encodeMode') }}:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li><strong>Component:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
-                    <li><strong>URI:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
-                  </ul>
-                  <p class="font-bold mb-1">{{ $t('tools.url.decodeMode') }}:</p>
-                  <ul class="list-disc list-inside text-xs mb-2">
-                    <li>{{ $t('tools.url.decodeModeDescription') }}</li>
-                  </ul>
-                  <p class="mt-2"><strong class="text-primary">{{ $t('app.example') }}:</strong></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.input') }}: <span class="text-red-400">name=你好</span></p>
-                  <p class="text-xs font-mono bg-muted p-1 rounded">{{ $t('common.labels.result') }}: <span class="text-green-400">name%3D%E4%BD%A0%E5%A5%BD</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="clearAll" class="px-3 py-1.5 text-sm btn-destructive rounded-md">{{ $t('common.clear') }}</button>
-            <LanguageSwitcher />
-            <ThemeToggleButton />
-          </div>
+  <div class="h-full flex flex-col bg-background text-foreground">
+    <!-- Compact Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+        <!-- Title & Icon -->
+        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
+          <Link class="w-5 h-5" />
+          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.url.name') }}</span>
         </div>
-      </div>
-    </header>
 
-    <!-- 工具栏 -->
-    <div class="container mx-auto px-4 py-3 border-b border-border">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="encode" class="rounded"><span class="text-sm">{{ $t('common.labels.encode') }}</span></label>
-          <label class="flex items-center space-x-2"><input type="radio" v-model="operation" value="decode" class="rounded"><span class="text-sm">{{ $t('common.labels.decode') }}</span></label>
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Operation Selection -->
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            v-for="op in ['encode', 'decode']"
+            :key="op"
+            @click="operation = op"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
+            :class="operation === op ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+          >
+            {{ $t('common.labels.' + op) }}
+          </button>
         </div>
-        <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2"><span class="text-sm">{{ $t('common.labels.mode') }}:</span>
-            <select v-model="mode" class="text-sm px-2 py-1 border border-border rounded bg-background">
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Options -->
+        <div class="flex items-center space-x-3 flex-shrink-0">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.mode') }}:</span>
+            <select v-model="mode" class="text-xs px-2 py-1 border border-border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none h-7">
               <option v-if="operation === 'encode'" value="encodeURIComponent">Component</option>
               <option v-if="operation === 'encode'" value="encodeURI">URI</option>
               <option v-if="operation === 'decode'" value="decodeURIComponent">Component</option>
               <option v-if="operation === 'decode'" value="decodeURI">URI</option>
             </select>
+          </div>
+
+          <label class="flex items-center space-x-2 cursor-pointer group">
+            <input type="checkbox" v-model="autoProcess" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
+            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoProcess') }}</span>
           </label>
-          <label class="flex items-center space-x-2">
-            <input type="checkbox" v-model="autoProcess" class="rounded">
-            <span class="text-sm">{{ $t('common.labels.autoProcess') }}</span>
-          </label>
-          <label class="flex items-center space-x-2" :title="$t('common.labels.autoWrap')">
-            <input type="checkbox" v-model="wordWrapEnabled" class="rounded">
-            <span class="text-sm">{{ $t('common.labels.autoWrap') }}</span>
+
+          <label class="flex items-center space-x-2 cursor-pointer group">
+            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
+            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoWrap') }}</span>
           </label>
         </div>
       </div>
+
+      <!-- Right Side Actions -->
+      <div class="flex items-center space-x-1 flex-shrink-0 ml-4">
+        <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-muted-foreground" :title="$t('common.clear')">
+          <Trash2 class="w-4 h-4" />
+        </button>
+        <div class="h-4 w-px bg-border mx-1"></div>
+        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
+          <HelpCircle class="w-4 h-4" />
+        </button>
+      </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <main class="flex-1 container mx-auto px-4 py-4 flex flex-col">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-        <!-- 输入编辑器 -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden">
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('common.labels.input') }}</h3>
-            <div class="flex items-center space-x-2">
-              <button @click="pasteInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.paste') }}</button>
-              <button @click="copyInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-h-0 p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
+        <!-- Input Editor -->
+        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
+          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
+            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
+            <div class="flex items-center space-x-1">
+              <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <ClipboardPaste class="w-3.5 h-3.5" />
+              </button>
+              <button @click="copyInput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Copy class="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -88,13 +83,17 @@
           </div>
         </div>
 
-        <!-- 输出编辑器 -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden">
-          <div class="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
-            <h3 class="text-sm font-medium">{{ $t('common.labels.result') }}</h3>
-            <div class="flex items-center space-x-2">
-              <button @click="copyOutput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.copy') }}</button>
-              <button @click="useAsInput" class="text-xs px-2 py-1 btn-secondary rounded">{{ $t('common.buttons.useAsInput') }}</button>
+        <!-- Output Editor -->
+        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
+          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
+            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.result') }}</h3>
+            <div class="flex items-center space-x-1">
+              <button @click="useAsInput" :title="$t('common.buttons.useAsInput')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowUpLeft class="w-3.5 h-3.5" />
+              </button>
+              <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Copy class="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
           <div class="flex-1 relative">
@@ -103,32 +102,46 @@
         </div>
       </div>
     </main>
+
+    <!-- Help Modal -->
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">{{ $t('tools.url.name') }} Help</h3>
+          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <p>{{ $t('tools.url.description') }}</p>
+          <div>
+            <p class="font-bold mb-2">{{ $t('tools.url.encodeMode') }}:</p>
+            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+              <li><strong>Component:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
+              <li><strong>URI:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle } from 'lucide-vue-next';
-import ToolSwitcher from '../components/ToolSwitcher.vue';
-import ThemeToggleButton from '../components/ThemeToggleButton.vue';
-import LanguageSwitcher from '../components/LanguageSwitcher.vue';
+import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
-// Refs
 const inputEditorRef = ref<HTMLElement | null>(null);
 const outputEditorRef = ref<HTMLElement | null>(null);
-
-// Monaco Editor Instances
 let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
-
-// 主题监听器清理函数
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
+const showHelp = ref(false);
 
-// 本地存储键名
 const STORAGE_KEYS = {
   inputText: 'url-input-text',
   operation: 'url-operation',
@@ -137,7 +150,6 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'url-word-wrap-enabled'
 };
 
-// State - 从本地存储加载初始值
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'https://example.com/?query=你好 世界'));
 const outputText = ref('');
 const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
@@ -145,7 +157,6 @@ const mode = ref(loadFromStorage(STORAGE_KEYS.mode, 'encodeURIComponent'));
 const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
-// Functions
 const processText = () => {
   const input = inputEditor?.getValue() || '';
   if (!input.trim()) {
@@ -174,7 +185,10 @@ const initEditors = async () => {
     theme: getMonacoTheme(),
     automaticLayout: true,
     minimap: { enabled: false },
-    wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off', // Apply word wrap setting
+    wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
+    padding: { top: 16, bottom: 16 },
+    fontSize: 14,
+    fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
   };
 
   if (inputEditorRef.value) {
@@ -187,11 +201,7 @@ const initEditors = async () => {
       saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
-    });
-    // 设置主题监听器
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     inputThemeWatcher = watchThemeChange(inputEditor);
   }
   if (outputEditorRef.value) {
@@ -200,17 +210,12 @@ const initEditors = async () => {
       readOnly: true,
       ...editorOptions,
     });
-    // 禁用保存快捷键 (Ctrl+S / Cmd+S)
-    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // 禁用默认保存行为，什么都不做
-    });
-    // 设置主题监听器
+    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     outputThemeWatcher = watchThemeChange(outputEditor);
   }
   processText();
 };
 
-// Toolbar actions
 const clearAll = () => {
   inputEditor?.setValue('');
   outputEditor?.setValue('');
@@ -224,8 +229,7 @@ const useAsInput = () => {
   operation.value = operation.value === 'encode' ? 'decode' : 'encode';
 };
 
-// Watchers - 监听状态变化并保存到本地存储
-watch(operation, (newVal: string) => {
+watch(operation, (newVal) => {
   saveToStorage(STORAGE_KEYS.operation, newVal);
   if (newVal === 'encode') {
     mode.value = 'encodeURIComponent';
@@ -234,31 +238,37 @@ watch(operation, (newVal: string) => {
   }
 });
 
-watch(mode, (newValue: string) => {
+watch(mode, (newValue) => {
   saveToStorage(STORAGE_KEYS.mode, newValue);
   if (autoProcess.value) processText();
 });
 
-watch(autoProcess, (newValue: boolean) => {
+watch(autoProcess, (newValue) => {
   saveToStorage(STORAGE_KEYS.autoProcess, newValue);
 });
 
-watch(wordWrapEnabled, (newValue: boolean) => {
+watch(wordWrapEnabled, (newValue) => {
   const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off';
   inputEditor?.updateOptions({ wordWrap: wrapOption });
   outputEditor?.updateOptions({ wordWrap: wrapOption });
   saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
 });
 
-// Lifecycle
 onMounted(initEditors);
 onBeforeUnmount(() => {
-  // 清理主题监听器
   inputThemeWatcher?.();
   outputThemeWatcher?.();
-  // 销毁编辑器实例
   inputEditor?.dispose();
   outputEditor?.dispose();
 });
-
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

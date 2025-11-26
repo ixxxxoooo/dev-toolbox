@@ -12,12 +12,12 @@
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
@@ -34,7 +34,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
+    --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -59,133 +59,36 @@
   }
 }
 
-/* 自定义滚动条 */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-muted;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-border rounded-full;
+  @apply bg-muted-foreground/20 rounded-full border-2 border-background;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  @apply bg-muted-foreground/40;
 }
 
-/* 工具提示样式 */
-.tooltip {
-  @apply invisible absolute;
+/* Monaco Editor Overrides */
+.monaco-editor {
+  --vscode-focusBorder: transparent !important;
 }
 
-.has-tooltip:hover .tooltip {
-  @apply visible z-50;
-}
-
-/* 动画类 */
+/* Animations */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* 按钮点击反馈效果 */
-button {
-  @apply transition-all duration-150 ease-in-out;
-  transform-origin: center;
-}
-
-button:active {
-  @apply scale-95;
-  transition-duration: 75ms;
-}
-
-button:disabled:active {
-  @apply scale-100;
-}
-
-/* 特定按钮类型的点击反馈 */
-.btn-primary {
-  @apply bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80;
-}
-
-.btn-primary:active {
-  @apply shadow-inner;
-}
-
-.btn-secondary {
-  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70;
-}
-
-.btn-secondary:active {
-  @apply shadow-inner;
-}
-
-.btn-destructive {
-  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80;
-}
-
-.btn-destructive:active {
-  @apply shadow-inner;
-}
-
-.btn-ghost {
-  @apply hover:bg-secondary/50 active:bg-secondary/70;
-}
-
-.btn-ghost:active {
-  @apply shadow-inner;
-}
-
-/* 圆形按钮特殊处理 */
-.btn-round:active {
-  @apply scale-90;
-}
-
-/* 图标按钮特殊处理 */
-.btn-icon:active {
-  @apply scale-90 bg-secondary/80;
-}
-
-/* Toast 滑入动画 */
-@keyframes slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-.monaco-editor {
-  --vscode-focusBorder: transparent !important;
 }
