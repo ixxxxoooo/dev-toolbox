@@ -350,7 +350,6 @@ const initEditors = async () => {
       const newValue = editor?.getValue() || '';
       if (!isProcessing) {
         inputText.value = newValue;
-        saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       }
     });
 
@@ -403,6 +402,14 @@ const toggleTreeExpansion = () => {
   }
   isTreeExpanded.value = !isTreeExpanded.value;
 };
+
+watch(inputText, (newValue) => {
+  saveToStorage(STORAGE_KEYS.inputText, newValue);
+});
+
+watch(operation, (newValue) => {
+  saveToStorage(STORAGE_KEYS.operation, newValue);
+});
 
 watch(indentSize, (newValue) => {
   saveToStorage(STORAGE_KEYS.indentSize, newValue);

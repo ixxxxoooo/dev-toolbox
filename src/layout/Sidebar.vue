@@ -55,7 +55,14 @@ import {
   FileText,
   Hash,
   Database,
-  Key
+  Key,
+  Calculator,
+  Globe,
+  Monitor,
+  Regex,
+  QrCode,
+  FileCode,
+  Image
 } from 'lucide-vue-next'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
@@ -76,7 +83,14 @@ const icons: Record<string, any> = {
   FileText,
   Hash,
   Database,
-  Key
+  Key,
+  Calculator,
+  Globe,
+  Monitor,
+  Regex,
+  QrCode,
+  FileCode,
+  Image
 }
 
 const getIcon = (name: string) => {

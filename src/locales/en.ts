@@ -243,33 +243,33 @@ export default {
       description: 'Generate secure passwords',
       passwordType: 'Password Type',
       passwordLength: 'Password Length',
-      recommendedLength: 'Recommended Length',
-      characters: 'characters',
+      recommendedLength: 'Recommended',
+      characters: 'chars',
       characterTypes: 'Character Types',
-      uppercase: 'Uppercase Letters',
-      lowercase: 'Lowercase Letters',
+      uppercase: 'Uppercase',
+      lowercase: 'Lowercase',
       numbers: 'Numbers',
       symbols: 'Symbols',
-      excludeAmbiguous: 'Exclude Ambiguous Characters',
-      configOptions: 'Configuration Options',
+      excludeAmbiguous: 'Exclude Ambiguous',
+      configOptions: 'Configuration',
       capitalizeWords: 'Capitalize Words',
       wordCount: 'Word Count',
       generatedPasswords: 'Generated Passwords',
       copyPassword: 'Copy Password',
-      strengthAnalysis: 'Password Strength Analysis',
+      strengthAnalysis: 'Strength Analysis',
       strengthLevel: 'Strength Level',
-      charsetSize: 'Character Set Size',
+      charsetSize: 'Charset Size',
       securityAdvice: 'Security Advice',
       entropy: 'Entropy',
       types: {
-        strong: 'Strong Password (Recommended)',
-        strongDesc: 'High-strength passwords containing uppercase, lowercase, numbers and symbols',
-        readable: 'Readable Password',
-        readableDesc: 'Passwords excluding confusing characters, easy for manual input',
-        pin: 'PIN Code',
-        pinDesc: 'Numeric-only passwords, suitable for PIN scenarios',
-        memorable: 'Memorable Password',
-        memorableDesc: 'Easy-to-remember passwords based on common word combinations'
+        strong: 'Strong (Recommended)',
+        strongDesc: 'High entropy password with mixed characters',
+        readable: 'Readable',
+        readableDesc: 'Easy to type, excludes ambiguous characters',
+        pin: 'PIN',
+        pinDesc: 'Numeric only, suitable for PIN codes',
+        memorable: 'Memorable',
+        memorableDesc: 'Based on random words, easy to remember'
       },
       strength: {
         weak: 'Weak',
@@ -277,9 +277,9 @@ export default {
         strong: 'Strong',
         veryStrong: 'Very Strong'
       },
-      crackTimeDesc: 'Estimated Time to Crack',
+      crackTimeDesc: 'Estimated Crack Time',
       crackTime: {
-        lessThanMinute: 'Less than 1 minute',
+        lessThanMinute: '< 1 minute',
         minutes: 'minutes',
         hours: 'hours',
         days: 'days',
@@ -287,12 +287,105 @@ export default {
         centuries: 'centuries'
       },
       advice: {
-        length: 'Use a minimum of 12 characters for strong passwords',
-        unique: 'Avoid using the same password for multiple accounts',
-        regular: 'Regularly change passwords for important accounts',
-        manager: 'Use a password manager to store passwords',
-        twoFactor: 'Enable two-factor authentication for enhanced security'
+        length: 'Use 12+ characters for better security',
+        unique: 'Never reuse passwords across accounts',
+        regular: 'Rotate important passwords periodically',
+        manager: 'Use a password manager',
+        twoFactor: 'Enable 2FA where possible'
       }
+    },
+
+    // Number Converter
+    numberConverter: {
+      name: 'Number Base Converter',
+      description: 'Convert between Binary, Octal, Decimal, and Hexadecimal',
+      decimal: 'Decimal',
+      hex: 'Hexadecimal',
+      binary: 'Binary',
+      octal: 'Octal'
+    },
+
+    // HTTP Status Codes
+    httpStatus: {
+      name: 'HTTP Status Codes',
+      description: 'Lookup HTTP status codes and meanings',
+      codes: [
+        // 1xx Informational
+        { code: 100, title: 'Continue', description: 'The server has received the request headers and the client should proceed to send the request body.', category: 'Informational' },
+        { code: 101, title: 'Switching Protocols', description: 'The requester has asked the server to switch protocols and the server has agreed to do so.', category: 'Informational' },
+
+        // 2xx Success
+        { code: 200, title: 'OK', description: 'Standard response for successful HTTP requests.', category: 'Success' },
+        { code: 201, title: 'Created', description: 'The request has been fulfilled, resulting in the creation of a new resource.', category: 'Success' },
+        { code: 202, title: 'Accepted', description: 'The request has been accepted for processing, but the processing has not been completed.', category: 'Success' },
+        { code: 204, title: 'No Content', description: 'The server successfully processed the request and is not returning any content.', category: 'Success' },
+
+        // 3xx Redirection
+        { code: 301, title: 'Moved Permanently', description: 'The requested page has moved to a new URL.', category: 'Redirection' },
+        { code: 302, title: 'Found', description: 'The requested page has moved temporarily to a new URL.', category: 'Redirection' },
+        { code: 304, title: 'Not Modified', description: 'Indicates that the resource has not been modified since the version specified by the request headers.', category: 'Redirection' },
+
+        // 4xx Client Error
+        { code: 400, title: 'Bad Request', description: 'The server cannot or will not process the request due to an apparent client error.', category: 'Client Error' },
+        { code: 401, title: 'Unauthorized', description: 'Authentication is required and has failed or has not been yet provided.', category: 'Client Error' },
+        { code: 403, title: 'Forbidden', description: 'The request was valid, but the server is refusing action.', category: 'Client Error' },
+        { code: 404, title: 'Not Found', description: 'The requested resource could not be found but may be available in the future.', category: 'Client Error' },
+        { code: 405, title: 'Method Not Allowed', description: 'A request method is not supported for the requested resource.', category: 'Client Error' },
+        { code: 429, title: 'Too Many Requests', description: 'The user has sent too many requests in a given amount of time.', category: 'Client Error' },
+
+        // 5xx Server Error
+        { code: 500, title: 'Internal Server Error', description: 'A generic error message, given when an unexpected condition was encountered and no more specific message is suitable.', category: 'Server Error' },
+        { code: 502, title: 'Bad Gateway', description: 'The server was acting as a gateway or proxy and received an invalid response from the upstream server.', category: 'Server Error' },
+        { code: 503, title: 'Service Unavailable', description: 'The server is currently unavailable (because it is overloaded or down for maintenance).', category: 'Server Error' },
+        { code: 504, title: 'Gateway Timeout', description: 'The server was acting as a gateway or proxy and did not receive a timely response from the upstream server.', category: 'Server Error' },
+      ]
+    },
+
+    // User Agent Parser
+    userAgent: {
+      name: 'User Agent Parser',
+      description: 'Parse User Agent strings',
+      browser: 'Browser',
+      os: 'Operating System',
+      device: 'Device',
+      useMyUa: 'Use My UA',
+      placeholder: 'Paste User Agent string here...'
+    },
+
+    // Regex Tester
+    regexTester: {
+      name: 'Regex Tester',
+      description: 'Test regular expressions',
+      regex: 'Regular Expression',
+      testString: 'Test String',
+      matches: 'Matches'
+    },
+
+    // QR Code Generator
+    qrCode: {
+      name: 'QR Code Generator',
+      description: 'Generate custom QR codes',
+      placeholder: 'Enter text or URL...',
+      options: 'Options'
+    },
+
+    // Markdown Preview
+    markdown: {
+      name: 'Markdown Preview',
+      description: 'Markdown editor with real-time preview',
+      copyHtml: 'Copy HTML'
+    },
+
+    // Image Tools
+    imageTools: {
+      name: 'Image Tools',
+      description: 'Compress and crop images',
+      compress: 'Compress',
+      crop: 'Crop',
+      dropText: 'Drop image here',
+      supportText: 'Supports JPG, PNG, WebP',
+      quality: 'Quality',
+      maxWidth: 'Max Width'
     }
   },
 

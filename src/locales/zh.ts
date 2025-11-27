@@ -293,6 +293,99 @@ export default {
         manager: '使用密码管理器存储密码',
         twoFactor: '启用双因素认证增强安全性'
       }
+    },
+
+    // 进制转换
+    numberConverter: {
+      name: '进制转换',
+      description: '二进制、八进制、十进制、十六进制相互转换',
+      decimal: '十进制',
+      hex: '十六进制',
+      binary: '二进制',
+      octal: '八进制'
+    },
+
+    // HTTP 状态码
+    httpStatus: {
+      name: 'HTTP 状态码',
+      description: '查询 HTTP 状态码含义',
+      codes: [
+        // 1xx Informational
+        { code: 100, title: 'Continue', description: '服务器已接收请求头，客户端应继续发送请求体。', category: '信息' },
+        { code: 101, title: 'Switching Protocols', description: '请求者已要求服务器切换协议，服务器已确认并准备切换。', category: '信息' },
+
+        // 2xx Success
+        { code: 200, title: 'OK', description: '请求成功。', category: '成功' },
+        { code: 201, title: 'Created', description: '请求已实现，并创建了新资源。', category: '成功' },
+        { code: 202, title: 'Accepted', description: '请求已接受处理，但尚未完成。', category: '成功' },
+        { code: 204, title: 'No Content', description: '服务器成功处理了请求，但没有返回任何内容。', category: '成功' },
+
+        // 3xx Redirection
+        { code: 301, title: 'Moved Permanently', description: '请求的页面已永久移动到新位置。', category: '重定向' },
+        { code: 302, title: 'Found', description: '请求的页面已临时移动到新位置。', category: '重定向' },
+        { code: 304, title: 'Not Modified', description: '自上次请求以来，请求的资源未被修改。', category: '重定向' },
+
+        // 4xx Client Error
+        { code: 400, title: 'Bad Request', description: '服务器无法理解请求的语法。', category: '客户端错误' },
+        { code: 401, title: 'Unauthorized', description: '请求要求身份验证。', category: '客户端错误' },
+        { code: 403, title: 'Forbidden', description: '服务器拒绝请求。', category: '客户端错误' },
+        { code: 404, title: 'Not Found', description: '服务器找不到请求的网页。', category: '客户端错误' },
+        { code: 405, title: 'Method Not Allowed', description: '请求中指定的方法不被允许。', category: '客户端错误' },
+        { code: 429, title: 'Too Many Requests', description: '用户在给定的时间内发送了太多请求。', category: '客户端错误' },
+
+        // 5xx Server Error
+        { code: 500, title: 'Internal Server Error', description: '服务器遇到错误，无法完成请求。', category: '服务器错误' },
+        { code: 502, title: 'Bad Gateway', description: '服务器作为网关或代理，从上游服务器收到无效响应。', category: '服务器错误' },
+        { code: 503, title: 'Service Unavailable', description: '服务器目前无法使用（由于超载或停机维护）。', category: '服务器错误' },
+        { code: 504, title: 'Gateway Timeout', description: '服务器作为网关或代理，未及时从上游服务器接收请求。', category: '服务器错误' },
+      ]
+    },
+
+    // User Agent 解析
+    userAgent: {
+      name: 'User Agent 解析',
+      description: '解析 User Agent 字符串',
+      browser: '浏览器',
+      os: '操作系统',
+      device: '设备',
+      useMyUa: '使用本机 UA',
+      placeholder: '在此粘贴 User Agent 字符串...'
+    },
+
+    // 正则测试
+    regexTester: {
+      name: '正则测试',
+      description: '正则表达式测试工具',
+      regex: '正则表达式',
+      testString: '测试文本',
+      matches: '匹配结果'
+    },
+
+    // 二维码生成
+    qrCode: {
+      name: '二维码生成',
+      description: '生成自定义二维码',
+      placeholder: '输入文本或链接...',
+      options: '选项'
+    },
+
+    // Markdown 预览
+    markdown: {
+      name: 'Markdown 预览',
+      description: 'Markdown 编辑与实时预览',
+      copyHtml: '复制 HTML'
+    },
+
+    // 图片工具
+    imageTools: {
+      name: '图片工具',
+      description: '图片压缩与裁剪',
+      compress: '压缩',
+      crop: '裁剪',
+      dropText: '拖拽图片到此处',
+      supportText: '支持 JPG, PNG, WebP',
+      quality: '质量',
+      maxWidth: '最大宽度'
     }
   },
 

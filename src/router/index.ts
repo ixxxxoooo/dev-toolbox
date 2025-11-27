@@ -66,6 +66,48 @@ const routes: Array<RouteRecordRaw> = [
         name: 'PasswordGenerator',
         component: () => import('../views/PasswordGenerator.vue'),
         meta: { title: 'tools.password.name', icon: 'Key' }
+      },
+      {
+        path: 'number-converter',
+        name: 'NumberConverter',
+        component: () => import('../views/NumberConverter.vue'),
+        meta: { title: 'tools.numberConverter.name', icon: 'Calculator' }
+      },
+      {
+        path: 'http-status',
+        name: 'HttpStatus',
+        component: () => import('../views/HttpStatus.vue'),
+        meta: { title: 'tools.httpStatus.name', icon: 'Globe' }
+      },
+      {
+        path: 'user-agent',
+        name: 'UserAgent',
+        component: () => import('../views/UserAgent.vue'),
+        meta: { title: 'tools.userAgent.name', icon: 'Monitor' }
+      },
+      {
+        path: 'regex-tester',
+        name: 'RegexTester',
+        component: () => import('../views/RegexTester.vue'),
+        meta: { title: 'tools.regexTester.name', icon: 'Regex' }
+      },
+      {
+        path: 'qr-code',
+        name: 'QrCode',
+        component: () => import('../views/QrCode.vue'),
+        meta: { title: 'tools.qrCode.name', icon: 'QrCode' }
+      },
+      {
+        path: 'markdown',
+        name: 'Markdown',
+        component: () => import('../views/Markdown.vue'),
+        meta: { title: 'tools.markdown.name', icon: 'FileCode' }
+      },
+      {
+        path: 'image-tools',
+        name: 'ImageTools',
+        component: () => import('../views/ImageTools.vue'),
+        meta: { title: 'tools.imageTools.name', icon: 'Image' }
       }
     ]
   }
