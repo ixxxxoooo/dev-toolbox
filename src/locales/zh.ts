@@ -17,7 +17,7 @@ export default {
     download: '下载',
     upload: '上传',
     generate: '生成',
-    
+
     // 按钮
     buttons: {
       importFile: '导入文件',
@@ -32,7 +32,7 @@ export default {
       regenerate: '重新生成',
       process: '处理'
     },
-    
+
     // 标签
     labels: {
       input: '输入',
@@ -52,7 +52,7 @@ export default {
       spaces2: '2空格',
       spaces4: '4空格'
     },
-    
+
     // 占位符
     placeholders: {
       searchTools: '搜索工具...',
@@ -60,7 +60,7 @@ export default {
       enterText: '请输入文本...',
       enterTimestamp: '输入时间戳、日期字符串或自然语言...'
     },
-    
+
     // 消息
     messages: {
       invalidJson: '无效的JSON，无法生成树状视图',
@@ -120,7 +120,12 @@ export default {
     // Base64 编解码
     base64: {
       name: 'Base64 编解码',
-      description: 'Base64 编码和解码工具'
+      description: 'Base64 编码和解码工具',
+      help: {
+        features: {
+          urlSafe: 'URL安全'
+        }
+      }
     },
 
     // JSON 工具
@@ -135,7 +140,9 @@ export default {
       escape: '转义',
       unescape: '去转义',
       escapeDescription: '转义 JSON 字符串中的特殊字符',
-      unescapeDescription: '去转义 JSON 字符串中的特殊字符'
+      unescapeDescription: '去转义 JSON 字符串中的特殊字符',
+      expandAll: '展开全部',
+      collapseAll: '折叠全部'
     },
 
     // URL 编解码

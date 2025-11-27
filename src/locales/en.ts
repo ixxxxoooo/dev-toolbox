@@ -17,7 +17,7 @@ export default {
     download: 'Download',
     upload: 'Upload',
     generate: 'Generate',
-    
+
     // Buttons
     buttons: {
       importFile: 'Import File',
@@ -32,7 +32,7 @@ export default {
       regenerate: 'Regenerate',
       process: 'Process'
     },
-    
+
     // Labels
     labels: {
       input: 'Input',
@@ -52,7 +52,7 @@ export default {
       spaces2: '2 Spaces',
       spaces4: '4 Spaces'
     },
-    
+
     // Placeholders
     placeholders: {
       searchTools: 'Search tools...',
@@ -60,7 +60,7 @@ export default {
       enterText: 'Please enter text...',
       enterTimestamp: 'Enter timestamp, date string or natural language...'
     },
-    
+
     // Messages
     messages: {
       invalidJson: 'Invalid JSON, cannot generate tree view',
@@ -124,7 +124,12 @@ export default {
       encodeMode: 'Encode Mode',
       decodeMode: 'Decode Mode',
       encodeModeDescription: 'Encode URL parameter values',
-      decodeModeDescription: 'Automatically decode URL-encoded characters'
+      decodeModeDescription: 'Automatically decode URL-encoded characters',
+      help: {
+        features: {
+          urlSafe: 'URL Safe'
+        }
+      }
     },
 
     // JSON Tools
@@ -139,7 +144,9 @@ export default {
       escape: 'Escape',
       unescape: 'Unescape',
       escapeDescription: 'Escape special characters in JSON strings',
-      unescapeDescription: 'Unescape special characters in JSON strings'
+      unescapeDescription: 'Unescape special characters in JSON strings',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All'
     },
 
     // URL Encoder/Decoder

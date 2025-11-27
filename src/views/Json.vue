@@ -123,8 +123,9 @@
           <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
             <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.treeView') }}</h3>
             <div class="flex items-center space-x-2">
-               <button @click="expandAll" class="text-xs text-primary hover:underline px-2">Expand All</button>
-               <button @click="collapseAll" class="text-xs text-primary hover:underline px-2">Collapse All</button>
+               <button @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
+                 {{ isTreeExpanded ? $t('tools.json.collapseAll') : $t('tools.json.expandAll') }}
+               </button>
             </div>
           </div>
           <div class="flex-1 relative overflow-auto bg-background p-4">
@@ -392,13 +393,15 @@ const copyInput = () => {
   navigator.clipboard.writeText(text);
 };
 
-const expandAll = () => {
-  // Implementation depends on JsonTreeView component exposing this method
-  // For now, we rely on the component to handle its own state or add this later
-};
+const isTreeExpanded = ref(true);
 
-const collapseAll = () => {
-  // Implementation depends on JsonTreeView component exposing this method
+const toggleTreeExpansion = () => {
+  if (isTreeExpanded.value) {
+    treeViewRef.value?.collapseAll();
+  } else {
+    treeViewRef.value?.expandAll();
+  }
+  isTreeExpanded.value = !isTreeExpanded.value;
 };
 
 watch(indentSize, (newValue) => {

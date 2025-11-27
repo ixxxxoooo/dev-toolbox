@@ -7,13 +7,13 @@
       <span v-else class="text-gray-500 ml-2">{{ isObject ? '{' + Object.keys(node).length + '}' : '[' + node.length + ']' }}</span>
     </div>
     <div v-if="isObjectOrArray && isOpen" class="children">
-      <JsonNode v-for="(child, key) in node" :key="key" :node="child" :node-key="key" :level="level + 1" />
+      <JsonNode v-for="(child, key) in node" :key="key" :node="child" :node-key="key" :level="level + 1" ref="childRefs" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps } from 'vue';
+import { ref, computed, defineProps, defineExpose } from 'vue';
 
 const props = defineProps({
   node: {
@@ -31,6 +31,7 @@ const props = defineProps({
 });
 
 const isOpen = ref(true);
+const childRefs = ref<any[]>([]);
 
 const isObject = computed(() => typeof props.node === 'object' && props.node !== null && !Array.isArray(props.node));
 const isArray = computed(() => Array.isArray(props.node));
@@ -48,6 +49,16 @@ function toggle() {
   }
 }
 
+function expand() {
+  isOpen.value = true;
+  childRefs.value.forEach((child: any) => child?.expand?.());
+}
+
+function collapse() {
+  isOpen.value = false;
+  childRefs.value.forEach((child: any) => child?.collapse?.());
+}
+
 function getValueClass(value: any) {
   const type = typeof value;
   if (type === 'string') return 'text-green-400';
@@ -56,6 +67,8 @@ function getValueClass(value: any) {
   if (value === null) return 'text-gray-500';
   return '';
 }
+
+defineExpose({ expand, collapse });
 </script>
 
 <style scoped>
