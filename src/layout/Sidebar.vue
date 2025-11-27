@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-64 bg-card border-r border-border flex flex-col h-full transition-all duration-300">
+  <aside class="w-64 bg-card border-r border-border flex flex-col h-full">
     <div class="p-4 border-b border-border flex items-center space-x-3">
       <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
         <svg class="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,19 +66,20 @@ const routes = computed(() => {
   return router.options.routes[0].children?.filter(r => r.meta?.title) || []
 })
 
+const icons: Record<string, any> = {
+  Braces,
+  GitCompare,
+  Clock,
+  Link,
+  Binary,
+  Fingerprint,
+  FileText,
+  Hash,
+  Database,
+  Key
+}
+
 const getIcon = (name: string) => {
-  const icons: Record<string, any> = {
-    Braces,
-    GitCompare,
-    Clock,
-    Link,
-    Binary,
-    Fingerprint,
-    FileText,
-    Hash,
-    Database,
-    Key
-  }
   return icons[name] || FileText
 }
 </script>
