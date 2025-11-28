@@ -51,7 +51,7 @@
   "dependencies": {
     "@vueuse/core": "^13.6.0",
     "browser-image-compression": "^2.0.2",
-    "cropperjs": "^2.1.0",
+    "cropperjs": "^1.6.2",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "diff-match-patch": "^1.0.5",

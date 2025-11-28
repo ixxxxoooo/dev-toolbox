@@ -17,6 +17,7 @@ export default {
     download: '下载',
     upload: '上传',
     generate: '生成',
+    apply: '应用',
 
     // 按钮
     buttons: {
@@ -91,30 +92,30 @@ export default {
   tools: {
     // 文本对比
     diff: {
-       name: '文本对比',
-       mode: '对比方式',
-       description: '比较两个文本之间的差异',
-       leftPanel: '左侧文本',
-       rightPanel: '右侧文本',
-       sideBySide: '并排对比',
-       inline: '内联对比',
-       ignoreWhitespace: '忽略空白',
-       wordWrap: '自动换行',
-       darkTheme: '深色主题',
-       lightTheme: '浅色主题',
-       theme: '主题',
-       showLineNumbers: '显示行号',
-       previousDiff: '上一个差异',
-       nextDiff: '下一个差异',
-       swapContent: '交换内容',
-       pasteLeft: '粘贴到左侧',
-       pasteRight: '粘贴到右侧',
-       copyLeft: '复制左侧',
-       copyRight: '复制右侧',
-       clearAll: '清空全部',
-       sideBySideDescription: '左右对比模式',
-       inlineDescription: '内联对比模式',
-       ignoreWhitespaceDescription: '忽略空白字符'
+      name: '文本对比',
+      mode: '对比方式',
+      description: '比较两个文本之间的差异',
+      leftPanel: '左侧文本',
+      rightPanel: '右侧文本',
+      sideBySide: '并排对比',
+      inline: '内联对比',
+      ignoreWhitespace: '忽略空白',
+      wordWrap: '自动换行',
+      darkTheme: '深色主题',
+      lightTheme: '浅色主题',
+      theme: '主题',
+      showLineNumbers: '显示行号',
+      previousDiff: '上一个差异',
+      nextDiff: '下一个差异',
+      swapContent: '交换内容',
+      pasteLeft: '粘贴到左侧',
+      pasteRight: '粘贴到右侧',
+      copyLeft: '复制左侧',
+      copyRight: '复制右侧',
+      clearAll: '清空全部',
+      sideBySideDescription: '左右对比模式',
+      inlineDescription: '内联对比模式',
+      ignoreWhitespaceDescription: '忽略空白字符'
     },
 
     // Base64 编解码
@@ -147,32 +148,32 @@ export default {
 
     // URL 编解码
     url: {
-        name: 'URL 编解码',
-        description: 'URL 编码和解码工具',
-        encodeMode: '编码模式',
-        decodeMode: '解码模式',
-        encodeModeDescription: '编码URL参数值',
-        decodeModeDescription: '自动识别并解码URL编码的字符'
+      name: 'URL 编解码',
+      description: 'URL 编码和解码工具',
+      encodeMode: '编码模式',
+      decodeMode: '解码模式',
+      encodeModeDescription: '编码URL参数值',
+      decodeModeDescription: '自动识别并解码URL编码的字符'
     },
 
     // 时间戳转换
     timestamp: {
-        name: '时间戳转换',
-        description: '智能时间戳转换工具',
-        actions: {
-          pasteAndParse: '粘贴并解析',
-          setCurrentTime: '设为当前时间'
-        },
-        result: {
-          title: '转换结果',
-          localTime: '本地时间 (UTC+8)',
-          localDate: '本地日期',
-          timestampSec: '时间戳 (秒)',
-          timestampMs: '时间戳 (毫秒)',
-          utcTime: 'UTC 时间 (ISO 8601)',
-          relativeTime: '相对时间',
-          rfc2822: 'RFC 2822'
-        }
+      name: '时间戳转换',
+      description: '智能时间戳转换工具',
+      actions: {
+        pasteAndParse: '粘贴并解析',
+        setCurrentTime: '设为当前时间'
+      },
+      result: {
+        title: '转换结果',
+        localTime: '本地时间 (UTC+8)',
+        localDate: '本地日期',
+        timestampSec: '时间戳 (秒)',
+        timestampMs: '时间戳 (毫秒)',
+        utcTime: 'UTC 时间 (ISO 8601)',
+        relativeTime: '相对时间',
+        rfc2822: 'RFC 2822'
+      }
     },
 
     // UUID 生成器
@@ -188,21 +189,21 @@ export default {
 
     // 文本分析
     textAnalyzer: {
-        name: '字符统计工具',
-        description: '文本字符统计分析',
-        coreFeatures: '核心功能',
-         stats: {
-          charsWithSpaces: '字符数 (含空格)',
-          charsWithoutSpaces: '字符数 (不含空格)',
-          words: '字数',
-          lines: '行数',
-          paragraphs: '段落数',
-          charsWithSpacesDesc: '统计文本中包含空格的字符数',
-          charsWithoutSpacesDesc: '统计文本中不包含空格的字符数',
-          wordsDesc: '统计文本中的单词数',
-          linesDesc: '统计文本中的行数',
-          paragraphsDesc: '统计文本中的段落数'
-         }
+      name: '字符统计工具',
+      description: '文本字符统计分析',
+      coreFeatures: '核心功能',
+      stats: {
+        charsWithSpaces: '字符数 (含空格)',
+        charsWithoutSpaces: '字符数 (不含空格)',
+        words: '字数',
+        lines: '行数',
+        paragraphs: '段落数',
+        charsWithSpacesDesc: '统计文本中包含空格的字符数',
+        charsWithoutSpacesDesc: '统计文本中不包含空格的字符数',
+        wordsDesc: '统计文本中的单词数',
+        linesDesc: '统计文本中的行数',
+        paragraphsDesc: '统计文本中的段落数'
+      }
     },
 
     // 哈希生成器
@@ -382,10 +383,33 @@ export default {
       description: '图片压缩与裁剪',
       compress: '压缩',
       crop: '裁剪',
+      resize: '调整大小',
+      rotate: '旋转/翻转',
+      convert: '格式转换',
+      base64: 'Base64',
       dropText: '拖拽图片到此处',
       supportText: '支持 JPG, PNG, WebP',
       quality: '质量',
-      maxWidth: '最大宽度'
+      width: '宽度',
+      height: '高度',
+      maintainAspectRatio: '保持纵横比',
+      rotateLeft: '向左旋转',
+      rotateRight: '向右旋转',
+      flipHorizontal: '水平翻转',
+      flipVertical: '垂直翻转',
+      adjustQuality: '调整质量以减小文件大小',
+      dragToCrop: '拖动以裁剪。点击应用以保存更改。',
+      base64Help: '当前图片的 Base64 表示',
+      helpTitle: '图片工具帮助',
+      helpContent: {
+        intro: '一套全面的图片处理工具：',
+        compress: '压缩：在保持质量的同时减小文件大小。',
+        crop: '裁剪：裁剪掉不需要的外部区域。',
+        resize: '调整大小：更改图片尺寸。',
+        rotate: '旋转/翻转：调整图片方向。',
+        convert: '转换：在 PNG、JPEG 和 WEBP 格式之间切换。',
+        base64: 'Base64：获取用于嵌入的 Base64 字符串。'
+      }
     }
   },
 

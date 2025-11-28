@@ -17,6 +17,7 @@ export default {
     download: 'Download',
     upload: 'Upload',
     generate: 'Generate',
+    apply: 'Apply',
 
     // Buttons
     buttons: {
@@ -91,30 +92,30 @@ export default {
   tools: {
     // Text Diff
     diff: {
-       name: 'Text Diff',
-       mode: 'Diff Mode',
-       description: 'Compare differences between two texts',
-       leftPanel: 'Left Text',
-       rightPanel: 'Right Text',
-       sideBySide: 'Side by Side',
-       inline: 'Inline',
-       ignoreWhitespace: 'Ignore Whitespace',
-       wordWrap: 'Word Wrap',
-       darkTheme: 'Dark Theme',
-       lightTheme: 'Light Theme',
-       theme: 'Theme',
-       showLineNumbers: 'Show Line Numbers',
-       previousDiff: 'Previous Diff',
-       nextDiff: 'Next Diff',
-       swapContent: 'Swap Content',
-       pasteLeft: 'Paste Left',
-       pasteRight: 'Paste Right',
-       copyLeft: 'Copy Left',
-       copyRight: 'Copy Right',
-       clearAll: 'Clear All',
-       sideBySideDescription: 'Side by Side Mode',
-       inlineDescription: 'Inline Mode',
-       ignoreWhitespaceDescription: 'Ignore Whitespace'
+      name: 'Text Diff',
+      mode: 'Diff Mode',
+      description: 'Compare differences between two texts',
+      leftPanel: 'Left Text',
+      rightPanel: 'Right Text',
+      sideBySide: 'Side by Side',
+      inline: 'Inline',
+      ignoreWhitespace: 'Ignore Whitespace',
+      wordWrap: 'Word Wrap',
+      darkTheme: 'Dark Theme',
+      lightTheme: 'Light Theme',
+      theme: 'Theme',
+      showLineNumbers: 'Show Line Numbers',
+      previousDiff: 'Previous Diff',
+      nextDiff: 'Next Diff',
+      swapContent: 'Swap Content',
+      pasteLeft: 'Paste Left',
+      pasteRight: 'Paste Right',
+      copyLeft: 'Copy Left',
+      copyRight: 'Copy Right',
+      clearAll: 'Clear All',
+      sideBySideDescription: 'Side by Side Mode',
+      inlineDescription: 'Inline Mode',
+      ignoreWhitespaceDescription: 'Ignore Whitespace'
     },
 
     // Base64 Encoder/Decoder
@@ -151,28 +152,28 @@ export default {
 
     // URL Encoder/Decoder
     url: {
-        name: 'URL Encoder/Decoder',
-        description: 'URL encoding and decoding tool'
+      name: 'URL Encoder/Decoder',
+      description: 'URL encoding and decoding tool'
     },
 
     // Timestamp Converter
     timestamp: {
-        name: 'Timestamp Converter',
-        description: 'Smart timestamp conversion tool',
-        actions: {
-          pasteAndParse: 'Paste and Parse',
-          setCurrentTime: 'Set Current Time'
-        },
-        result: {
-          title: 'Conversion Result',
-          localTime: 'Local Time (UTC+8)',
-          localDate: 'Local Date',
-          timestampSec: 'Timestamp (seconds)',
-          timestampMs: 'Timestamp (milliseconds)',
-          utcTime: 'UTC Time (ISO 8601)',
-          relativeTime: 'Relative Time',
-          rfc2822: 'RFC 2822'
-        }
+      name: 'Timestamp Converter',
+      description: 'Smart timestamp conversion tool',
+      actions: {
+        pasteAndParse: 'Paste and Parse',
+        setCurrentTime: 'Set Current Time'
+      },
+      result: {
+        title: 'Conversion Result',
+        localTime: 'Local Time (UTC+8)',
+        localDate: 'Local Date',
+        timestampSec: 'Timestamp (seconds)',
+        timestampMs: 'Timestamp (milliseconds)',
+        utcTime: 'UTC Time (ISO 8601)',
+        relativeTime: 'Relative Time',
+        rfc2822: 'RFC 2822'
+      }
     },
 
     // UUID Generator
@@ -188,21 +189,21 @@ export default {
 
     // Text Analyzer
     textAnalyzer: {
-        name: 'Text Analyzer',
-        description: 'Text character statistics analysis',
-        coreFeatures: 'Core Features',
-         stats: {
-          charsWithSpaces: 'Characters (with spaces)',
-          charsWithoutSpaces: 'Characters (without spaces)',
-          words: 'Words',
-          lines: 'Lines',
-          paragraphs: 'Paragraphs',
-          charsWithSpacesDesc: 'Count characters including spaces',
-          charsWithoutSpacesDesc: 'Count characters excluding spaces',
-          wordsDesc: 'Count words in the text',
-          linesDesc: 'Count lines in the text',
-          paragraphsDesc: 'Count paragraphs in the text'
-         }
+      name: 'Text Analyzer',
+      description: 'Text character statistics analysis',
+      coreFeatures: 'Core Features',
+      stats: {
+        charsWithSpaces: 'Characters (with spaces)',
+        charsWithoutSpaces: 'Characters (without spaces)',
+        words: 'Words',
+        lines: 'Lines',
+        paragraphs: 'Paragraphs',
+        charsWithSpacesDesc: 'Count characters including spaces',
+        charsWithoutSpacesDesc: 'Count characters excluding spaces',
+        wordsDesc: 'Count words in the text',
+        linesDesc: 'Count lines in the text',
+        paragraphsDesc: 'Count paragraphs in the text'
+      }
     },
 
     // Hash Generator
@@ -382,10 +383,33 @@ export default {
       description: 'Compress and crop images',
       compress: 'Compress',
       crop: 'Crop',
+      resize: 'Resize',
+      rotate: 'Rotate/Flip',
+      convert: 'Convert',
+      base64: 'Base64',
       dropText: 'Drop image here',
       supportText: 'Supports JPG, PNG, WebP',
       quality: 'Quality',
-      maxWidth: 'Max Width'
+      width: 'Width',
+      height: 'Height',
+      maintainAspectRatio: 'Maintain Aspect Ratio',
+      rotateLeft: 'Rotate Left',
+      rotateRight: 'Rotate Right',
+      flipHorizontal: 'Flip Horizontal',
+      flipVertical: 'Flip Vertical',
+      adjustQuality: 'Adjust quality to reduce file size.',
+      dragToCrop: 'Drag to crop. Click Apply to save changes.',
+      base64Help: 'Base64 representation of the current image.',
+      helpTitle: 'Image Tools Help',
+      helpContent: {
+        intro: 'A comprehensive suite of image manipulation tools:',
+        compress: 'Compress: Reduce file size while maintaining quality.',
+        crop: 'Crop: Trim unwanted outer areas.',
+        resize: 'Resize: Change image dimensions.',
+        rotate: 'Rotate/Flip: Orient your image correctly.',
+        convert: 'Convert: Switch between PNG, JPEG, and WEBP formats.',
+        base64: 'Base64: Get the Base64 string for embedding.'
+      }
     }
   },
 
