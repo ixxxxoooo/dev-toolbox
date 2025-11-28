@@ -139,9 +139,9 @@ export default {
       minifyDescription: '压缩JSON大小',
       treeViewDescription: '树状结构显示',
       escape: '转义',
-      unescape: '去转义',
-      escapeDescription: '转义 JSON 字符串中的特殊字符',
-      unescapeDescription: '去转义 JSON 字符串中的特殊字符',
+      unescape: '反转义',
+      escapeDescription: '转义 SQL 字符串中的特殊字符。',
+      unescapeDescription: '还原 SQL 字符串中的特殊字符。',
       expandAll: '展开全部',
       collapseAll: '折叠全部'
     },
@@ -235,7 +235,8 @@ export default {
       escapeDescription: '转义特殊字符',
       unescapeDescription: '去转义特殊字符',
       escape: '转义',
-      unescape: '去转义'
+      unescape: '去转义',
+      unicode: 'Unicode 转中文'
     },
 
     // 密码生成器
@@ -410,6 +411,36 @@ export default {
         convert: '转换：在 PNG、JPEG 和 WEBP 格式之间切换。',
         base64: 'Base64：获取用于嵌入的 Base64 字符串。'
       }
+    },
+
+    // 水印去除
+    watermark: {
+      name: '水印去除',
+      description: '去除图片和视频中的水印',
+      image: '图片去水印',
+      video: '视频去水印',
+      dropImage: '拖拽图片到此处',
+      supportImage: '支持 JPG, PNG, WebP',
+      dropVideo: '拖拽视频到此处',
+      supportVideo: '支持 MP4, WebM',
+      brushSize: '画笔大小',
+      remove: '去除水印',
+      add: '添加水印',
+      mode: '模式',
+      removeMode: '去除模式',
+      addMode: '添加模式',
+      text: '文字水印',
+      imageType: '图片水印',
+      content: '内容',
+      color: '颜色',
+      size: '大小',
+      opacity: '透明度',
+      position: '位置',
+      x: 'X 坐标',
+      y: 'Y 坐标',
+      paintInstruction: '使用鼠标涂抹水印区域，然后点击“去除水印”。',
+      videoInstruction: '拖动红色方框覆盖水印区域，然后点击“去除水印”。',
+      help: '去除模式：图片使用修复算法，视频使用去logo滤镜。添加模式：支持添加文字或图片水印。'
     }
   },
 

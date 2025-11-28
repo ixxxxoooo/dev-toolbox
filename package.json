@@ -49,6 +49,9 @@
     "vue-tsc": "^2.0.26"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@techstark/opencv-js": "^4.12.0-release.1",
     "@vueuse/core": "^13.6.0",
     "browser-image-compression": "^2.0.2",
     "cropperjs": "^1.6.2",

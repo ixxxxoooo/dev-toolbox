@@ -108,6 +108,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'ImageTools',
         component: () => import('../views/ImageTools.vue'),
         meta: { title: 'tools.imageTools.name', icon: 'Image' }
+      },
+      {
+        path: 'watermark-remover',
+        name: 'WatermarkRemover',
+        component: () => import('../views/WatermarkRemover.vue'),
+        meta: { title: 'tools.watermark.name', icon: 'Eraser' }
       }
     ]
   }

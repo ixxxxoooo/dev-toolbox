@@ -235,7 +235,8 @@ export default {
       escapeDescription: 'Escape special characters',
       unescapeDescription: 'Unescape special characters',
       escape: 'Escape',
-      unescape: 'Unescape'
+      unescape: 'Unescape',
+      unicode: 'Unicode to Chinese'
     },
 
     // Password Generator
@@ -410,6 +411,36 @@ export default {
         convert: 'Convert: Switch between PNG, JPEG, and WEBP formats.',
         base64: 'Base64: Get the Base64 string for embedding.'
       }
+    },
+
+    // Watermark Remover
+    watermark: {
+      name: 'Watermark Remover',
+      description: 'Remove watermarks from images and videos',
+      image: 'Image Remover',
+      video: 'Video Remover',
+      dropImage: 'Drop image here',
+      supportImage: 'Supports JPG, PNG, WebP',
+      dropVideo: 'Drop video here',
+      supportVideo: 'Supports MP4, WebM',
+      brushSize: 'Brush Size',
+      remove: 'Remove Watermark',
+      add: 'Add Watermark',
+      mode: 'Mode',
+      removeMode: 'Remove Mode',
+      addMode: 'Add Mode',
+      text: 'Text Watermark',
+      imageType: 'Image Watermark',
+      content: 'Content',
+      color: 'Color',
+      size: 'Size',
+      opacity: 'Opacity',
+      position: 'Position',
+      x: 'X Position',
+      y: 'Y Position',
+      paintInstruction: 'Paint over the watermark area, then click "Remove Watermark".',
+      videoInstruction: 'Drag the red box to cover the watermark, then click "Remove Watermark".',
+      help: 'Remove Mode: Uses inpainting for images and delogo for videos. Add Mode: Add text or image watermarks.'
     }
   },
 
