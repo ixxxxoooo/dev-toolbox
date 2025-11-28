@@ -114,6 +114,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'WatermarkRemover',
         component: () => import('../views/WatermarkRemover.vue'),
         meta: { title: 'tools.watermark.name', icon: 'Eraser' }
+      },
+      {
+        path: 'unicode-converter',
+        name: 'UnicodeConverter',
+        component: () => import('../views/UnicodeConverter.vue'),
+        meta: { title: 'tools.unicodeConverter.name', icon: 'Languages' }
       }
     ]
   }

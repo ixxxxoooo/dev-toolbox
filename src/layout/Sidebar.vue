@@ -63,7 +63,8 @@ import {
   QrCode,
   FileCode,
   Image,
-  Eraser
+  Eraser,
+  Languages
 } from 'lucide-vue-next'
 import ThemeToggleButton from '../components/ThemeToggleButton.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
@@ -92,7 +93,8 @@ const icons: Record<string, any> = {
   QrCode,
   FileCode,
   Image,
-  Eraser
+  Eraser,
+  Languages
 }
 
 const getIcon = (name: string) => {

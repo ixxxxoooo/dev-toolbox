@@ -413,24 +413,18 @@ export default {
       }
     },
 
-    // Watermark Remover
+    // Watermark Tool
     watermark: {
-      name: 'Watermark Remover',
-      description: 'Remove watermarks from images and videos',
-      image: 'Image Remover',
-      video: 'Video Remover',
-      dropImage: 'Drop image here',
-      supportImage: 'Supports JPG, PNG, WebP',
-      dropVideo: 'Drop video here',
-      supportVideo: 'Supports MP4, WebM',
-      brushSize: 'Brush Size',
+      name: 'Watermark Tool',
+      description: 'Add or remove watermarks from images/videos',
       remove: 'Remove Watermark',
       add: 'Add Watermark',
       mode: 'Mode',
       removeMode: 'Remove Mode',
       addMode: 'Add Mode',
       text: 'Text Watermark',
-      imageType: 'Image Watermark',
+      imageType: 'Image',
+      video: 'Video',
       content: 'Content',
       color: 'Color',
       size: 'Size',
@@ -438,9 +432,28 @@ export default {
       position: 'Position',
       x: 'X Position',
       y: 'Y Position',
-      paintInstruction: 'Paint over the watermark area, then click "Remove Watermark".',
-      videoInstruction: 'Drag the red box to cover the watermark, then click "Remove Watermark".',
-      help: 'Remove Mode: Uses inpainting for images and delogo for videos. Add Mode: Add text or image watermarks.'
+      dropImage: 'Drop or click to upload image',
+      dropVideo: 'Drop or click to upload video',
+      supportImage: 'Supports JPG, PNG, WebP',
+      supportVideo: 'Supports MP4, WebM',
+      brushSize: 'Brush Size',
+      paintInstruction: 'Paint over the watermark area',
+      videoInstruction: 'Drag the selection box to mark watermark area',
+      help: 'A powerful watermark processing tool. In "Remove Mode", mark watermark areas by painting (images) or selection box (videos) and remove them. In "Add Mode", add text watermarks to images or videos.'
+    },
+
+    // Unicode Converter
+    unicodeConverter: {
+      name: 'Unicode Converter',
+      description: 'Convert between Unicode and text',
+      textToUnicode: 'Text to Unicode',
+      unicodeToText: 'Unicode to Text',
+      textToUnicodeDesc: 'Convert text to Unicode escape sequences (\\uXXXX)',
+      unicodeToTextDesc: 'Convert Unicode escape sequences to readable text',
+      inputPlaceholder: 'Enter text or Unicode...',
+      outputPlaceholder: 'Conversion result will appear here...',
+      swap: 'Swap input/output',
+      features: 'Features'
     }
   },
 

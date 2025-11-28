@@ -413,34 +413,47 @@ export default {
       }
     },
 
-    // 水印去除
+    // 水印工具
     watermark: {
-      name: '水印去除',
-      description: '去除图片和视频中的水印',
-      image: '图片去水印',
-      video: '视频去水印',
-      dropImage: '拖拽图片到此处',
-      supportImage: '支持 JPG, PNG, WebP',
-      dropVideo: '拖拽视频到此处',
-      supportVideo: '支持 MP4, WebM',
-      brushSize: '画笔大小',
+      name: '水印工具',
+      description: '添加或移除图片/视频水印',
       remove: '去除水印',
       add: '添加水印',
       mode: '模式',
       removeMode: '去除模式',
       addMode: '添加模式',
       text: '文字水印',
-      imageType: '图片水印',
+      imageType: '图片',
+      video: '视频',
       content: '内容',
       color: '颜色',
       size: '大小',
       opacity: '透明度',
       position: '位置',
-      x: 'X 坐标',
-      y: 'Y 坐标',
-      paintInstruction: '使用鼠标涂抹水印区域，然后点击“去除水印”。',
-      videoInstruction: '拖动红色方框覆盖水印区域，然后点击“去除水印”。',
-      help: '去除模式：图片使用修复算法，视频使用去logo滤镜。添加模式：支持添加文字或图片水印。'
+      x: 'X坐标',
+      y: 'Y坐标',
+      dropImage: '拖拽或点击上传图片',
+      dropVideo: '拖拽或点击上传视频',
+      supportImage: '支持 JPG, PNG, WebP',
+      supportVideo: '支持 MP4, WebM',
+      brushSize: '画笔大小',
+      paintInstruction: '在水印区域涂抹标记',
+      videoInstruction: '拖动选择框标记水印区域',
+      help: '这是一个强大的水印处理工具。在"去除模式"下，可以通过涂抹(图片)或选择框(视频)标记水印区域并移除。在"添加模式"下，可以添加文字水印到图片或视频上。'
+    },
+
+    // Unicode 转换器
+    unicodeConverter: {
+      name: 'Unicode 转换器',
+      description: 'Unicode 编码与文本互转',
+      textToUnicode: '文本转 Unicode',
+      unicodeToText: 'Unicode 转文本',
+      textToUnicodeDesc: '将文本转换为 Unicode 编码格式 (\\uXXXX)',
+      unicodeToTextDesc: '将 Unicode 编码转换为可读文本',
+      inputPlaceholder: '输入文本或 Unicode 编码...',
+      outputPlaceholder: '转换结果将显示在这里...',
+      swap: '交换输入输出',
+      features: '功能特性'
     }
   },
 
