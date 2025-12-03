@@ -8,7 +8,8 @@
       "Bash(true)",
       "Bash(ls:*)",
       "Bash(cp:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

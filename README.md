@@ -2,11 +2,10 @@
 
 <div align="center">
 
-**A Modern Desktop Application with Essential Developer Tools**
+**A Modern Web Application with Essential Developer Tools**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Electron](https://img.shields.io/badge/Electron-31+-blue.svg)](https://electronjs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-green.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -36,7 +35,7 @@ English | [简体中文](README_ZH.md)
 🌙 **Dark Mode** - System adaptive theme, eye-friendly
 ⚡ **High Performance** - Real-time processing, responsive
 💾 **Data Persistence** - Auto-save user settings and history
-🖥️ **Cross Platform** - Support macOS, Windows, Linux
+🌐 **Web-based** - Access from any browser, no installation required
 
 ## 📸 Preview
 
@@ -48,82 +47,65 @@ English | [简体中文](README_ZH.md)
 
 - **Frontend Framework**: Vue 3 + TypeScript
 - **Build Tool**: Vite 5
-- **Desktop Framework**: Electron 31
 - **UI Framework**: TailwindCSS 3
 - **Editor**: Monaco Editor (VS Code Core)
 - **State Management**: Pinia
 - **Utilities**: dayjs, crypto-js, js-yaml, xml-js, etc.
 
-## 📦 Installation & Usage
+## 🌐 Online Access
 
-### Pre-built Releases (Recommended)
+Experience Dev Toolbox directly in your browser:
 
-Download the installer for your platform from [Releases](../../releases):
+**Official Website**: [https://dev-toolbox.vercel.app](https://dev-toolbox.vercel.app)
 
-- **macOS**: `Dev-Toolbox-x.x.x.dmg` (Intel & Apple Silicon supported)
-- **Windows**: `Dev-Toolbox-Setup-x.x.x.exe`
-- **Linux**: `Dev-Toolbox-x.x.x.AppImage`
+> No installation required, works on all platforms with a modern browser
 
-### Build from Source
+## 📦 Local Development
 
-#### Requirements
+### Requirements
 
 - Node.js 18+
 - npm 9+
 
-#### Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/your-username/dev-toolbox.git
 cd dev-toolbox
 ```
 
-#### Install Dependencies
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-#### Development Mode
+### Development Mode
 
 ```bash
-# Web development mode
 npm run dev
-
-# Electron development mode
-npm run electron:dev
 ```
 
-#### Build Application
+The app will be available at `http://localhost:5173`
+
+### Build for Production
 
 ```bash
-# Build for all platforms
+# Build the application
 npm run build
 
-# Platform-specific builds
-npm run build:mac     # macOS
-npm run build:win     # Windows
-npm run build:linux   # Linux
-```
-
-#### Web Version Deployment
-
-```bash
-# Build web version
-npm run build:web
-
-# Preview build result
+# Preview the build
 npm run preview
 ```
 
 ## 🎯 Usage Guide
 
-### Launch Application
+### Getting Started
 
-1. Download and install the installer for your platform
-2. Launch Dev Toolbox
-3. Select the tool you need from the main interface
-4. Enjoy efficient development experience
+1. Visit the online version or run locally
+2. Select the tool you need from the main interface
+3. Start using the tools immediately
+4. Your preferences are automatically saved
 
 ### Keyboard Shortcuts
 
@@ -136,14 +118,6 @@ npm run preview
 ### Tool Instructions
 
 Each tool page provides detailed usage instructions and examples. Click the "?" icon to view help information.
-
-## 🌐 Online Experience
-
-You can also experience Dev Toolbox directly through your browser:
-
-- **Official Online Version**: [https://dev-toolbox.vercel.app](https://dev-toolbox.vercel.app)
-
-> The online version includes full functionality, but file operations may be limited by browser restrictions
 
 ## 🤝 Contributing
 
@@ -185,7 +159,6 @@ This project is open source under [MIT License](LICENSE).
 Thanks to the following open source projects:
 
 - [Vue.js](https://vuejs.org/) - Progressive JavaScript Framework
-- [Electron](https://electronjs.org/) - Cross-platform Desktop Application Framework
 - [Monaco Editor](https://microsoft.github.io/monaco-editor/) - Powerful Code Editor
 - [TailwindCSS](https://tailwindcss.com/) - Utility-first CSS Framework
 - [Vite](https://vitejs.dev/) - Fast Build Tool
