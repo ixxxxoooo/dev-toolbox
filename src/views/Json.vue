@@ -197,8 +197,18 @@ const errorMessage = ref('');
 const showHelp = ref(false);
 let errorTimer: NodeJS.Timeout | null = null;
 
-const showError = (message: string) => {
-  errorMessage.value = message;
+const showError = (error: any, prefix = 'Error') => {
+  console.error(prefix, error);
+  let message = error instanceof Error ? error.message : String(error);
+  if (prefix) {
+    message = `${prefix}: ${message}`;
+  }
+  
+  // Truncate error message if it's too long
+  errorMessage.value = message.length > 150 
+    ? message.substring(0, 150) + '...' 
+    : message;
+
   if (errorTimer) clearTimeout(errorTimer);
   errorTimer = setTimeout(() => {
     errorMessage.value = '';
@@ -316,14 +326,13 @@ const processData = () => {
     editor?.setValue(resultData);
     inputText.value = resultData;
   } catch (e: unknown) {
-    const error = e as Error;
-    let errorMsg = '';
-    if (operation.value === 'escape') errorMsg = 'Escape failed: ' + error.message;
-    else if (operation.value === 'unescape') errorMsg = 'Unescape failed: ' + error.message;
-    else if (operation.value === 'format') errorMsg = 'Format failed: Invalid JSON';
-    else if (operation.value === 'minify') errorMsg = 'Minify failed: Invalid JSON';
-    else errorMsg = 'Process failed: ' + error.message;
-    showError(errorMsg);
+    let prefix = 'Process failed';
+    if (operation.value === 'escape') prefix = 'Escape failed';
+    else if (operation.value === 'unescape') prefix = 'Unescape failed';
+    else if (operation.value === 'format') prefix = 'Format failed';
+    else if (operation.value === 'minify') prefix = 'Minify failed';
+    
+    showError(e, prefix);
   } finally {
     setTimeout(() => { isProcessing = false; }, 100);
   }

@@ -26,15 +26,9 @@
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.sql.database') }}:</span>
             <select v-model="sqlDialect" class="text-xs px-2 py-1 border border-border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none h-7">
               <option value="mysql">MySQL</option>
-              <option value="postgresql">PostgreSQL</option>
               <option value="tidb">TiDB</option>
-              <option value="sqlite">SQLite</option>
-              <option value="mariadb">MariaDB</option>
-              <option value="bigquery">BigQuery</option>
-              <option value="redshift">Redshift</option>
-              <option value="snowflake">Snowflake</option>
-              <option value="spark">Spark SQL</option>
-              <option value="trino">Trino</option>
+              <option value="starrocks">StarRocks</option>
+              <option value="postgresql">PostgreSQL</option>
             </select>
           </div>
           <div class="flex items-center space-x-2">
@@ -147,15 +141,9 @@ const STORAGE_KEYS = {
 
 const DIALECT_MAP: Record<string, string> = {
   'mysql': 'mysql',
-  'postgresql': 'postgresql',
   'tidb': 'mysql',
-  'sqlite': 'sqlite',
-  'mariadb': 'mariadb',
-  'bigquery': 'bigquery',
-  'redshift': 'redshift',
-  'snowflake': 'snowflake',
-  'spark': 'spark',
-  'trino': 'trino'
+  'starrocks': 'mysql',
+  'postgresql': 'postgresql'
 }
 
 const sqlText = ref(loadFromStorage(STORAGE_KEYS.sqlText, `SELECT u.id, u.name, u.email, p.title, p.content, COUNT(c.id) as comment_count FROM users u LEFT JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.created_at >= '2023-01-01' AND u.status = 'active' GROUP BY u.id, p.id ORDER BY u.created_at DESC, comment_count DESC LIMIT 10;`))
@@ -184,8 +172,13 @@ const replaceTextInEditor = (newText: string, isSelection: boolean, selection: a
   }
 }
 
-const showError = (message: string) => {
-  errorMessage.value = message
+const showError = (error: any, prefix = 'Error') => {
+  console.error(prefix, error)
+  const message = error instanceof Error ? error.message : String(error)
+  // Truncate error message if it's too long
+  errorMessage.value = message.length > 150 
+    ? message.substring(0, 150) + '...' 
+    : message
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
 
@@ -203,7 +196,7 @@ const formatSQL = () => {
     })
     replaceTextInEditor(formatted, isSelection, selection)
   } catch (error: any) {
-    showError(`SQL Format Failed: ${error.message || 'Unknown error'}`)
+    showError(error, 'SQL Format Failed')
   }
 }
 

@@ -31,9 +31,9 @@
     </nav>
 
     <div class="p-4 border-t border-border space-y-2">
-      <div class="flex items-center justify-between px-2">
+      <!-- <div class="flex items-center justify-between px-2">
         <span class="text-xs font-medium text-muted-foreground">Appearance</span>
-      </div>
+      </div> -->
       <div class="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
         <ThemeToggleButton />
         <LanguageSwitcher />
