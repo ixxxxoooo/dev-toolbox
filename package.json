@@ -35,6 +35,7 @@
     "terser": "^5.43.1",
     "typescript": "^5.9.2",
     "vite": "^5.2.9",
+    "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^2.0.26"
   },
   "dependencies": {

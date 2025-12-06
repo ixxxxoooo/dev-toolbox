@@ -72,6 +72,13 @@
         <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
           <h3 class="text-xs font-medium text-muted-foreground">SQL {{ $t('common.labels.input') }}</h3>
           <div class="flex items-center space-x-1">
+            <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Undo (Ctrl+Z)">
+              <Undo2 class="w-3.5 h-3.5" />
+            </button>
+            <button @click="redo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Redo (Ctrl+Y)">
+              <Redo2 class="w-3.5 h-3.5" />
+            </button>
+            <div class="h-4 w-px bg-border mx-1"></div>
             <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
               <ClipboardPaste class="w-3.5 h-3.5" />
             </button>
@@ -123,7 +130,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2 } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 
@@ -132,6 +139,9 @@ const fileInput = ref<HTMLInputElement | null>(null)
 let sqlEditor: monaco.editor.IStandaloneCodeEditor | null = null
 let themeWatcher: (() => void) | null = null
 const showHelp = ref(false)
+
+const undo = () => sqlEditor?.trigger('keyboard', 'undo', null)
+const redo = () => sqlEditor?.trigger('keyboard', 'redo', null)
 
 const STORAGE_KEYS = {
   sqlText: 'sql-text',
@@ -298,6 +308,9 @@ const initEditor = async () => {
       }, 150)
     })
 
+    sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo)
+    sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo)
+    sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo)
     sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
     themeWatcher = watchThemeChange(sqlEditor)
   }
