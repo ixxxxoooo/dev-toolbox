@@ -83,6 +83,7 @@
             <button @click="minifySQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
             <button @click="escapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.escape') }}</button>
             <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
+            <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
           </div>
         </div>
         <div class="flex-1 relative">
@@ -243,6 +244,19 @@ const unescapeSQL = () => {
   if (!text.trim()) return
   const unescaped = text.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\')
   replaceTextInEditor(unescaped, isSelection, selection)
+}
+
+const decodeUnicode = () => {
+  const { text, isSelection, selection } = getSelectedTextOrAll()
+  if (!text.trim()) return
+  try {
+    const decoded = text.replace(/\\u[\dA-F]{4}/gi, (match: string) => {
+      return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
+    })
+    replaceTextInEditor(decoded, isSelection, selection)
+  } catch (error: any) {
+    showError(`Unicode Decode Failed: ${error.message || 'Unknown error'}`)
+  }
 }
 
 const initEditor = async () => {

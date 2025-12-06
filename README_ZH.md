@@ -2,11 +2,10 @@
 
 <div align="center">
 
-**一个集成常用开发者工具的现代化桌面应用**
+**一个集成常用开发者工具的现代化 Web 应用**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Electron](https://img.shields.io/badge/Electron-31+-blue.svg)](https://electronjs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-green.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -36,7 +35,7 @@
 🌙 **深色模式** - 自适应系统主题，护眼舒适
 ⚡ **高性能** - 实时处理，响应迅速
 💾 **数据持久化** - 自动保存用户设置和历史记录
-🖥️ **跨平台** - 支持 macOS、Windows、Linux
+🌐 **基于浏览器** - 无需安装，任何浏览器均可访问
 
 ## 📸 预览
 
@@ -47,69 +46,52 @@
 
 - **前端框架**: Vue 3 + TypeScript
 - **构建工具**: Vite 5
-- **桌面框架**: Electron 31
 - **UI框架**: TailwindCSS 3
 - **编辑器**: Monaco Editor (VS Code 核心)
 - **状态管理**: Pinia
 - **工具库**: dayjs、crypto-js、js-yaml、xml-js 等
 
-## 📦 安装使用
+## 🌐 在线访问
 
-### 预编译版本 (推荐)
+在浏览器中直接体验 Dev Toolbox：
 
-前往 [Releases](../../releases) 页面下载适合您平台的安装包：
+**官方网站**: [https://dev-toolbox.vercel.app](https://dev-toolbox.vercel.app)
 
-- **macOS**: `Dev-Toolbox-x.x.x.dmg` (支持 Intel 和 Apple Silicon)
-- **Windows**: `Dev-Toolbox-Setup-x.x.x.exe`
-- **Linux**: `Dev-Toolbox-x.x.x.AppImage`
+> 无需安装，支持所有现代浏览器
 
-### 从源码构建
+## 📦 本地开发
 
-#### 环境要求
+### 环境要求
 
 - Node.js 18+
 - npm 9+
 
-#### 克隆仓库
+### 克隆仓库
 
 ```bash
 git clone https://github.com/your-username/dev-toolbox.git
 cd dev-toolbox
 ```
 
-#### 安装依赖
+### 安装依赖
 
 ```bash
 npm install
 ```
 
-#### 开发模式
+### 开发模式
 
 ```bash
-# Web 开发模式
 npm run dev
-
-# Electron 开发模式
-npm run electron:dev
 ```
 
-#### 构建应用
+应用将在 `http://localhost:5173` 启动
+
+### 生产构建
 
 ```bash
-# 构建所有平台
+# 构建应用
 npm run build
-
-# 分平台构建
-npm run build:mac     # macOS
-npm run build:win     # Windows
-npm run build:linux   # Linux
-```
-
-#### Web 版本部署
-
-```bash
-# 构建 Web 版本
-npm run build:web
 
 # 预览构建结果
 npm run preview
@@ -117,12 +99,12 @@ npm run preview
 
 ## 🎯 使用指南
 
-### 启动应用
+### 开始使用
 
-1. 下载并安装对应平台的安装包
-2. 启动 Dev Toolbox
-3. 在主界面选择需要使用的工具
-4. 享受高效的开发体验
+1. 访问在线版本或本地运行
+2. 在主界面选择需要使用的工具
+3. 立即开始使用工具
+4. 您的偏好设置会自动保存
 
 ### 快捷操作
 
@@ -135,14 +117,6 @@ npm run preview
 ### 工具说明
 
 每个工具页面都提供了详细的使用说明和示例，点击 "?" 图标查看帮助信息。
-
-## 🌐 在线体验
-
-您也可以通过浏览器直接体验 Dev Toolbox：
-
-- **官方在线版**: [https://dev-toolbox.vercel.app](https://dev-toolbox.vercel.app)
-
-> 在线版本包含完整功能，但文件操作可能受到浏览器限制
 
 ## 🤝 贡献指南
 
@@ -184,7 +158,6 @@ npm run preview
 感谢以下开源项目的支持：
 
 - [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
-- [Electron](https://electronjs.org/) - 跨平台桌面应用框架
 - [Monaco Editor](https://microsoft.github.io/monaco-editor/) - 强大的代码编辑器
 - [TailwindCSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
 - [Vite](https://vitejs.dev/) - 快速的构建工具

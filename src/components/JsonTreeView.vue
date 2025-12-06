@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, defineExpose } from 'vue';
+import { ref } from 'vue';
 import JsonNode from './JsonNode.vue';
 
 defineProps({

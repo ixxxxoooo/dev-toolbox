@@ -1,15 +1,14 @@
-name: Build and Release
+name: Build and Deploy
 
 on:
   push:
     branches: [ main, develop ]
-    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  build-web:
-    name: Build Web Version
+  build:
+    name: Build Web Application
     runs-on: ubuntu-latest
 
     steps:
@@ -25,131 +24,30 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build web version
-      run: npm run build:web
+    - name: Build application
+      run: npm run build
 
-    - name: Upload web build artifacts
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: web-build
         path: dist/
 
-  build-electron:
-    name: Build Electron Apps
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+  deploy:
+    name: Deploy to Vercel
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
       with:
-        node-version: '18'
-        cache: 'npm'
-
-    # macOS 需要 Python 来构建某些 native 依赖
-    - name: Setup Python (macOS)
-      if: matrix.os == 'macos-latest'
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: npm ci
-
-    # 确保 dist-electron 目录存在（供 TS 编译输出）
-    - name: Create dist-electron directory
-      run: mkdir -p dist-electron/electron
-
-    - name: Build Electron app (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        # 构建 Vue 应用（输出到 dist/）
-        npm run build:web
-        # 编译 Electron 主进程与预加载脚本（输出到 dist-electron/）
-        npx tsc -p tsconfig.node.json
-        # 重命名 Electron 输出为 .cjs（与 main.ts 中的 __dirname 引用一致）
-        cd dist-electron/electron
-        if [ -f main.js ]; then mv main.js main.cjs; fi
-        if [ -f preload.js ]; then mv preload.js preload.cjs; fi
-        cd ../..
-        # 构建 Electron 应用；publish=never 避免在构建阶段发布，从而不需要 GH_TOKEN
-        npx electron-builder --mac --publish=never
-      env:
-        # 禁用自动代码签名，避免 CI 中签名失败
-        CSC_IDENTITY_AUTO_DISCOVERY: false
-        # 提供给 electron-builder 的 GitHub Token（即使 publish=never，一些插件也可能读取该变量）
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build Electron app (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        # 构建 Vue 应用（输出到 dist/）
-        npm run build:web
-        # 编译 Electron 主进程与预加载脚本（输出到 dist-electron/）
-        npx tsc -p tsconfig.node.json
-        # 重命名 Electron 输出为 .cjs（与 main.ts 中的 __dirname 引用一致）
-        cd dist-electron/electron
-        if (Test-Path main.js) { Rename-Item main.js main.cjs }
-        if (Test-Path preload.js) { Rename-Item preload.js preload.cjs }
-        cd ../..
-        # 构建 Electron 应用；publish=never 避免在构建阶段发布，从而不需要 GH_TOKEN
-        npx electron-builder --win --publish=never
-      env:
-        # 禁用自动代码签名，避免 CI 中签名失败
-        CSC_IDENTITY_AUTO_DISCOVERY: false
-        # 提供给 electron-builder 的 GitHub Token（即使 publish=never，一些插件也可能读取该变量）
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      shell: pwsh
-
-    - name: Upload Electron build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: electron-${{ matrix.os }}
+        name: web-build
         path: dist/
 
-  release:
-    name: Create Release
-    needs: [build-web, build-electron]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    # 赋予创建发布所需的仓库写权限
-    permissions:
-      contents: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-
-    - name: Prepare release files
-      run: |
-        # 创建发布文件目录
-        mkdir -p release-files
-        
-        # 复制 macOS DMG 文件
-        find electron-macos-latest -name "*.dmg" -exec cp {} release-files/ \;
-        
-        # 复制 Windows EXE 文件
-        find electron-windows-latest -name "*.exe" -exec cp {} release-files/ \;
-        
-        # 列出将要发布的文件
-        echo "Files to be released:"
-        ls -la release-files/
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: release-files/*
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-        # 使用 GitHub Actions 默认提供的 GITHUB_TOKEN 进行发布
-        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Deploy to Vercel
+      run: echo "Deploy to Vercel (configure with Vercel GitHub integration)"

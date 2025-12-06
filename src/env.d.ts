@@ -20,12 +20,6 @@ interface ImportMeta {
 // 全局类型声明
 declare global {
   interface Window {
-    electronAPI: {
-      store: {
-        get: (key: string) => Promise<any>
-        set: (key: string, value: any) => Promise<void>
-        delete: (key: string) => Promise<void>
-      }
-    }
+    // 保留用于未来扩展
   }
 }

@@ -139,9 +139,9 @@ export default {
       minifyDescription: '压缩JSON大小',
       treeViewDescription: '树状结构显示',
       escape: '转义',
-      unescape: '去转义',
-      escapeDescription: '转义 JSON 字符串中的特殊字符',
-      unescapeDescription: '去转义 JSON 字符串中的特殊字符',
+      unescape: '反转义',
+      escapeDescription: '转义 SQL 字符串中的特殊字符。',
+      unescapeDescription: '还原 SQL 字符串中的特殊字符。',
       expandAll: '展开全部',
       collapseAll: '折叠全部'
     },
@@ -235,7 +235,8 @@ export default {
       escapeDescription: '转义特殊字符',
       unescapeDescription: '去转义特殊字符',
       escape: '转义',
-      unescape: '去转义'
+      unescape: '去转义',
+      unicode: 'Unicode 转中文'
     },
 
     // 密码生成器
@@ -410,6 +411,49 @@ export default {
         convert: '转换：在 PNG、JPEG 和 WEBP 格式之间切换。',
         base64: 'Base64：获取用于嵌入的 Base64 字符串。'
       }
+    },
+
+    // 水印工具
+    watermark: {
+      name: '水印工具',
+      description: '添加或移除图片/视频水印',
+      remove: '去除水印',
+      add: '添加水印',
+      mode: '模式',
+      removeMode: '去除模式',
+      addMode: '添加模式',
+      text: '文字水印',
+      imageType: '图片',
+      video: '视频',
+      content: '内容',
+      color: '颜色',
+      size: '大小',
+      opacity: '透明度',
+      position: '位置',
+      x: 'X坐标',
+      y: 'Y坐标',
+      dropImage: '拖拽或点击上传图片',
+      dropVideo: '拖拽或点击上传视频',
+      supportImage: '支持 JPG, PNG, WebP',
+      supportVideo: '支持 MP4, WebM',
+      brushSize: '画笔大小',
+      paintInstruction: '在水印区域涂抹标记',
+      videoInstruction: '拖动选择框标记水印区域',
+      help: '这是一个强大的水印处理工具。在"去除模式"下，可以通过涂抹(图片)或选择框(视频)标记水印区域并移除。在"添加模式"下，可以添加文字水印到图片或视频上。'
+    },
+
+    // Unicode 转换器
+    unicodeConverter: {
+      name: 'Unicode 转换器',
+      description: 'Unicode 编码与文本互转',
+      textToUnicode: '文本转 Unicode',
+      unicodeToText: 'Unicode 转文本',
+      textToUnicodeDesc: '将文本转换为 Unicode 编码格式 (\\uXXXX)',
+      unicodeToTextDesc: '将 Unicode 编码转换为可读文本',
+      inputPlaceholder: '输入文本或 Unicode 编码...',
+      outputPlaceholder: '转换结果将显示在这里...',
+      swap: '交换输入输出',
+      features: '功能特性'
     }
   },
 

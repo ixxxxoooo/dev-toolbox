@@ -4,7 +4,6 @@ node_modules/
 
 # Build outputs
 dist/
-dist-electron/
 
 # Environment variables
 .env
@@ -64,6 +63,3 @@ jspm_packages/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
-
-# Electron
-out/

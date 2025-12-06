@@ -235,7 +235,8 @@ export default {
       escapeDescription: 'Escape special characters',
       unescapeDescription: 'Unescape special characters',
       escape: 'Escape',
-      unescape: 'Unescape'
+      unescape: 'Unescape',
+      unicode: 'Unicode to Chinese'
     },
 
     // Password Generator
@@ -410,6 +411,49 @@ export default {
         convert: 'Convert: Switch between PNG, JPEG, and WEBP formats.',
         base64: 'Base64: Get the Base64 string for embedding.'
       }
+    },
+
+    // Watermark Tool
+    watermark: {
+      name: 'Watermark Tool',
+      description: 'Add or remove watermarks from images/videos',
+      remove: 'Remove Watermark',
+      add: 'Add Watermark',
+      mode: 'Mode',
+      removeMode: 'Remove Mode',
+      addMode: 'Add Mode',
+      text: 'Text Watermark',
+      imageType: 'Image',
+      video: 'Video',
+      content: 'Content',
+      color: 'Color',
+      size: 'Size',
+      opacity: 'Opacity',
+      position: 'Position',
+      x: 'X Position',
+      y: 'Y Position',
+      dropImage: 'Drop or click to upload image',
+      dropVideo: 'Drop or click to upload video',
+      supportImage: 'Supports JPG, PNG, WebP',
+      supportVideo: 'Supports MP4, WebM',
+      brushSize: 'Brush Size',
+      paintInstruction: 'Paint over the watermark area',
+      videoInstruction: 'Drag the selection box to mark watermark area',
+      help: 'A powerful watermark processing tool. In "Remove Mode", mark watermark areas by painting (images) or selection box (videos) and remove them. In "Add Mode", add text watermarks to images or videos.'
+    },
+
+    // Unicode Converter
+    unicodeConverter: {
+      name: 'Unicode Converter',
+      description: 'Convert between Unicode and text',
+      textToUnicode: 'Text to Unicode',
+      unicodeToText: 'Unicode to Text',
+      textToUnicodeDesc: 'Convert text to Unicode escape sequences (\\uXXXX)',
+      unicodeToTextDesc: 'Convert Unicode escape sequences to readable text',
+      inputPlaceholder: 'Enter text or Unicode...',
+      outputPlaceholder: 'Conversion result will appear here...',
+      swap: 'Swap input/output',
+      features: 'Features'
     }
   },
 

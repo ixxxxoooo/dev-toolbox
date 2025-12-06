@@ -31,16 +31,12 @@
 4. **启动开发服务器**
    ```bash
    npm run dev          # Web 开发模式
-   npm run electron:dev # Electron 开发模式
    ```
 
 ### 项目结构
 
 ```
 dev-toolbox/
-├── electron/          # Electron 主进程代码
-│   ├── main.ts        # 主进程入口
-│   └── preload.ts     # 预加载脚本
 ├── src/               # Vue 应用源码
 │   ├── components/    # 可复用组件
 │   ├── stores/        # 状态管理
@@ -136,9 +132,9 @@ dev-toolbox/
 
 4. **测试更改**
    ```bash
-   npm run dev          # 测试 Web 版本
-   npm run electron:dev # 测试 Electron 版本
+   npm run dev          # 测试开发版本
    npm run build        # 测试构建
+   npm run preview      # 预览构建结果
    ```
 
 5. **提交更改**
