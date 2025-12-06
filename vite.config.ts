@@ -11,7 +11,25 @@ export default defineConfig({
       injectRegister: 'auto',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Exclude very large files from precaching (they'll be cached at runtime)
+        globIgnores: ['**/monaco-*.js', '**/ts.worker-*.js', '**/WatermarkRemover-*.js'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         runtimeCaching: [
+          {
+            // Cache large JS files at runtime (Monaco, workers, etc.)
+            urlPattern: /\/assets\/(monaco|ts\.worker|WatermarkRemover)-.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'large-assets-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
