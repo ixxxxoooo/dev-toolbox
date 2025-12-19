@@ -77,7 +77,7 @@
             </div>
           </div>
           <div v-if="matches.length === 0" class="text-sm text-muted-foreground text-center py-4">
-            {{ $t('common.errors.noResults') }}
+            {{ $t('errors.noResults') }}
           </div>
         </div>
       </div>

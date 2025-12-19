@@ -70,8 +70,13 @@
     <main class="flex-1 flex flex-col min-h-0 p-4">
       <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
         <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-          <h3 class="text-xs font-medium text-muted-foreground">SQL {{ $t('common.labels.input') }}</h3>
           <div class="flex items-center space-x-1">
+            <button @click="formatSQL" class="px-2 py-1 text-[10px] font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">{{ $t('common.labels.format') }}</button>
+            <button @click="minifySQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
+            <button @click="escapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.escape') }}</button>
+            <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
+            <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
+            <div class="h-4 w-px bg-border mx-1"></div>
             <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Undo (Ctrl+Z)">
               <Undo2 class="w-3.5 h-3.5" />
             </button>
@@ -85,13 +90,8 @@
             <button @click="copyInput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
               <Copy class="w-3.5 h-3.5" />
             </button>
-            <div class="h-4 w-px bg-border mx-1"></div>
-            <button @click="formatSQL" class="px-2 py-1 text-[10px] font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">{{ $t('common.labels.format') }}</button>
-            <button @click="minifySQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
-            <button @click="escapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.escape') }}</button>
-            <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
-            <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
           </div>
+          <h3 class="text-xs font-medium text-muted-foreground">SQL {{ $t('common.labels.input') }}</h3>
         </div>
         <div class="flex-1 relative">
           <div ref="sqlEditorRef" class="absolute inset-0"></div>

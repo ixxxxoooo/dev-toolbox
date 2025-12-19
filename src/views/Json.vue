@@ -109,12 +109,7 @@
           </div>
           <div class="flex-1 relative group">
             <div ref="editorRef" class="absolute inset-0"></div>
-            <!-- Quick Actions Overlay (Visible on hover) -->
-            <div class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 pointer-events-none">
-              <button @click="handleOperation('format')" class="pointer-events-auto px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-lg hover:bg-primary/90 transition-colors">
-                {{ $t('common.labels.format') }}
-              </button>
-            </div>
+
           </div>
         </div>
 

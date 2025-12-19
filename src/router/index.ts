@@ -17,7 +17,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'diff',
         name: 'Diff',
         component: () => import('../views/Diff.vue'),
-        meta: { title: 'tools.diff.name', icon: 'GitCompare' },
+        meta: { title: 'tools.diff.name', icon: 'FileDiff' },
       },
       {
         path: 'sql-formatter',

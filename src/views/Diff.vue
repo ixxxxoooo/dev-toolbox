@@ -5,7 +5,7 @@
       <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <GitCompare class="w-5 h-5" />
+          <FileDiff class="w-5 h-5" />
           <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.diff.name') }}</span>
         </div>
 
@@ -131,7 +131,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, GitCompare, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X } from 'lucide-vue-next';
+import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
