@@ -44,6 +44,15 @@
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
             <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.sql.wordWrap') }}</span>
           </label>
+
+          <button
+            @click="showMinimap = !showMinimap"
+            class="p-1.5 rounded-md transition-colors h-7 w-7 flex items-center justify-center border border-transparent"
+            :class="showMinimap ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted'"
+            title="Toggle Minimap"
+          >
+            <Map class="w-3.5 h-3.5" />
+          </button>
         </div>
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
@@ -164,7 +173,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History, Map } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
@@ -188,7 +197,8 @@ const STORAGE_KEYS = {
   sqlText: 'sql-text',
   sqlDialect: 'sql-dialect',
   indentSize: 'sql-indent-size',
-  wordWrapEnabled: 'sql-word-wrap-enabled'
+  wordWrapEnabled: 'sql-word-wrap-enabled',
+  showMinimap: 'sql-show-minimap'
 }
 
 const DIALECT_MAP: Record<string, string> = {
@@ -202,6 +212,7 @@ const sqlText = ref(loadFromStorage(STORAGE_KEYS.sqlText, `SELECT u.id, u.name, 
 const sqlDialect = ref(loadFromStorage(STORAGE_KEYS.sqlDialect, 'mysql'))
 const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2))
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
+const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false))
 const errorMessage = ref('')
 
 const getSelectedTextOrAll = () => {
@@ -328,7 +339,7 @@ const initEditor = async () => {
     language: 'sql',
     theme: getMonacoTheme(),
     automaticLayout: true,
-    minimap: { enabled: false },
+    minimap: { enabled: showMinimap.value },
     wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
     fontSize: 14,
     lineNumbers: 'on' as 'on',
@@ -416,6 +427,11 @@ watch(wordWrapEnabled, (newValue) => {
   const wrapOption = newValue ? 'on' : 'off'
   sqlEditor?.updateOptions({ wordWrap: wrapOption })
   saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue)
+})
+
+watch(showMinimap, (newValue) => {
+  sqlEditor?.updateOptions({ minimap: { enabled: newValue } })
+  saveToStorage(STORAGE_KEYS.showMinimap, newValue)
 })
 
 onMounted(initEditor)

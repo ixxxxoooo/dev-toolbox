@@ -54,28 +54,50 @@
             v-for="item in filteredHistory" 
             :key="item.id"
             class="group relative bg-card hover:bg-muted/30 border border-border/60 rounded-xl p-4 transition-all cursor-pointer hover:border-primary/40 hover:shadow-md"
-            @click="$emit('select', item.content)"
+            @click="type !== 'diff' ? $emit('select', item.content) : null"
             @mouseenter="hoveredItem = item.content"
-            @mouseleave="hoveredItem = null"
           >
             <div class="flex justify-between items-start mb-3">
               <span class="text-[11px] font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md flex items-center space-x-1.5">
                 <Calendar class="w-3.5 h-3.5" />
                 <span>{{ formatDate(item.timestamp) }}</span>
               </span>
-              <button 
-                @click.stop="$emit('delete', item.id)"
-                class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                title="Delete entry"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
+              <div class="flex items-center space-x-1">
+                <button 
+                  @click.stop="copyToClipboard(item.content)"
+                  class="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                  title="Copy to clipboard"
+                >
+                  <Copy class="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  @click.stop="$emit('delete', item.id)"
+                  class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                  title="Delete entry"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
             <div class="text-sm font-mono text-foreground/70 line-clamp-3 break-all whitespace-pre-wrap leading-relaxed bg-muted/20 p-3 rounded-lg border border-border/20">
               {{ item.content }}
             </div>
-            <div class="mt-3 flex justify-end">
-              <span class="text-xs text-primary font-semibold opacity-0 group-hover:opacity-100 transition-all flex items-center space-x-1">
+            <div class="mt-3 flex justify-end gap-2">
+              <template v-if="type === 'diff'">
+                <button 
+                  @click.stop="$emit('select', { content: item.content, side: 'original' })"
+                  class="px-2 py-1 text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 transition-all"
+                >
+                  {{ $t('common.history.useLeft') }}
+                </button>
+                <button 
+                  @click.stop="$emit('select', { content: item.content, side: 'modified' })"
+                  class="px-2 py-1 text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 transition-all"
+                >
+                  {{ $t('common.history.useRight') }}
+                </button>
+              </template>
+              <span v-else class="text-xs text-primary font-semibold opacity-0 group-hover:opacity-100 transition-all flex items-center space-x-1">
                 <span>{{ $t('common.history.use') }}</span>
                 <ChevronRight class="w-4 h-4" />
               </span>
@@ -89,11 +111,9 @@
             <Eye class="w-4 h-4 text-muted-foreground" />
             <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Preview Content</span>
           </div>
-          <div class="flex-1 p-4 overflow-auto">
-            <div v-if="hoveredItem" class="font-mono text-xs text-foreground/80 whitespace-pre-wrap break-all leading-relaxed animate-in fade-in slide-in-from-right-2 duration-200">
-              {{ hoveredItem }}
-            </div>
-            <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground/30 italic text-sm">
+          <div class="flex-1 overflow-hidden relative">
+            <div v-show="hoveredItem" ref="previewEditorRef" class="absolute inset-0"></div>
+            <div v-if="!hoveredItem" class="h-full flex flex-col items-center justify-center text-muted-foreground/30 italic text-sm">
               <MousePointer2 class="w-8 h-8 mb-2 opacity-20" />
               <p>Hover over an item to preview</p>
             </div>
@@ -105,8 +125,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { History, X, Trash2, Clock, Search, Calendar, ChevronRight, Eye, MousePointer2 } from 'lucide-vue-next'
+import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
+import { History, X, Trash2, Clock, Search, Calendar, ChevronRight, Eye, MousePointer2, Copy } from 'lucide-vue-next'
+import * as monaco from 'monaco-editor'
+import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
@@ -121,12 +143,102 @@ interface HistoryItem {
 const props = defineProps<{
   show: boolean
   history: HistoryItem[]
+  type?: string
 }>()
 
 defineEmits(['close', 'select', 'delete', 'clear'])
 
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (err) {
+    console.error('Copy failed', err)
+  }
+}
+
 const searchQuery = ref('')
 const hoveredItem = ref<string | null>(null)
+const previewEditorRef = ref<HTMLElement | null>(null)
+let previewEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let themeWatcher: (() => void) | null = null
+
+const detectLanguage = (text: string | null) => {
+  if (!text) return 'text'
+  const trimmed = text.trim()
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try {
+      JSON.parse(trimmed)
+      return 'json'
+    } catch {}
+  }
+  
+  const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'WITH', 'GRANT']
+  const upperText = trimmed.toUpperCase()
+  if (sqlKeywords.some(kw => upperText.startsWith(kw))) {
+    return 'sql'
+  }
+  
+  return 'text'
+}
+
+const initPreviewEditor = async () => {
+  if (previewEditor) return
+  await nextTick()
+  if (previewEditorRef.value) {
+    previewEditor = monaco.editor.create(previewEditorRef.value, {
+      value: '',
+      language: 'text',
+      theme: getMonacoTheme(),
+      readOnly: true,
+      automaticLayout: true,
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      fontSize: 12,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+      padding: { top: 12, bottom: 12 },
+      wordWrap: 'on',
+      lineNumbers: 'off',
+      glyphMargin: false,
+      folding: true,
+    })
+    themeWatcher = watchThemeChange(previewEditor)
+  }
+}
+
+watch(hoveredItem, async (newVal) => {
+  if (newVal) {
+    if (!previewEditor) {
+      await initPreviewEditor()
+    }
+    const lang = detectLanguage(newVal)
+    const model = previewEditor?.getModel()
+    if (model) {
+      monaco.editor.setModelLanguage(model, lang)
+    }
+    previewEditor?.setValue(newVal)
+  }
+})
+
+watch(() => props.show, (newShow) => {
+  if (newShow) {
+    nextTick(() => {
+      initPreviewEditor()
+    })
+  } else {
+    hoveredItem.value = null
+    if (previewEditor) {
+      previewEditor.dispose()
+      previewEditor = null
+      themeWatcher?.()
+      themeWatcher = null
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  themeWatcher?.()
+  previewEditor?.dispose()
+})
 
 const filteredHistory = computed(() => {
   if (!searchQuery.value) return props.history

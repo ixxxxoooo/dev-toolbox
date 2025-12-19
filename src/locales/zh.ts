@@ -44,6 +44,9 @@ export default {
       placeholder: '搜索历史...',
       lastUsed: '上次使用',
       use: '使用',
+      useLeft: '使用左侧',
+      useRight: '使用右侧',
+      copy: '复制',
       delete: '删除'
     },
 

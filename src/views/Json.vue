@@ -79,6 +79,15 @@
           >
             <WrapText class="w-4 h-4" />
           </button>
+
+          <button
+            @click="showMinimap = !showMinimap"
+            class="p-1.5 rounded-md transition-colors h-8 w-8 flex items-center justify-center"
+            :class="showMinimap ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
+            title="Toggle Minimap"
+          >
+            <Map class="w-4 h-4" />
+          </button>
         </div>
 
         <div class="h-4 w-px bg-border hidden md:block"></div>
@@ -213,7 +222,7 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History, Map } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -256,7 +265,8 @@ const STORAGE_KEYS = {
   operation: 'json-operation',
   indentSize: 'json-indent-size',
   showTreeView: 'json-show-tree-view',
-  wordWrapEnabled: 'json-word-wrap-enabled'
+  wordWrapEnabled: 'json-word-wrap-enabled',
+  showMinimap: 'json-show-minimap'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
@@ -264,6 +274,7 @@ const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
 const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
 const showTreeView = ref(loadFromStorage(STORAGE_KEYS.showTreeView, false));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
+const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
 
 const parsedJson = computed(() => {
   try {
@@ -395,7 +406,7 @@ const initEditors = async () => {
       language: 'json',
       theme: getMonacoTheme(),
       automaticLayout: true,
-      minimap: { enabled: false },
+      minimap: { enabled: showMinimap.value },
       wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
       padding: { top: 16, bottom: 16 },
       fontSize: 14,
@@ -491,6 +502,11 @@ watch(showTreeView, (newValue) => saveToStorage(STORAGE_KEYS.showTreeView, newVa
 watch(wordWrapEnabled, (newValue) => {
   editor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
   saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
+});
+
+watch(showMinimap, (newValue) => {
+  editor?.updateOptions({ minimap: { enabled: newValue } });
+  saveToStorage(STORAGE_KEYS.showMinimap, newValue);
 });
 
 onMounted(initEditors);

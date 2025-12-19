@@ -31,6 +31,22 @@
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
 
+        <!-- History Action -->
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="showHistory = true"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.history')"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
+          </button>
+        </div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
         <!-- Options -->
         <div class="flex items-center space-x-3 flex-shrink-0">
           <label class="flex items-center space-x-2 cursor-pointer group">
@@ -41,6 +57,15 @@
             <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
             <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.diff.wordWrap') }}</span>
           </label>
+
+          <button
+            @click="showMinimap = !showMinimap"
+            class="p-1.5 rounded-md transition-colors h-7 w-7 flex items-center justify-center border border-transparent"
+            :class="showMinimap ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted'"
+            title="Toggle Minimap"
+          >
+            <Map class="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -74,9 +99,6 @@
           <div class="flex items-center justify-between px-3 py-1.5 border-r border-border">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.leftPanel') }}</span>
             <div class="flex items-center space-x-1">
-              <button @click="showLeftHistory = true" :title="$t('common.buttons.history')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <History class="w-3.5 h-3.5" />
-              </button>
               <button @click="pasteTo('original')" :title="$t('tools.diff.pasteLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -88,9 +110,6 @@
           <div class="flex items-center justify-between px-3 py-1.5">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.rightPanel') }}</span>
             <div class="flex items-center space-x-1">
-              <button @click="showRightHistory = true" :title="$t('common.buttons.history')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <History class="w-3.5 h-3.5" />
-              </button>
               <button @click="pasteTo('modified')" :title="$t('tools.diff.pasteRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -132,22 +151,15 @@
       </div>
     </div>
 
-    <!-- History Modals -->
+    <!-- History Modal -->
     <HistoryModal
-      :show="showLeftHistory"
-      :history="leftHistory"
-      @close="showLeftHistory = false"
-      @select="(val) => useHistoryItem(val, 'original')"
-      @delete="deleteLeftHistory"
-      @clear="clearLeftHistory"
-    />
-    <HistoryModal
-      :show="showRightHistory"
-      :history="rightHistory"
-      @close="showRightHistory = false"
-      @select="(val) => useHistoryItem(val, 'modified')"
-      @delete="deleteRightHistory"
-      @clear="clearRightHistory"
+      :show="showHistory"
+      :history="history"
+      type="diff"
+      @close="showHistory = false"
+      @select="handleHistorySelect"
+      @delete="deleteHistory"
+      @clear="clearHistory"
     />
   </div>
 </template>
@@ -155,7 +167,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History } from 'lucide-vue-next';
+import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -165,11 +177,9 @@ const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
 let themeWatcher: (() => void) | null = null;
 const showHelp = ref(false);
-const showLeftHistory = ref(false);
-const showRightHistory = ref(false);
+const showHistory = ref(false);
 
-const { history: leftHistory, addHistory: addLeftHistory, deleteHistory: deleteLeftHistory, clearHistory: clearLeftHistory } = useHistory('diff-left', 50);
-const { history: rightHistory, addHistory: addRightHistory, deleteHistory: deleteRightHistory, clearHistory: clearRightHistory } = useHistory('diff-right', 50);
+const { history, addHistory, deleteHistory, clearHistory } = useHistory('diff', 50);
 
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
@@ -178,7 +188,8 @@ const STORAGE_KEYS = {
   ignoreWhitespace: 'diff-ignore-whitespace',
   showLineNumbers: 'diff-show-line-numbers',
   theme: 'diff-theme',
-  wordWrapEnabled: 'diff-word-wrap-enabled'
+  wordWrapEnabled: 'diff-word-wrap-enabled',
+  showMinimap: 'diff-show-minimap'
 };
 
 const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'));
@@ -187,6 +198,7 @@ const diffMode = ref<'split' | 'inline'>(loadFromStorage(STORAGE_KEYS.diffMode, 
 const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, false));
 const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
+const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
 
 const initMonacoDiffEditor = async () => {
   await nextTick();
@@ -212,11 +224,16 @@ const initMonacoDiffEditor = async () => {
     renderSideBySide: diffMode.value === 'split',
     lineNumbers: showLineNumbers.value ? 'on' : 'off',
     ignoreTrimWhitespace: ignoreWhitespace.value,
-    minimap: { enabled: diffMode.value === 'split' },
+    minimap: { enabled: showMinimap.value },
     padding: { top: 16, bottom: 16 },
   });
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+
+  // Use a small delay to ensure sub-editors are fully ready to accept options
+  setTimeout(() => {
+    applyMinimapOption();
+  }, 100);
 
   themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
 
@@ -237,13 +254,13 @@ const initMonacoDiffEditor = async () => {
 
   originalEditor.onDidPaste(() => {
     setTimeout(() => {
-      addLeftHistory(originalEditor.getValue());
+      addHistory(originalEditor.getValue());
     }, 50);
   });
 
   modifiedEditor.onDidPaste(() => {
     setTimeout(() => {
-      addRightHistory(modifiedEditor.getValue());
+      addHistory(modifiedEditor.getValue());
     }, 50);
   });
 };
@@ -319,24 +336,22 @@ const pasteTo = async (side: 'original' | 'modified') => {
     const text = await navigator.clipboard.readText();
     if (side === 'original') {
       diffEditor?.getOriginalEditor().setValue(text);
-      addLeftHistory(text);
     } else {
       diffEditor?.getModifiedEditor().setValue(text);
-      addRightHistory(text);
     }
+    addHistory(text);
   } catch (err) {
     console.error('Cannot read clipboard:', err);
   }
 };
 
-const useHistoryItem = (content: string, side: 'original' | 'modified') => {
+const handleHistorySelect = ({ content, side }: { content: string, side: 'original' | 'modified' }) => {
   if (side === 'original') {
     diffEditor?.getOriginalEditor().setValue(content);
-    showLeftHistory.value = false;
   } else {
     diffEditor?.getModifiedEditor().setValue(content);
-    showRightHistory.value = false;
   }
+  showHistory.value = false;
 };
 
 const copyFrom = async (side: 'original' | 'modified') => {
@@ -348,6 +363,16 @@ const copyFrom = async (side: 'original' | 'modified') => {
   }
 };
 
+const applyMinimapOption = () => {
+  if (!diffEditor) return;
+  const enabled = showMinimap.value;
+  // Apply to the diff editor itself
+  diffEditor.updateOptions({ minimap: { enabled } });
+  // Explicitly apply to both internal editors as DiffEditor doesn't always propagate this correctly
+  diffEditor.getOriginalEditor().updateOptions({ minimap: { enabled } });
+  diffEditor.getModifiedEditor().updateOptions({ minimap: { enabled } });
+};
+
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
@@ -357,8 +382,7 @@ onBeforeUnmount(() => {
 
 watch(diffMode, (newMode) => {
   diffEditor?.updateOptions({
-    renderSideBySide: newMode === 'split',
-    minimap: { enabled: newMode === 'split' }
+    renderSideBySide: newMode === 'split'
   });
   saveToStorage(STORAGE_KEYS.diffMode, newMode);
 });
@@ -376,6 +400,11 @@ watch(ignoreWhitespace, (newValue) => {
 watch(wordWrapEnabled, (newValue) => {
   diffEditor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
   saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
+});
+
+watch(showMinimap, (newValue) => {
+  applyMinimapOption();
+  saveToStorage(STORAGE_KEYS.showMinimap, newValue);
 });
 </script>
 

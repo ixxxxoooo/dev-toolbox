@@ -44,6 +44,9 @@ export default {
       placeholder: 'Search history...',
       lastUsed: 'Last used',
       use: 'Use',
+      useLeft: 'Use Left',
+      useRight: 'Use Right',
+      copy: 'Copy',
       delete: 'Delete'
     },
 
