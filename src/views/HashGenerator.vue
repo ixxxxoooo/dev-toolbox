@@ -135,6 +135,17 @@ const generateHashes = () => {
   hashes.value.sha512 = SHA512(text).toString();
 };
 
+const replaceTextInEditor = (newText: string) => {
+  if (!editor) return;
+  const model = editor.getModel();
+  if (model) {
+    const fullRange = model.getFullModelRange();
+    editor.executeEdits('hash-processor', [{ range: fullRange, text: newText }]);
+  } else {
+    editor.setValue(newText);
+  }
+};
+
 const initEditor = async () => {
   await nextTick();
   if (editorRef.value) {
@@ -163,14 +174,14 @@ const initEditor = async () => {
 const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText();
-    editor?.setValue(text);
+    replaceTextInEditor(text);
   } catch (err) {
     console.error('Failed to read clipboard:', err);
   }
 };
 
 const clearInput = () => {
-  editor?.setValue('');
+  replaceTextInEditor('');
 };
 
 const copyHash = (key: HashKey) => {

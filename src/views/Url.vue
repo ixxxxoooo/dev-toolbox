@@ -30,23 +30,22 @@
         <div class="flex items-center space-x-3 flex-shrink-0">
           <div class="flex items-center space-x-2">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.mode') }}:</span>
-            <select v-model="mode" class="text-xs px-2 py-1 border border-border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none h-7">
-              <option v-if="operation === 'encode'" value="encodeURIComponent">Component</option>
-              <option v-if="operation === 'encode'" value="encodeURI">URI</option>
-              <option v-if="operation === 'decode'" value="decodeURIComponent">Component</option>
-              <option v-if="operation === 'decode'" value="decodeURI">URI</option>
-            </select>
+            <CustomSelect
+              v-model="mode"
+              :options="modeOptions"
+              class="w-32"
+            />
           </div>
 
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="autoProcess" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoProcess') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="autoProcess"
+            :label="$t('common.labels.autoProcess')"
+          />
 
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoWrap') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="wordWrapEnabled"
+            :label="$t('common.labels.autoWrap')"
+          />
         </div>
       </div>
 
@@ -70,6 +69,13 @@
           <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
             <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-1">
+              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Undo2 class="w-3.5 h-3.5" />
+              </button>
+              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Redo2 class="w-3.5 h-3.5" />
+              </button>
+              <div class="w-px h-3 bg-border mx-1"></div>
               <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -128,9 +134,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X } from 'lucide-vue-next';
+import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
+import CustomSelect from '../components/CustomSelect.vue';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
+import { useI18n } from 'vue-i18n';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
@@ -140,6 +149,7 @@ let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
+const { t } = useI18n();
 const showHelp = ref(false);
 
 const STORAGE_KEYS = {
@@ -156,6 +166,23 @@ const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
 const mode = ref(loadFromStorage(STORAGE_KEYS.mode, 'encodeURIComponent'));
 const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
+
+const modeOptions = computed(() => {
+  if (operation.value === 'encode') {
+    return [
+      { label: t('tools.url.encodeModeDescription').split('(')[0].trim() || 'Component', value: 'encodeURIComponent' },
+      { label: 'URI', value: 'encodeURI' }
+    ];
+  } else {
+    return [
+      { label: t('tools.url.decodeModeDescription').split('(')[0].trim() || 'Component', value: 'decodeURIComponent' },
+      { label: 'URI', value: 'decodeURI' }
+    ];
+  }
+});
+
+const undo = () => inputEditor?.trigger('keyboard', 'undo', null);
+const redo = () => inputEditor?.trigger('keyboard', 'redo', null);
 
 const processText = () => {
   const input = inputEditor?.getValue() || '';
@@ -175,6 +202,17 @@ const processText = () => {
     outputEditor?.setValue(result);
   } catch (e: any) {
     outputEditor?.setValue(`Error: ${e.message}`);
+  }
+};
+
+const replaceTextInEditor = (newText: string) => {
+  if (!inputEditor) return;
+  const model = inputEditor.getModel();
+  if (model) {
+    const fullRange = model.getFullModelRange();
+    inputEditor.executeEdits('url-processor', [{ range: fullRange, text: newText }]);
+  } else {
+    inputEditor.setValue(newText);
   }
 };
 
@@ -201,6 +239,9 @@ const initEditors = async () => {
       saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     inputThemeWatcher = watchThemeChange(inputEditor);
   }
@@ -217,15 +258,15 @@ const initEditors = async () => {
 };
 
 const clearAll = () => {
-  inputEditor?.setValue('');
+  replaceTextInEditor('');
   outputEditor?.setValue('');
 };
-const pasteInput = async () => inputEditor?.setValue(await navigator.clipboard.readText());
+const pasteInput = async () => replaceTextInEditor(await navigator.clipboard.readText());
 const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
 const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
 const useAsInput = () => {
   const outputValue = outputEditor?.getValue() || '';
-  inputEditor?.setValue(outputValue);
+  replaceTextInEditor(outputValue);
   operation.value = operation.value === 'encode' ? 'decode' : 'encode';
 };
 

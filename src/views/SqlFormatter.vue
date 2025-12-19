@@ -31,10 +31,11 @@
             <CustomSelect v-model="indentSize" :options="indentOptions" />
           </div>
 
-          <label class="flex items-center space-x-2 cursor-pointer group" :title="$t('tools.sql.wordWrap')">
-            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.sql.wordWrap') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="wordWrapEnabled"
+            :label="$t('tools.sql.wordWrap')"
+            :title="$t('tools.sql.wordWrap')"
+          />
 
           <button
             @click="showMinimap = !showMinimap"
@@ -100,10 +101,10 @@
             <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
             <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
             <div class="h-4 w-px bg-border mx-1"></div>
-            <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Undo (Ctrl+Z)">
+            <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.undo') + ' (Ctrl+Z)'">
               <Undo2 class="w-3.5 h-3.5" />
             </button>
-            <button @click="redo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Redo (Ctrl+Y)">
+            <button @click="redo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.redo') + ' (Ctrl+Y)'">
               <Redo2 class="w-3.5 h-3.5" />
             </button>
             <div class="h-4 w-px bg-border mx-1"></div>
@@ -170,8 +171,9 @@ import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
 import { useThemeStore } from '../stores/theme'
 import HistoryModal from '../components/HistoryModal.vue'
-import CustomSelect from '../components/CustomSelect.vue'
-import { useI18n } from 'vue-i18n'
+import CustomSelect from '../components/CustomSelect.vue';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter()
 const { t } = useI18n()
@@ -240,11 +242,15 @@ const getSelectedTextOrAll = () => {
 
 const replaceTextInEditor = (newText: string, isSelection: boolean, selection: any) => {
   if (!sqlEditor) return
+  const model = sqlEditor.getModel()
+  if (!model) return
+
   if (isSelection && selection) {
     sqlEditor.executeEdits('sql-formatter', [{ range: selection, text: newText }])
   } else {
-    sqlEditor.setValue(newText)
-    sqlText.value = newText
+    // Use executeEdits on the full range to preserve undo/redo stack
+    const fullRange = model.getFullModelRange()
+    sqlEditor.executeEdits('sql-formatter', [{ range: fullRange, text: newText }])
   }
 }
 
@@ -259,8 +265,7 @@ const showError = (error: any, prefix = 'Error') => {
 }
 
 const useHistoryItem = (content: string) => {
-  sqlEditor?.setValue(content)
-  sqlText.value = content
+  replaceTextInEditor(content, false, null)
   showHistory.value = false
   formatSQL()
 }
@@ -401,7 +406,7 @@ const handleFileSelect = (e: Event) => {
     const reader = new FileReader()
     reader.onload = (res) => {
       const content = res.target?.result as string
-      sqlEditor?.setValue(content)
+      replaceTextInEditor(content, false, null)
     }
     reader.readAsText(file)
   }
@@ -416,11 +421,11 @@ const downloadFile = () => {
   a.click()
   URL.revokeObjectURL(url)
 }
-const clearAll = () => sqlEditor?.setValue('')
+const clearAll = () => replaceTextInEditor('', false, null)
 const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText()
-    sqlEditor?.setValue(text)
+    replaceTextInEditor(text, false, null)
     await nextTick()
     addHistory(text)
     formatSQL(true)

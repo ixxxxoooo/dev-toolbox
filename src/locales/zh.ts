@@ -13,6 +13,8 @@ export default {
     copy: '复制',
     paste: '粘贴',
     clear: '清空',
+    undo: '撤销',
+    redo: '重做',
     editorTheme: {
       title: '编辑器主题',
       select: '选择主题',

@@ -11,10 +11,12 @@
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
         <!-- Flags -->
         <div class="flex items-center space-x-2">
-          <label v-for="flag in flags" :key="flag.value" class="flex items-center space-x-1 cursor-pointer">
-            <input type="checkbox" v-model="flag.enabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground">{{ flag.label }}</span>
-          </label>
+          <CustomCheckbox
+            v-for="flag in flags"
+            :key="flag.value"
+            v-model="flag.enabled"
+            :label="flag.label"
+          />
         </div>
       </div>
       <div class="flex items-center space-x-3">
@@ -103,6 +105,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue';
 import { Regex, HelpCircle, X } from 'lucide-vue-next';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
 
 const regexPattern = ref('');
 const testString = ref('Hello World! 123');

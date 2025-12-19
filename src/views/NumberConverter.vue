@@ -24,72 +24,61 @@
     <main class="flex-1 overflow-auto p-4">
       <div class="max-w-2xl mx-auto space-y-6">
         <!-- Decimal -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-muted-foreground">{{ $t('tools.numberConverter.decimal') }} (10)</label>
-          <div class="relative">
-            <input
-              v-model="decimal"
-              type="text"
-              @input="updateFromDecimal"
-              class="w-full bg-card border border-border rounded-lg px-4 py-2 text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              placeholder="0"
-            />
-            <button @click="copy(decimal)" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors">
-              <Copy class="w-4 h-4" />
+        <CustomInput
+          v-model="decimal"
+          :label="$t('tools.numberConverter.decimal') + ' (10)'"
+          placeholder="0"
+          @update:model-value="updateFromDecimal"
+        >
+          <template #suffix>
+            <button @click="copy(decimal)" class="p-1 hover:bg-muted rounded-md transition-colors">
+              <Copy class="w-3.5 h-3.5" />
             </button>
-          </div>
-        </div>
+          </template>
+        </CustomInput>
 
         <!-- Hexadecimal -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-muted-foreground">{{ $t('tools.numberConverter.hex') }} (16)</label>
-          <div class="relative">
-            <input
-              v-model="hex"
-              type="text"
-              @input="updateFromHex"
-              class="w-full bg-card border border-border rounded-lg px-4 py-2 text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase"
-              placeholder="0"
-            />
-            <button @click="copy(hex)" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors">
-              <Copy class="w-4 h-4" />
+        <CustomInput
+          v-model="hex"
+          :label="$t('tools.numberConverter.hex') + ' (16)'"
+          placeholder="0"
+          class="uppercase"
+          @update:model-value="updateFromHex"
+        >
+          <template #suffix>
+            <button @click="copy(hex)" class="p-1 hover:bg-muted rounded-md transition-colors">
+              <Copy class="w-3.5 h-3.5" />
             </button>
-          </div>
-        </div>
+          </template>
+        </CustomInput>
 
         <!-- Binary -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-muted-foreground">{{ $t('tools.numberConverter.binary') }} (2)</label>
-          <div class="relative">
-            <input
-              v-model="binary"
-              type="text"
-              @input="updateFromBinary"
-              class="w-full bg-card border border-border rounded-lg px-4 py-2 text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              placeholder="0"
-            />
-            <button @click="copy(binary)" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors">
-              <Copy class="w-4 h-4" />
+        <CustomInput
+          v-model="binary"
+          :label="$t('tools.numberConverter.binary') + ' (2)'"
+          placeholder="0"
+          @update:model-value="updateFromBinary"
+        >
+          <template #suffix>
+            <button @click="copy(binary)" class="p-1 hover:bg-muted rounded-md transition-colors">
+              <Copy class="w-3.5 h-3.5" />
             </button>
-          </div>
-        </div>
+          </template>
+        </CustomInput>
 
         <!-- Octal -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-muted-foreground">{{ $t('tools.numberConverter.octal') }} (8)</label>
-          <div class="relative">
-            <input
-              v-model="octal"
-              type="text"
-              @input="updateFromOctal"
-              class="w-full bg-card border border-border rounded-lg px-4 py-2 text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              placeholder="0"
-            />
-            <button @click="copy(octal)" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors">
-              <Copy class="w-4 h-4" />
+        <CustomInput
+          v-model="octal"
+          :label="$t('tools.numberConverter.octal') + ' (8)'"
+          placeholder="0"
+          @update:model-value="updateFromOctal"
+        >
+          <template #suffix>
+            <button @click="copy(octal)" class="p-1 hover:bg-muted rounded-md transition-colors">
+              <Copy class="w-3.5 h-3.5" />
             </button>
-          </div>
-        </div>
+          </template>
+        </CustomInput>
       </div>
     </main>
 
@@ -113,6 +102,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Binary, Copy, HelpCircle, X } from 'lucide-vue-next';
+import CustomInput from '../components/CustomInput.vue';
 
 const decimal = ref('');
 const hex = ref('');

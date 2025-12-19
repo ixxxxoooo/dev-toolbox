@@ -13,6 +13,8 @@ export default {
     copy: 'Copy',
     paste: 'Paste',
     clear: 'Clear',
+    undo: 'Undo',
+    redo: 'Redo',
     editorTheme: {
       title: 'Editor Theme',
       select: 'Select Theme',

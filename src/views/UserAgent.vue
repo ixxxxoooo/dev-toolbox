@@ -24,14 +24,12 @@
     <main class="flex-1 overflow-auto p-4">
       <div class="max-w-4xl mx-auto space-y-6">
         <!-- Input -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-muted-foreground">{{ $t('common.labels.input') }}</label>
-          <textarea
-            v-model="uaString"
-            class="w-full h-24 bg-card border border-border rounded-lg px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
-            :placeholder="$t('tools.userAgent.placeholder')"
-          ></textarea>
-        </div>
+        <CustomTextarea
+          v-model="uaString"
+          :label="$t('common.labels.input')"
+          :placeholder="$t('tools.userAgent.placeholder')"
+          class="h-32"
+        />
 
         <!-- Result -->
         <div v-if="parsedUa" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,6 +123,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Monitor, HelpCircle, X, Globe, Cpu, Smartphone } from 'lucide-vue-next';
 import { UAParser } from 'ua-parser-js';
+import CustomTextarea from '../components/CustomTextarea.vue';
 
 const uaString = ref('');
 const showHelp = ref(false);

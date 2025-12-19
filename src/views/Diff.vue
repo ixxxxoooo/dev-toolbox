@@ -49,14 +49,14 @@
 
         <!-- Options -->
         <div class="flex items-center space-x-3 flex-shrink-0">
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="ignoreWhitespace" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.diff.ignoreWhitespace') }}</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.diff.wordWrap') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="ignoreWhitespace"
+            :label="$t('tools.diff.ignoreWhitespace')"
+          />
+          <CustomCheckbox
+            v-model="wordWrapEnabled"
+            :label="$t('tools.diff.wordWrap')"
+          />
 
           <button
             @click="showMinimap = !showMinimap"
@@ -170,6 +170,7 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useHistory } from '../composables/useHistory';
 import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';

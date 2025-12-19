@@ -110,40 +110,58 @@
               
               <!-- Compress Controls -->
               <div v-if="activeTab === 'compress'" class="space-y-4">
-                <div class="space-y-2">
-                  <div class="flex justify-between text-sm">
-                    <label class="font-medium">{{ $t('tools.imageTools.quality') }}</label>
-                    <span class="text-muted-foreground">{{ Math.round(quality * 100) }}%</span>
-                  </div>
-                  <input type="range" v-model.number="quality" min="0.1" max="1" step="0.05" class="w-full accent-primary" @change="compressImage">
-                </div>
+                <CustomRange
+                  v-model="quality"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.05"
+                  :label="$t('tools.imageTools.quality')"
+                  unit="%"
+                  @update:model-value="compressImage"
+                >
+                  <template #header>
+                    <span class="text-xs font-mono font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{{ Math.round(quality * 100) }}%</span>
+                  </template>
+                </CustomRange>
                 <p class="text-xs text-muted-foreground text-center">{{ $t('tools.imageTools.adjustQuality') }}</p>
               </div>
 
               <!-- Resize Controls -->
               <div v-if="activeTab === 'resize'" class="flex flex-col items-center gap-4 w-full">
-                <div class="flex flex-wrap gap-4 items-end justify-center">
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-muted-foreground">{{ $t('tools.imageTools.width') }} (px)</label>
-                    <input type="number" v-model.number="resizeWidth" class="w-24 px-2 py-1.5 bg-background border border-input rounded-md text-sm" @input="onWidthChange">
+                <div class="flex flex-wrap gap-6 items-end justify-center">
+                  <CustomInput
+                    v-model="resizeWidth"
+                    type="number"
+                    :label="$t('tools.imageTools.width') + ' (px)'"
+                    class="w-32"
+                    @update:model-value="onWidthChange"
+                  />
+                  <div class="flex items-center pb-2.5 text-muted-foreground" :title="$t('tools.imageTools.maintainAspectRatio')">
+                    <div 
+                      class="p-2 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
+                      @click="maintainAspectRatio = !maintainAspectRatio"
+                    >
+                      <Link2 v-if="maintainAspectRatio" class="w-4 h-4 text-primary" />
+                      <Unlink2 v-else class="w-4 h-4 opacity-50" />
+                    </div>
                   </div>
-                  <div class="flex items-center pb-2 text-muted-foreground" :title="$t('tools.imageTools.maintainAspectRatio')">
-                    <Link2 v-if="maintainAspectRatio" class="w-4 h-4 cursor-pointer" @click="maintainAspectRatio = false" />
-                    <Unlink2 v-else class="w-4 h-4 cursor-pointer opacity-50" @click="maintainAspectRatio = true" />
-                  </div>
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-muted-foreground">{{ $t('tools.imageTools.height') }} (px)</label>
-                    <input type="number" v-model.number="resizeHeight" class="w-24 px-2 py-1.5 bg-background border border-input rounded-md text-sm" @input="onHeightChange">
-                  </div>
+                  <CustomInput
+                    v-model="resizeHeight"
+                    type="number"
+                    :label="$t('tools.imageTools.height') + ' (px)'"
+                    class="w-32"
+                    @update:model-value="onHeightChange"
+                  />
                 </div>
                 
-                <div class="w-full max-w-xs space-y-2">
-                   <div class="flex justify-between text-xs text-muted-foreground">
-                      <span>1%</span>
-                      <span>{{ resizePercentage }}%</span>
-                      <span>200%</span>
-                   </div>
-                   <input type="range" v-model.number="resizePercentage" min="1" max="200" step="1" class="w-full accent-primary">
+                <div class="w-full max-w-sm">
+                  <CustomRange
+                    v-model="resizePercentage"
+                    :min="1"
+                    :max="200"
+                    unit="%"
+                    show-labels
+                  />
                 </div>
               </div>
 
@@ -243,6 +261,8 @@ import {
 import imageCompression from 'browser-image-compression';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
+import CustomRange from '../components/CustomRange.vue';
+import CustomInput from '../components/CustomInput.vue';
 
 const tabs = [
   { id: 'compress', label: 'Compress', icon: Minimize2 },

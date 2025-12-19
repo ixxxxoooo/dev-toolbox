@@ -77,11 +77,14 @@
               <!-- Remove Mode Controls -->
               <div v-if="activeFunction === 'remove'" class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                  <div class="flex items-center space-x-2">
-                    <label class="text-sm font-medium">{{ $t('tools.watermark.brushSize') }}</label>
-                    <input type="range" v-model.number="brushSize" min="5" max="50" class="w-32 accent-primary">
-                    <span class="text-xs text-muted-foreground">{{ brushSize }}px</span>
-                  </div>
+                  <CustomRange
+                    v-model="brushSize"
+                    :min="5"
+                    :max="50"
+                    :label="$t('tools.watermark.brushSize')"
+                    unit="px"
+                    class="w-48"
+                  />
                 </div>
                 <div class="flex items-center space-x-2">
                   <button
@@ -105,31 +108,43 @@
 
               <!-- Add Mode Controls -->
               <div v-if="activeFunction === 'add'" class="flex flex-wrap gap-4 items-end">
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.content') }}</label>
-                  <input type="text" v-model="watermarkText" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-40" placeholder="Text">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.color') }}</label>
-                  <input type="color" v-model="watermarkColor" class="h-8 w-12 p-0 border border-border rounded-md cursor-pointer">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.size') }}</label>
-                  <input type="number" v-model.number="watermarkSize" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16" min="10" max="200">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.opacity') }}</label>
-                  <input type="range" v-model.number="watermarkOpacity" min="0.1" max="1" step="0.1" class="w-24 accent-primary">
-                </div>
-                <!-- Position controls removed as they are now draggable, but kept for fine-tuning if needed. Let's keep them read-only or editable. -->
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">X</label>
-                  <input type="number" v-model.number="watermarkX" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">Y</label>
-                  <input type="number" v-model.number="watermarkY" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16">
-                </div>
+                <CustomInput
+                  v-model="watermarkText"
+                  :label="$t('tools.watermark.content')"
+                  class="w-48"
+                />
+                <CustomColorPicker
+                  v-model="watermarkColor"
+                  :label="$t('tools.watermark.color')"
+                />
+                <CustomInput
+                  v-model="watermarkSize"
+                  type="number"
+                  :label="$t('tools.watermark.size')"
+                  class="w-20"
+                  :min="10"
+                  :max="200"
+                />
+                <CustomRange
+                  v-model="watermarkOpacity"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.1"
+                  :label="$t('tools.watermark.opacity')"
+                  class="w-32"
+                />
+                <CustomInput
+                  v-model="watermarkX"
+                  type="number"
+                  label="X"
+                  class="w-20"
+                />
+                <CustomInput
+                  v-model="watermarkY"
+                  type="number"
+                  label="Y"
+                  class="w-20"
+                />
 
                 <div class="flex items-center space-x-2 pb-1">
                   <button
@@ -221,30 +236,43 @@
 
               <!-- Add Mode Controls -->
               <div v-if="activeFunction === 'add'" class="flex flex-wrap gap-4 items-end">
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.content') }}</label>
-                  <input type="text" v-model="watermarkText" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-40" placeholder="Text">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.color') }}</label>
-                  <input type="color" v-model="watermarkColor" class="h-8 w-12 p-0 border border-border rounded-md cursor-pointer">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.size') }}</label>
-                  <input type="number" v-model.number="watermarkSize" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16" min="10" max="200">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">{{ $t('tools.watermark.opacity') }}</label>
-                  <input type="range" v-model.number="watermarkOpacity" min="0.1" max="1" step="0.1" class="w-24 accent-primary">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">X</label>
-                  <input type="number" v-model.number="watermarkX" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16">
-                </div>
-                <div class="flex flex-col space-y-1">
-                  <label class="text-xs font-medium">Y</label>
-                  <input type="number" v-model.number="watermarkY" class="px-2 py-1 border border-border rounded-md text-sm bg-background w-16">
-                </div>
+                <CustomInput
+                  v-model="watermarkText"
+                  :label="$t('tools.watermark.content')"
+                  class="w-48"
+                />
+                <CustomColorPicker
+                  v-model="watermarkColor"
+                  :label="$t('tools.watermark.color')"
+                />
+                <CustomInput
+                  v-model="watermarkSize"
+                  type="number"
+                  :label="$t('tools.watermark.size')"
+                  class="w-20"
+                  :min="10"
+                  :max="200"
+                />
+                <CustomRange
+                  v-model="watermarkOpacity"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.1"
+                  :label="$t('tools.watermark.opacity')"
+                  class="w-32"
+                />
+                <CustomInput
+                  v-model="watermarkX"
+                  type="number"
+                  label="X"
+                  class="w-20"
+                />
+                <CustomInput
+                  v-model="watermarkY"
+                  type="number"
+                  label="Y"
+                  class="w-20"
+                />
                 <div class="flex items-center space-x-2 pb-1">
                   <button
                     @click="addWatermarkVideo"
@@ -343,6 +371,9 @@ import { Eraser, Image, Video, UploadCloud, Trash2, Wand2, Download, HelpCircle,
 import cv from '@techstark/opencv-js';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import CustomRange from '../components/CustomRange.vue';
+import CustomInput from '../components/CustomInput.vue';
+import CustomColorPicker from '../components/CustomColorPicker.vue';
 
 const activeFunction = ref('remove'); // 'remove' | 'add'
 const activeTab = ref('image'); // 'image' | 'video'

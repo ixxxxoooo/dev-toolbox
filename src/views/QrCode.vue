@@ -40,12 +40,11 @@
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">Error Correction</label>
-                <select v-model="errorCorrectionLevel" class="w-full bg-muted/50 border border-border rounded px-2 py-1 text-sm">
-                  <option value="L">Low (7%)</option>
-                  <option value="M">Medium (15%)</option>
-                  <option value="Q">Quartile (25%)</option>
-                  <option value="H">High (30%)</option>
-                </select>
+                <CustomSelect
+                  v-model="errorCorrectionLevel"
+                  :options="ecOptions"
+                  class="w-full"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">Size (px)</label>
@@ -99,6 +98,14 @@
 import { ref, watch, onMounted } from 'vue';
 import { QrCode, HelpCircle, X } from 'lucide-vue-next';
 import QRCode from 'qrcode';
+import CustomSelect from '../components/CustomSelect.vue';
+
+const ecOptions = [
+  { label: 'Low (7%)', value: 'L' },
+  { label: 'Medium (15%)', value: 'M' },
+  { label: 'Quartile (25%)', value: 'Q' },
+  { label: 'High (30%)', value: 'H' }
+];
 
 const text = ref('https://example.com');
 const qrDataUrl = ref('');

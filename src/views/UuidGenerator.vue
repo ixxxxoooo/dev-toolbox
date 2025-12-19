@@ -38,25 +38,23 @@
              <h2 class="text-lg font-medium text-muted-foreground">Generated UUID v4</h2>
           </div>
 
-          <div class="relative group">
-            <input
-              type="text"
-              readonly
-              v-model="uuid"
-              :placeholder="$t('common.placeholders.clickToGenerate')"
-              class="w-full text-center text-2xl font-mono p-6 bg-muted/30 border-2 border-border rounded-xl focus:outline-none focus:border-primary transition-colors cursor-text select-all"
-            />
-            <div class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-               <button
+          <CustomInput
+            v-model="uuid"
+            readonly
+            :placeholder="$t('common.placeholders.clickToGenerate')"
+            class="text-center"
+          >
+            <template #suffix>
+              <button
                 @click="copyUuid"
                 :disabled="!uuid"
-                class="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                class="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-0"
                 :title="$t('common.copy')"
               >
                 <Copy class="w-5 h-5" />
               </button>
-            </div>
-          </div>
+            </template>
+          </CustomInput>
 
           <p class="mt-4 text-xs text-muted-foreground">
             Click generate to create a new cryptographically strong UUID.
@@ -93,6 +91,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle, Fingerprint, RefreshCw, Trash2, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
+import CustomInput from '../components/CustomInput.vue';
 
 const uuid = ref('');
 const showHelp = ref(false);

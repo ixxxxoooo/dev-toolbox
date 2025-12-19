@@ -31,20 +31,19 @@
       <div class="w-full max-w-3xl space-y-8">
         <!-- Input Section -->
         <div class="space-y-2">
-          <div class="relative group">
-            <input
-              type="text"
-              v-model="userInput"
-              @input="parseInput"
-              :placeholder="$t('common.placeholders.enterTimestamp')"
-              class="w-full text-center text-xl font-mono p-4 pr-12 bg-card border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-              :class="isValid ? 'border-primary/50 focus:border-primary' : (userInput ? 'border-destructive/50 focus:border-destructive' : 'border-border focus:border-primary')"
-            />
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity duration-200" :class="userInput ? 'opacity-100' : 'opacity-0'">
-              <CheckCircle2 v-if="isValid" class="w-5 h-5 text-green-500" />
-              <AlertCircle v-else class="w-5 h-5 text-destructive" />
-            </div>
-          </div>
+          <CustomInput
+            v-model="userInput"
+            :placeholder="$t('common.placeholders.enterTimestamp')"
+            class="text-center"
+            @update:model-value="parseInput"
+          >
+            <template #suffix>
+              <div class="flex items-center space-x-2">
+                <CheckCircle2 v-if="isValid" class="w-5 h-5 text-green-500" />
+                <AlertCircle v-else-if="userInput" class="w-5 h-5 text-destructive" />
+              </div>
+            </template>
+          </CustomInput>
           <p v-if="!isValid && userInput" class="text-center text-destructive text-xs font-medium animate-pulse">{{ $t('errors.invalidTimestamp') }}</p>
           <p v-else class="text-center text-muted-foreground text-xs">
             Supports: Unix Timestamp (s/ms), ISO 8601, YYYY-MM-DD, Natural Language
@@ -109,6 +108,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { HelpCircle, Clock, ClipboardPaste, RefreshCw, CheckCircle2, AlertCircle, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
+import CustomInput from '../components/CustomInput.vue';
 
 const { t: $t } = useI18n();
 

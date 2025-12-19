@@ -18,25 +18,21 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col min-h-0 p-4 gap-4">
       <!-- Input Panel -->
-      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-        <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-          <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
-          <div class="flex items-center space-x-1">
-            <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <ClipboardPaste class="w-3.5 h-3.5" />
-            </button>
-            <button @click="clearInput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-        <textarea
-          v-model="inputText"
-          class="flex-1 p-4 bg-background resize-none outline-none font-mono text-sm"
-          :placeholder="$t('tools.unicodeConverter.inputPlaceholder')"
-          @input="handleInput"
-        ></textarea>
-      </div>
+      <CustomTextarea
+        v-model="inputText"
+        :label="$t('common.labels.input')"
+        :placeholder="$t('tools.unicodeConverter.inputPlaceholder')"
+        @update:model-value="handleInput"
+      >
+        <template #header>
+          <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+            <ClipboardPaste class="w-3.5 h-3.5" />
+          </button>
+          <button @click="clearInput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+            <Trash2 class="w-3.5 h-3.5" />
+          </button>
+        </template>
+      </CustomTextarea>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-center gap-2">
@@ -54,25 +50,21 @@
       </div>
 
       <!-- Output Panel -->
-      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-        <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-          <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.output') }}</h3>
-          <div class="flex items-center space-x-1">
-            <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Copy class="w-3.5 h-3.5" />
-            </button>
-            <button @click="clearOutput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-        <textarea
-          v-model="outputText"
-          class="flex-1 p-4 bg-background resize-none outline-none font-mono text-sm"
-          :placeholder="$t('tools.unicodeConverter.outputPlaceholder')"
-          readonly
-        ></textarea>
-      </div>
+      <CustomTextarea
+        v-model="outputText"
+        :label="$t('common.labels.output')"
+        :placeholder="$t('tools.unicodeConverter.outputPlaceholder')"
+        readonly
+      >
+        <template #header>
+          <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+            <Copy class="w-3.5 h-3.5" />
+          </button>
+          <button @click="clearOutput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+            <Trash2 class="w-3.5 h-3.5" />
+          </button>
+        </template>
+      </CustomTextarea>
     </main>
 
     <!-- Help Modal -->
@@ -102,6 +94,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Languages, HelpCircle, ClipboardPaste, Copy, Trash2, ArrowDown, ArrowUp, ArrowUpDown, X } from 'lucide-vue-next'
+import CustomTextarea from '../components/CustomTextarea.vue'
 
 const inputText = ref('')
 const outputText = ref('')

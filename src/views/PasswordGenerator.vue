@@ -39,48 +39,35 @@
               {{ $t('tools.password.passwordType') }}
             </h3>
             <div class="space-y-3">
-              <label v-for="type in passwordTypes" :key="type.key" class="flex items-start space-x-3 p-3 rounded-lg border border-transparent hover:bg-muted/50 hover:border-border cursor-pointer transition-all" :class="selectedType === type.key ? 'bg-muted/50 border-primary/50' : ''">
-                <input
-                  type="radio"
-                  :value="type.key"
-                  v-model="selectedType"
-                  @change="generatePassword"
-                  class="mt-1 form-radio text-primary focus:ring-primary"
-                />
-                <div class="flex-1">
-                  <div class="text-sm font-medium" :class="selectedType === type.key ? 'text-primary' : ''">{{ $t(type.label) }}</div>
-                  <div class="text-xs text-muted-foreground mt-0.5">{{ $t(type.description) }}</div>
-                </div>
-              </label>
+              <CustomRadio
+                v-for="type in passwordTypes"
+                :key="type.key"
+                v-model="selectedType"
+                :value="type.key"
+                :label="$t(type.label)"
+                :description="$t(type.description)"
+                @update:model-value="generatePassword"
+              />
             </div>
           </div>
 
           <!-- Length Configuration -->
-          <div class="bg-card border border-border rounded-xl p-6 shadow-sm">
-            <h3 class="text-sm font-semibold mb-4 flex items-center">
-              <Ruler class="w-4 h-4 mr-2 text-primary" />
-              {{ $t('tools.password.passwordLength') }}
-            </h3>
             <div class="space-y-4">
-              <div class="flex items-center space-x-4">
-                <input
-                  type="range"
-                  :min="getMinLength()"
-                  :max="getMaxLength()"
-                  v-model="passwordLength"
-                  @input="generatePassword"
-                  class="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                />
-                <div class="w-12 h-8 flex items-center justify-center bg-muted rounded font-mono text-sm font-bold">
-                  {{ passwordLength }}
-                </div>
-              </div>
+              <CustomRange
+                v-model="passwordLength"
+                :min="getMinLength()"
+                :max="getMaxLength()"
+                @update:model-value="generatePassword"
+              >
+                <template #icon>
+                  <Ruler class="w-4 h-4 mr-2 text-primary" />
+                </template>
+              </CustomRange>
               <div class="text-xs text-muted-foreground flex items-center">
                 <Info class="w-3 h-3 mr-1" />
                 {{ $t('tools.password.recommendedLength') }}: {{ getRecommendedLength() }} {{ $t('tools.password.characters') }}
               </div>
             </div>
-          </div>
 
           <!-- Advanced Options -->
           <div v-if="selectedType === 'strong'" class="bg-card border border-border rounded-xl p-6 shadow-sm">
@@ -89,26 +76,11 @@
               {{ $t('tools.password.characterTypes') }}
             </h3>
             <div class="grid grid-cols-2 gap-3">
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="options.uppercase" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.uppercase') }} (A-Z)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="options.lowercase" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.lowercase') }} (a-z)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="options.numbers" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.numbers') }} (0-9)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="options.symbols" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.symbols') }} (!@#$)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors col-span-2">
-                <input type="checkbox" v-model="options.excludeAmbiguous" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.excludeAmbiguous') }} (0 O 1 l I | `)</span>
-              </label>
+              <CustomCheckbox v-model="options.uppercase" @change="generatePassword" :label="$t('tools.password.uppercase') + ' (A-Z)'" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomCheckbox v-model="options.lowercase" @change="generatePassword" :label="$t('tools.password.lowercase') + ' (a-z)'" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomCheckbox v-model="options.numbers" @change="generatePassword" :label="$t('tools.password.numbers') + ' (0-9)'" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomCheckbox v-model="options.symbols" @change="generatePassword" :label="$t('tools.password.symbols') + ' (!@#$)'" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomCheckbox v-model="options.excludeAmbiguous" @change="generatePassword" :label="$t('tools.password.excludeAmbiguous') + ' (0 O 1 l I | `)'" class="p-2 rounded hover:bg-muted/50 transition-colors col-span-2 w-full" />
             </div>
           </div>
 
@@ -119,25 +91,15 @@
               {{ $t('tools.password.configOptions') }}
             </h3>
             <div class="space-y-3">
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="memorableOptions.includeNumbers" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.numbers') }}</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-muted/50 transition-colors">
-                <input type="checkbox" v-model="memorableOptions.capitalizeWords" @change="generatePassword" class="rounded border-muted-foreground/30 text-primary focus:ring-primary" />
-                <span class="text-sm">{{ $t('tools.password.capitalizeWords') }}</span>
-              </label>
-              <div class="p-2">
-                <label class="text-sm mb-2 block">{{ $t('tools.password.wordCount') }}: {{ memorableOptions.wordCount }}</label>
-                <input
-                  type="range"
-                  min="3"
-                  max="6"
-                  v-model="memorableOptions.wordCount"
-                  @input="generatePassword"
-                  class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                />
-              </div>
+              <CustomCheckbox v-model="memorableOptions.includeNumbers" @change="generatePassword" :label="$t('tools.password.numbers')" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomCheckbox v-model="memorableOptions.capitalizeWords" @change="generatePassword" :label="$t('tools.password.capitalizeWords')" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
+              <CustomRange
+                v-model="memorableOptions.wordCount"
+                :min="3"
+                :max="6"
+                :label="$t('tools.password.wordCount')"
+                @update:model-value="generatePassword"
+              />
             </div>
           </div>
         </div>
@@ -251,6 +213,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle, KeyRound, RefreshCw, Trash2, Settings2, Ruler, Info, Sliders, List, Copy, ShieldCheck, Lightbulb, X } from 'lucide-vue-next';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
+import CustomRadio from '../components/CustomRadio.vue';
+import CustomRange from '../components/CustomRange.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 import { useI18n } from 'vue-i18n';
 

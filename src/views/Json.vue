@@ -118,10 +118,10 @@
               </span>
             </div>
             <div class="flex items-center space-x-1">
-              <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Undo (Ctrl+Z)">
+              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <Undo2 class="w-3.5 h-3.5" />
               </button>
-              <button @click="redo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Redo (Ctrl+Y)">
+              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <Redo2 class="w-3.5 h-3.5" />
               </button>
               <div class="h-3 w-px bg-border mx-1"></div>
@@ -335,9 +335,20 @@ const handleOperation = (op: string) => {
   processData(false);
 };
 
+const replaceTextInEditor = (newText: string) => {
+  if (!editor) return;
+  const model = editor.getModel();
+  if (model) {
+    const fullRange = model.getFullModelRange();
+    editor.executeEdits('json-processor', [{ range: fullRange, text: newText }]);
+  } else {
+    editor?.setValue(newText);
+  }
+  inputText.value = newText;
+};
+
 const useHistoryItem = (content: string) => {
-  editor?.setValue(content);
-  inputText.value = content;
+  replaceTextInEditor(content);
   showHistory.value = false;
   handleOperation('format');
 };
@@ -389,8 +400,7 @@ const processData = (isAuto = false) => {
       }
     }
 
-    editor?.setValue(resultData);
-    inputText.value = resultData;
+    replaceTextInEditor(resultData);
     
     // Add to history if it's not an automatic format or if it's a manual format
     if (!isAuto && operation.value === 'format') {
@@ -460,12 +470,12 @@ const initEditors = async () => {
   }
 };
 
-const clearAll = () => editor?.setValue('');
+const clearAll = () => replaceTextInEditor('');
 
 const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText();
-    editor?.setValue(text);
+    replaceTextInEditor(text);
     addHistory(text);
     setTimeout(() => handleOperation('format'), 100);
   } catch (error) {

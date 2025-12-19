@@ -28,20 +28,21 @@
 
         <!-- Options -->
         <div class="flex items-center space-x-3 flex-shrink-0">
-          <label class="flex items-center space-x-2 cursor-pointer group" :title="$t('tools.base64.help.features.urlSafe')">
-            <input type="checkbox" v-model="urlSafe" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.urlSafe') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="urlSafe"
+            :label="$t('common.labels.urlSafe')"
+            :title="$t('tools.base64.help.features.urlSafe')"
+          />
 
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="autoProcess" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoProcess') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="autoProcess"
+            :label="$t('common.labels.autoProcess')"
+          />
 
-          <label class="flex items-center space-x-2 cursor-pointer group">
-            <input type="checkbox" v-model="wordWrapEnabled" class="rounded border-muted-foreground/30 text-primary focus:ring-primary w-3.5 h-3.5">
-            <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('common.labels.autoWrap') }}</span>
-          </label>
+          <CustomCheckbox
+            v-model="wordWrapEnabled"
+            :label="$t('common.labels.autoWrap')"
+          />
         </div>
       </div>
 
@@ -72,6 +73,13 @@
           <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
             <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
             <div class="flex items-center space-x-1">
+              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Undo2 class="w-3.5 h-3.5" />
+              </button>
+              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Redo2 class="w-3.5 h-3.5" />
+              </button>
+              <div class="w-px h-3 bg-border mx-1"></div>
               <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -126,9 +134,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, Binary, Upload, Download, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X } from 'lucide-vue-next';
+import { HelpCircle, Binary, Upload, Download, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import CustomCheckbox from '../components/CustomCheckbox.vue';
 
 const inputEditorRef = ref<HTMLElement | null>(null);
 const outputEditorRef = ref<HTMLElement | null>(null);
@@ -187,6 +196,20 @@ const processText = () => {
   }
 };
 
+const undo = () => inputEditor?.trigger('keyboard', 'undo', null);
+const redo = () => inputEditor?.trigger('keyboard', 'redo', null);
+
+const replaceTextInEditor = (newText: string) => {
+  if (!inputEditor) return;
+  const model = inputEditor.getModel();
+  if (model) {
+    const fullRange = model.getFullModelRange();
+    inputEditor.executeEdits('base64-processor', [{ range: fullRange, text: newText }]);
+  } else {
+    inputEditor.setValue(newText);
+  }
+};
+
 const initEditors = async () => {
   await nextTick();
   const editorOptions = {
@@ -210,6 +233,9 @@ const initEditors = async () => {
       saveToStorage(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     inputThemeWatcher = watchThemeChange(inputEditor);
   }
@@ -232,7 +258,7 @@ const handleFileSelect = (e: Event) => {
     const reader = new FileReader();
     reader.onload = (res) => {
       const content = res.target?.result as string;
-      inputEditor?.setValue(content);
+      replaceTextInEditor(content);
     };
     reader.readAsText(file);
   }
@@ -249,15 +275,15 @@ const downloadFile = () => {
   URL.revokeObjectURL(url);
 };
 const clearAll = () => {
-  inputEditor?.setValue('');
+  replaceTextInEditor('');
   outputEditor?.setValue('');
 };
-const pasteInput = async () => inputEditor?.setValue(await navigator.clipboard.readText());
+const pasteInput = async () => replaceTextInEditor(await navigator.clipboard.readText());
 const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
 const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
 const useAsInput = () => {
   const outputValue = outputEditor?.getValue() || '';
-  inputEditor?.setValue(outputValue);
+  replaceTextInEditor(outputValue);
   operation.value = operation.value === 'encode' ? 'decode' : 'encode';
 };
 

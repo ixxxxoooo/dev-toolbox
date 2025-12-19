@@ -41,7 +41,8 @@
         :class="[
           $route.name === route.name
             ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          isCollapsed ? 'justify-center' : ''
         ]"
         :title="isCollapsed ? $t(route.meta?.title as string) : ''"
       >
@@ -63,7 +64,7 @@
     </nav>
 
     <!-- Footer -->
-    <div class="p-4 border-t border-border shrink-0">
+    <div class="flex items-center h-[49px] px-3 border-t border-border shrink-0">
       <SettingsPanel :collapsed="isCollapsed" />
     </div>
 
