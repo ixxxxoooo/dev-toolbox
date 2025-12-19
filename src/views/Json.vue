@@ -38,6 +38,20 @@
             {{ $t('tools.json.' + op) }}
           </button>
         </div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Compare Action -->
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="goToDiff"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('tools.diff.name')"
+          >
+            <ArrowRightLeft class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Right Side Controls -->
@@ -176,13 +190,15 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
+const router = useRouter();
 const editorRef = ref<HTMLElement | null>(null);
 const treeViewRef = ref<any>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -394,6 +410,12 @@ const pasteInput = async () => {
 const copyInput = () => {
   const text = editor?.getValue() || '';
   navigator.clipboard.writeText(text);
+};
+
+const goToDiff = () => {
+  const text = editor?.getValue() || '';
+  saveToStorage('diff-left-content', text);
+  router.push('/diff');
 };
 
 const isTreeExpanded = ref(true);

@@ -45,6 +45,20 @@
             <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">{{ $t('tools.sql.wordWrap') }}</span>
           </label>
         </div>
+
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+
+        <!-- Compare Action -->
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="goToDiff"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('tools.diff.name')"
+          >
+            <ArrowRightLeft class="w-4 h-4" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Right Side Actions -->
@@ -128,11 +142,14 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2 } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
+
+const router = useRouter()
 
 const sqlEditorRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -348,6 +365,12 @@ const pasteInput = async () => {
   } catch (error) { console.error('Paste failed:', error) }
 }
 const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')
+
+const goToDiff = () => {
+  const text = sqlEditor?.getValue() || ''
+  saveToStorage('diff-left-content', text)
+  router.push('/diff')
+}
 
 watch(sqlDialect, (newValue) => saveToStorage(STORAGE_KEYS.sqlDialect, newValue))
 watch(indentSize, (newValue) => saveToStorage(STORAGE_KEYS.indentSize, newValue))

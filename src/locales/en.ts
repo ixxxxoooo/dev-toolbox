@@ -31,7 +31,8 @@ export default {
       showTreeView: 'Show Tree View',
       hideTreeView: 'Hide Tree View',
       regenerate: 'Regenerate',
-      process: 'Process'
+      process: 'Process',
+      compare: 'Compare'
     },
 
     // Labels

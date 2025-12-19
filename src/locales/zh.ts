@@ -31,7 +31,8 @@ export default {
       showTreeView: '显示树状视图',
       hideTreeView: '隐藏树状视图',
       regenerate: '重新生成',
-      process: '处理'
+      process: '处理',
+      compare: '对比'
     },
 
     // 标签
