@@ -10,7 +10,7 @@
     </div>
 
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
       <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">

@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm">
+    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2 text-primary flex-shrink-0">
           <Eraser class="w-5 h-5" />
