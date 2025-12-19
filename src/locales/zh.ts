@@ -32,7 +32,19 @@ export default {
       hideTreeView: '隐藏树状视图',
       regenerate: '重新生成',
       process: '处理',
-      compare: '对比'
+      compare: '对比',
+      history: '历史记录'
+    },
+
+    // 历史记录
+    history: {
+      title: '历史记录',
+      empty: '暂无历史记录',
+      clear: '清空历史',
+      placeholder: '搜索历史...',
+      lastUsed: '上次使用',
+      use: '使用',
+      delete: '删除'
     },
 
     // 标签

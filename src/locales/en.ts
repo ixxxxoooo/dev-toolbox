@@ -32,7 +32,19 @@ export default {
       hideTreeView: 'Hide Tree View',
       regenerate: 'Regenerate',
       process: 'Process',
-      compare: 'Compare'
+      compare: 'Compare',
+      history: 'History'
+    },
+
+    // History
+    history: {
+      title: 'History Storage',
+      empty: 'No history yet',
+      clear: 'Clear History',
+      placeholder: 'Search history...',
+      lastUsed: 'Last used',
+      use: 'Use',
+      delete: 'Delete'
     },
 
     // Labels

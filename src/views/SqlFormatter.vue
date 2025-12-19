@@ -48,8 +48,17 @@
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
 
-        <!-- Compare Action -->
+        <!-- History & Compare Action -->
         <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="showHistory = true"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.history')"
+          >
+            <History class="w-4 h-4" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
+          </button>
+          <div class="h-4 w-px bg-border flex-shrink-0"></div>
           <button
             @click="goToDiff"
             class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
@@ -85,8 +94,8 @@
       <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
         <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
           <div class="flex items-center space-x-1">
-            <button @click="formatSQL" class="px-2 py-1 text-[10px] font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">{{ $t('common.labels.format') }}</button>
-            <button @click="minifySQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
+            <button @click="formatSQL(false)" class="px-2 py-1 text-[10px] font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">{{ $t('common.labels.format') }}</button>
+            <button @click="minifySQL()" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
             <button @click="escapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.escape') }}</button>
             <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
             <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
@@ -137,6 +146,16 @@
         </div>
       </div>
     </div>
+
+    <!-- History Modal -->
+    <HistoryModal
+      :show="showHistory"
+      :history="history"
+      @close="showHistory = false"
+      @select="useHistoryItem"
+      @delete="deleteHistory"
+      @clear="clearHistory"
+    />
   </div>
 </template>
 
@@ -145,9 +164,11 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
+import { useHistory } from '../composables/useHistory'
+import HistoryModal from '../components/HistoryModal.vue'
 
 const router = useRouter()
 
@@ -156,6 +177,9 @@ const fileInput = ref<HTMLInputElement | null>(null)
 let sqlEditor: monaco.editor.IStandaloneCodeEditor | null = null
 let themeWatcher: (() => void) | null = null
 const showHelp = ref(false)
+const showHistory = ref(false)
+
+const { history, addHistory, deleteHistory, clearHistory } = useHistory('sql', 50)
 
 const undo = () => sqlEditor?.trigger('keyboard', 'undo', null)
 const redo = () => sqlEditor?.trigger('keyboard', 'redo', null)
@@ -210,7 +234,14 @@ const showError = (error: any, prefix = 'Error') => {
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
 
-const formatSQL = () => {
+const useHistoryItem = (content: string) => {
+  sqlEditor?.setValue(content)
+  sqlText.value = content
+  showHistory.value = false
+  formatSQL()
+}
+
+const formatSQL = (isAuto = false) => {
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   try {
@@ -223,8 +254,13 @@ const formatSQL = () => {
       dataTypeCase: 'upper'
     })
     replaceTextInEditor(formatted, isSelection, selection)
+    
+    // Add to history if it's not an automatic format or if the content has changed significantly
+    if (!isAuto && !isSelection) {
+      addHistory(text)
+    }
   } catch (error: any) {
-    showError(error, 'SQL Format Failed')
+    if (!isAuto) showError(error, 'SQL Format Failed')
   }
 }
 
@@ -319,7 +355,8 @@ const initEditor = async () => {
         pasteTimer = null
         if (!isFormatting) {
           isFormatting = true
-          formatSQL()
+          addHistory(sqlEditor?.getValue() || '')
+          formatSQL(true)
           setTimeout(() => { isFormatting = false }, 200)
         }
       }, 150)
@@ -361,7 +398,8 @@ const pasteInput = async () => {
     const text = await navigator.clipboard.readText()
     sqlEditor?.setValue(text)
     await nextTick()
-    formatSQL()
+    addHistory(text)
+    formatSQL(true)
   } catch (error) { console.error('Paste failed:', error) }
 }
 const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')

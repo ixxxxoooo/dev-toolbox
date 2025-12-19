@@ -74,6 +74,9 @@
           <div class="flex items-center justify-between px-3 py-1.5 border-r border-border">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.leftPanel') }}</span>
             <div class="flex items-center space-x-1">
+              <button @click="showLeftHistory = true" :title="$t('common.buttons.history')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <History class="w-3.5 h-3.5" />
+              </button>
               <button @click="pasteTo('original')" :title="$t('tools.diff.pasteLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -85,6 +88,9 @@
           <div class="flex items-center justify-between px-3 py-1.5">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.rightPanel') }}</span>
             <div class="flex items-center space-x-1">
+              <button @click="showRightHistory = true" :title="$t('common.buttons.history')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <History class="w-3.5 h-3.5" />
+              </button>
               <button @click="pasteTo('modified')" :title="$t('tools.diff.pasteRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -125,20 +131,45 @@
         </div>
       </div>
     </div>
+
+    <!-- History Modals -->
+    <HistoryModal
+      :show="showLeftHistory"
+      :history="leftHistory"
+      @close="showLeftHistory = false"
+      @select="(val) => useHistoryItem(val, 'original')"
+      @delete="deleteLeftHistory"
+      @clear="clearLeftHistory"
+    />
+    <HistoryModal
+      :show="showRightHistory"
+      :history="rightHistory"
+      @close="showRightHistory = false"
+      @select="(val) => useHistoryItem(val, 'modified')"
+      @delete="deleteRightHistory"
+      @clear="clearRightHistory"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X } from 'lucide-vue-next';
+import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { useHistory } from '../composables/useHistory';
+import HistoryModal from '../components/HistoryModal.vue';
 
 const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
 let themeWatcher: (() => void) | null = null;
 const showHelp = ref(false);
+const showLeftHistory = ref(false);
+const showRightHistory = ref(false);
+
+const { history: leftHistory, addHistory: addLeftHistory, deleteHistory: deleteLeftHistory, clearHistory: clearLeftHistory } = useHistory('diff-left', 50);
+const { history: rightHistory, addHistory: addRightHistory, deleteHistory: deleteRightHistory, clearHistory: clearRightHistory } = useHistory('diff-right', 50);
 
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
@@ -202,6 +233,18 @@ const initMonacoDiffEditor = async () => {
   modifiedEditor.onDidChangeModelContent(() => {
     rightContent.value = modifiedEditor.getValue() || '';
     saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
+  });
+
+  originalEditor.onDidPaste(() => {
+    setTimeout(() => {
+      addLeftHistory(originalEditor.getValue());
+    }, 50);
+  });
+
+  modifiedEditor.onDidPaste(() => {
+    setTimeout(() => {
+      addRightHistory(modifiedEditor.getValue());
+    }, 50);
   });
 };
 
@@ -274,10 +317,25 @@ const goToPrevDiff = () => {
 const pasteTo = async (side: 'original' | 'modified') => {
   try {
     const text = await navigator.clipboard.readText();
-    if (side === 'original') diffEditor?.getOriginalEditor().setValue(text);
-    else diffEditor?.getModifiedEditor().setValue(text);
+    if (side === 'original') {
+      diffEditor?.getOriginalEditor().setValue(text);
+      addLeftHistory(text);
+    } else {
+      diffEditor?.getModifiedEditor().setValue(text);
+      addRightHistory(text);
+    }
   } catch (err) {
     console.error('Cannot read clipboard:', err);
+  }
+};
+
+const useHistoryItem = (content: string, side: 'original' | 'modified') => {
+  if (side === 'original') {
+    diffEditor?.getOriginalEditor().setValue(content);
+    showLeftHistory.value = false;
+  } else {
+    diffEditor?.getModifiedEditor().setValue(content);
+    showRightHistory.value = false;
   }
 };
 

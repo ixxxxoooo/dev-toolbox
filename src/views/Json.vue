@@ -41,8 +41,17 @@
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
 
-        <!-- Compare Action -->
+        <!-- History & Compare Action -->
         <div class="flex items-center space-x-1 flex-shrink-0">
+          <button
+            @click="showHistory = true"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.history')"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
+          </button>
+          <div class="h-4 w-px bg-border flex-shrink-0"></div>
           <button
             @click="goToDiff"
             class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
@@ -185,6 +194,16 @@
         </div>
       </div>
     </div>
+
+    <!-- History Modal -->
+    <HistoryModal
+      :show="showHistory"
+      :history="history"
+      @close="showHistory = false"
+      @select="useHistoryItem"
+      @delete="deleteHistory"
+      @clear="clearHistory"
+    />
   </div>
 </template>
 
@@ -194,9 +213,11 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { useHistory } from '../composables/useHistory';
+import HistoryModal from '../components/HistoryModal.vue';
 
 const router = useRouter();
 const editorRef = ref<HTMLElement | null>(null);
@@ -206,6 +227,10 @@ let themeWatcher: (() => void) | null = null;
 let isProcessing = false;
 const errorMessage = ref('');
 const showHelp = ref(false);
+const showHistory = ref(false);
+
+const { history, addHistory, deleteHistory, clearHistory } = useHistory('json', 50);
+
 let errorTimer: NodeJS.Timeout | null = null;
 
 const showError = (error: any, prefix = 'Error') => {
@@ -285,15 +310,23 @@ const redo = () => editor?.trigger('keyboard', 'redo', null);
 
 const handleOperation = (op: string) => {
   operation.value = op;
-  processData();
+  processData(false);
 };
 
-const processData = () => {
+const useHistoryItem = (content: string) => {
+  editor?.setValue(content);
+  inputText.value = content;
+  showHistory.value = false;
+  handleOperation('format');
+};
+
+const processData = (isAuto = false) => {
   if (!inputText.value.trim() || isProcessing) return;
 
   try {
     isProcessing = true;
     let resultData = '';
+    const currentInput = inputText.value;
 
     if (operation.value === 'escape') {
       resultData = JSON.stringify(inputText.value);
@@ -336,6 +369,11 @@ const processData = () => {
 
     editor?.setValue(resultData);
     inputText.value = resultData;
+    
+    // Add to history if it's not an automatic format or if it's a manual format
+    if (!isAuto && operation.value === 'format') {
+      addHistory(currentInput);
+    }
   } catch (e: unknown) {
     let prefix = 'Process failed';
     if (operation.value === 'escape') prefix = 'Escape failed';
@@ -380,6 +418,11 @@ const initEditors = async () => {
     editor.onDidPaste(() => {
       setTimeout(() => {
         const currentText = editor?.getValue() || '';
+        // Always record paste to history
+        if (currentText.trim()) {
+          addHistory(currentText);
+        }
+        
         // Auto-detect if we should format
         try {
            JSON5.parse(currentText);
@@ -401,6 +444,7 @@ const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText();
     editor?.setValue(text);
+    addHistory(text);
     setTimeout(() => handleOperation('format'), 100);
   } catch (error) {
     console.error('Paste failed:', error);
