@@ -116,7 +116,7 @@ const MIN_WIDTH = 240
 const MAX_WIDTH = 480
 const COLLAPSED_WIDTH = 80
 const sidebarWidth = ref(260)
-const isCollapsed = ref(false)
+const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
 const isResizing = ref(false)
 
 // Routes
@@ -154,6 +154,8 @@ const getIcon = (name: string) => {
 // Actions
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
+  
   if (isCollapsed.value) {
     sidebarWidth.value = COLLAPSED_WIDTH
   } else {
@@ -207,8 +209,10 @@ onMounted(() => {
   if (savedWidth) {
     const w = parseInt(savedWidth)
     if (!isNaN(w)) {
-      sidebarWidth.value = Math.max(MIN_WIDTH, Math.min(w, MAX_WIDTH))
+      sidebarWidth.value = isCollapsed.value ? COLLAPSED_WIDTH : Math.max(MIN_WIDTH, Math.min(w, MAX_WIDTH))
     }
+  } else if (isCollapsed.value) {
+    sidebarWidth.value = COLLAPSED_WIDTH
   }
 })
 
