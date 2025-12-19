@@ -1,13 +1,27 @@
 import { watch, type WatchStopHandle } from 'vue'
 import { useThemeStore } from '../stores/theme'
+import { defineCustomThemes } from './monaco-themes'
+
+// Ensure custom themes are defined once
+let themesDefined = false
+function ensureThemes() {
+  if (!themesDefined) {
+    defineCustomThemes()
+    themesDefined = true
+  }
+}
 
 /**
  * 根据当前主题返回对应的 Monaco Editor 主题名称
  * @returns Monaco Editor 主题名称
  */
 export function getMonacoTheme(): string {
+  ensureThemes()
   const themeStore = useThemeStore()
-  return themeStore.isDark.value ? 'vs-dark' : 'vs'
+  if (themeStore.editorTheme.value === 'auto') {
+    return themeStore.isDark.value ? 'vs-dark' : 'vs'
+  }
+  return themeStore.editorTheme.value
 }
 
 /**
@@ -31,11 +45,10 @@ export function watchThemeChange(editor: any): WatchStopHandle {
 
   // 监听主题变化
   return watch(
-    () => themeStore.isDark.value,
+    [() => themeStore.isDark.value, () => themeStore.editorTheme.value],
     () => {
       updateTheme()
-    },
-    { immediate: false }
+    }
   )
 }
 
@@ -59,10 +72,9 @@ export function watchThemeChangeForDiffEditor(diffEditor: any): WatchStopHandle 
 
   // 监听主题变化
   return watch(
-    () => themeStore.isDark.value,
+    [() => themeStore.isDark.value, () => themeStore.editorTheme.value],
     () => {
       updateTheme()
-    },
-    { immediate: false }
+    }
   )
 }

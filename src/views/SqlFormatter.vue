@@ -24,20 +24,11 @@
         <div class="flex items-center space-x-3 flex-shrink-0">
           <div class="flex items-center space-x-2">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.sql.database') }}:</span>
-            <select v-model="sqlDialect" class="text-xs px-2 py-1 border border-border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none h-7">
-              <option value="mysql">MySQL</option>
-              <option value="tidb">TiDB</option>
-              <option value="starrocks">StarRocks</option>
-              <option value="postgresql">PostgreSQL</option>
-            </select>
+            <CustomSelect v-model="sqlDialect" :options="dialectOptions" />
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.indent') }}:</span>
-            <select v-model="indentSize" class="text-xs px-2 py-1 border border-border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none h-7">
-              <option :value="2">{{ $t('tools.sql.indent2') }}</option>
-              <option :value="3">{{ $t('tools.sql.indent3') }}</option>
-              <option :value="4">{{ $t('tools.sql.indent4') }}</option>
-            </select>
+            <CustomSelect v-model="indentSize" :options="indentOptions" />
           </div>
 
           <label class="flex items-center space-x-2 cursor-pointer group" :title="$t('tools.sql.wordWrap')">
@@ -177,9 +168,26 @@ import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, A
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
+import { useThemeStore } from '../stores/theme'
 import HistoryModal from '../components/HistoryModal.vue'
+import CustomSelect from '../components/CustomSelect.vue'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
+
+const dialectOptions = [
+  { label: 'MySQL', value: 'mysql' },
+  { label: 'TiDB', value: 'tidb' },
+  { label: 'StarRocks', value: 'starrocks' },
+  { label: 'PostgreSQL', value: 'postgresql' }
+]
+
+const indentOptions = [
+  { label: t('tools.sql.indent2'), value: 2 },
+  { label: t('tools.sql.indent3'), value: 3 },
+  { label: t('tools.sql.indent4'), value: 4 }
+]
 
 const sqlEditorRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -188,7 +196,12 @@ let themeWatcher: (() => void) | null = null
 const showHelp = ref(false)
 const showHistory = ref(false)
 
-const { history, addHistory, deleteHistory, clearHistory } = useHistory('sql', 50)
+const themeStore = useThemeStore()
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('sql', themeStore.historyLimit.value)
+
+watch(() => themeStore.historyLimit.value, (newLimit) => {
+  updateMaxItems(newLimit)
+})
 
 const undo = () => sqlEditor?.trigger('keyboard', 'undo', null)
 const redo = () => sqlEditor?.trigger('keyboard', 'redo', null)

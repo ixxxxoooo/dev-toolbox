@@ -63,14 +63,8 @@
     </nav>
 
     <!-- Footer -->
-    <div class="p-2 border-t border-border space-y-1 overflow-hidden shrink-0">
-      <div
-        class="flex items-center justify-between bg-muted/50 p-1 rounded-lg transition-all duration-300"
-        :class="{ 'flex-col space-y-2': isCollapsed }"
-      >
-        <ThemeToggleButton />
-        <LanguageSwitcher v-show="!isCollapsed" />
-      </div>
+    <div class="p-4 border-t border-border shrink-0">
+      <SettingsPanel :collapsed="isCollapsed" />
     </div>
 
     <!-- Resize Handle -->
@@ -106,8 +100,7 @@ import {
   Eraser,
   Languages
 } from 'lucide-vue-next'
-import ThemeToggleButton from '../components/ThemeToggleButton.vue'
-import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import SettingsPanel from '../components/SettingsPanel.vue'
 
 const router = useRouter()
 

@@ -171,6 +171,7 @@ import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, Clipb
 import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
+import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';
 
 const diffEditorRef = ref<HTMLElement | null>(null);
@@ -179,7 +180,12 @@ let themeWatcher: (() => void) | null = null;
 const showHelp = ref(false);
 const showHistory = ref(false);
 
-const { history, addHistory, deleteHistory, clearHistory } = useHistory('diff', 50);
+const themeStore = useThemeStore();
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('diff', themeStore.historyLimit.value);
+
+watch(() => themeStore.historyLimit.value, (newLimit) => {
+  updateMaxItems(newLimit);
+});
 
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',

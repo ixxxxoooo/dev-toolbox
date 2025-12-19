@@ -66,10 +66,7 @@
       <!-- Right Side Controls -->
       <div class="flex items-center space-x-3 flex-shrink-0 ml-4">
         <div class="flex items-center space-x-2 hidden md:flex">
-          <select v-model="indentSize" class="text-xs px-2 py-1 border border-border rounded bg-background focus:ring-1 focus:ring-primary outline-none h-8">
-            <option :value="2">{{ $t('common.labels.spaces2') }}</option>
-            <option :value="4">{{ $t('common.labels.spaces4') }}</option>
-          </select>
+          <CustomSelect v-model="indentSize" :options="indentOptions" />
 
           <button
             @click="wordWrapEnabled = !wordWrapEnabled"
@@ -226,9 +223,18 @@ import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
+import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';
+import CustomSelect from '../components/CustomSelect.vue';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
+
+const indentOptions = [
+  { label: t('common.labels.spaces2'), value: 2 },
+  { label: t('common.labels.spaces4'), value: 4 }
+];
 const editorRef = ref<HTMLElement | null>(null);
 const treeViewRef = ref<any>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -238,7 +244,12 @@ const errorMessage = ref('');
 const showHelp = ref(false);
 const showHistory = ref(false);
 
-const { history, addHistory, deleteHistory, clearHistory } = useHistory('json', 50);
+const themeStore = useThemeStore();
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('json', themeStore.historyLimit.value);
+
+watch(() => themeStore.historyLimit.value, (newLimit) => {
+  updateMaxItems(newLimit);
+});
 
 let errorTimer: NodeJS.Timeout | null = null;
 

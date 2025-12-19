@@ -9,7 +9,7 @@
           </div>
           <div>
             <h3 class="text-lg font-bold leading-none mb-1">{{ $t('common.history.title') }}</h3>
-            <p class="text-xs text-muted-foreground">{{ history.length }} / 50 records stored</p>
+            <p class="text-xs text-muted-foreground">{{ history.length }} / {{ themeStore.historyLimit.value }} records stored</p>
           </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -53,54 +53,59 @@
           <div 
             v-for="item in filteredHistory" 
             :key="item.id"
-            class="group relative bg-card hover:bg-muted/30 border border-border/60 rounded-xl p-4 transition-all cursor-pointer hover:border-primary/40 hover:shadow-md"
+            class="group relative bg-card hover:bg-muted/5 border border-border rounded-xl px-4 py-3 transition-all cursor-pointer hover:border-primary/40 shadow-sm"
             @click="type !== 'diff' ? $emit('select', item.content) : null"
             @mouseenter="hoveredItem = item.content"
           >
-            <div class="flex justify-between items-start mb-3">
-              <span class="text-[11px] font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md flex items-center space-x-1.5">
-                <Calendar class="w-3.5 h-3.5" />
-                <span>{{ formatDate(item.timestamp) }}</span>
-              </span>
-              <div class="flex items-center space-x-1">
+            <div class="flex items-center justify-between gap-4">
+              <!-- Left: Meta & Preview -->
+              <div class="flex-1 min-w-0 flex items-center space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                  <Clock class="w-4 h-4" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center space-x-2 mb-0.5">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                      {{ formatDate(item.timestamp) }}
+                    </span>
+                  </div>
+                  <div class="text-[12px] font-mono text-foreground/70 truncate opacity-80">
+                    {{ item.content.replace(/\s+/g, ' ') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Actions -->
+              <div class="flex items-center space-x-1 flex-shrink-0">
+                <template v-if="type === 'diff'">
+                  <button 
+                    @click.stop="$emit('select', { content: item.content, side: 'original' })"
+                    class="px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary hover:text-primary-foreground rounded-md border border-primary/20 transition-all"
+                  >
+                    L
+                  </button>
+                  <button 
+                    @click.stop="$emit('select', { content: item.content, side: 'modified' })"
+                    class="px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary hover:text-primary-foreground rounded-md border border-primary/20 transition-all"
+                  >
+                    R
+                  </button>
+                </template>
+                <div class="h-4 w-px bg-border mx-1"></div>
                 <button 
                   @click.stop="copyToClipboard(item.content)"
-                  class="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                  title="Copy to clipboard"
+                  class="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
                 >
                   <Copy class="w-3.5 h-3.5" />
                 </button>
                 <button 
                   @click.stop="$emit('delete', item.id)"
-                  class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                  title="Delete entry"
+                  class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
                 </button>
+                <ChevronRight class="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" />
               </div>
-            </div>
-            <div class="text-sm font-mono text-foreground/70 line-clamp-3 break-all whitespace-pre-wrap leading-relaxed bg-muted/20 p-3 rounded-lg border border-border/20">
-              {{ item.content }}
-            </div>
-            <div class="mt-3 flex justify-end gap-2">
-              <template v-if="type === 'diff'">
-                <button 
-                  @click.stop="$emit('select', { content: item.content, side: 'original' })"
-                  class="px-2 py-1 text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 transition-all"
-                >
-                  {{ $t('common.history.useLeft') }}
-                </button>
-                <button 
-                  @click.stop="$emit('select', { content: item.content, side: 'modified' })"
-                  class="px-2 py-1 text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 transition-all"
-                >
-                  {{ $t('common.history.useRight') }}
-                </button>
-              </template>
-              <span v-else class="text-xs text-primary font-semibold opacity-0 group-hover:opacity-100 transition-all flex items-center space-x-1">
-                <span>{{ $t('common.history.use') }}</span>
-                <ChevronRight class="w-4 h-4" />
-              </span>
             </div>
           </div>
         </div>
@@ -126,11 +131,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
-import { History, X, Trash2, Clock, Search, Calendar, ChevronRight, Eye, MousePointer2, Copy } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+import { History, X, Trash2, Clock, Search, ChevronRight, Eye, MousePointer2, Copy } from 'lucide-vue-next'
 import * as monaco from 'monaco-editor'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
+import { useThemeStore } from '../stores/theme'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
 
 dayjs.extend(relativeTime)
 
@@ -147,6 +155,9 @@ const props = defineProps<{
 }>()
 
 defineEmits(['close', 'select', 'delete', 'clear'])
+
+const themeStore = useThemeStore()
+const { locale } = useI18n()
 
 const copyToClipboard = async (text: string) => {
   try {
@@ -249,6 +260,9 @@ const filteredHistory = computed(() => {
 })
 
 const formatDate = (ts: number) => {
+  // Set dayjs locale based on current app language
+  const lang = locale.value === 'zh' ? 'zh-cn' : 'en'
+  dayjs.locale(lang)
   return dayjs(ts).format('YYYY-MM-DD HH:mm:ss') + ' (' + dayjs(ts).fromNow() + ')'
 }
 </script>

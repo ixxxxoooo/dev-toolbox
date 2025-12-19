@@ -16,6 +16,12 @@ const localeStore = useLocaleStore()
 onMounted(() => {
   // 设置 HTML lang 属性
   document.documentElement.setAttribute('lang', localeStore.currentLocale)
+
+  window.addEventListener('app-lang-change', (e: any) => {
+    const lang = e.detail
+    localeStore.setLocale(lang)
+    document.documentElement.setAttribute('lang', lang)
+  })
 })
 </script>
 

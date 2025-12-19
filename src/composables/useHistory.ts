@@ -37,10 +37,19 @@ export function useHistory(key: string, maxItems: number = 50) {
         saveToStorage(`history-${key}`, history.value)
     }
 
+    const updateMaxItems = (newLimit: number) => {
+        maxItems = newLimit
+        if (history.value.length > maxItems) {
+            history.value = history.value.slice(0, maxItems)
+            saveToStorage(`history-${key}`, history.value)
+        }
+    }
+
     return {
         history,
         addHistory,
         deleteHistory,
-        clearHistory
+        clearHistory,
+        updateMaxItems
     }
 }
