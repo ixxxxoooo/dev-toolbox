@@ -5,7 +5,10 @@
     :style="{ width: sidebarWidth + 'px' }"
   >
     <!-- Header -->
-    <div class="h-[49px] px-4 border-b border-border flex items-center shrink-0 overflow-hidden">
+    <div 
+      class="h-[49px] border-b border-border flex items-center shrink-0 overflow-hidden transition-all duration-300"
+      :class="isCollapsed ? 'px-[22px]' : 'px-4'"
+    >
       <div 
         class="flex items-center space-x-3 cursor-pointer group/sidebar-toggle"
         @click="toggleCollapse"
@@ -37,12 +40,13 @@
         v-for="route in routes"
         :key="route.name"
         :to="{ name: route.name }"
-        class="flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all duration-300 group relative overflow-hidden"
-        :class="[
-          $route.name === route.name
-            ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-        ]"
+        class="flex items-center h-10 rounded-lg text-sm font-medium transition-all duration-300 group relative overflow-hidden"
+          :class="[
+            $route.name === route.name
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+            'px-3'
+          ]"
         :title="isCollapsed ? $t(route.meta?.title as string) : ''"
       >
         <div class="w-6 h-6 shrink-0 flex items-center justify-center transition-all duration-300" :class="isCollapsed ? 'mr-0' : 'mr-3'">

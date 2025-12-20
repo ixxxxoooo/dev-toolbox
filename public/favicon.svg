@@ -1,53 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <defs>
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  
-  <!-- 背景 -->
-  <rect width="128" height="128" rx="24" fill="url(#gradient)" />
-  
-  <!-- 工具箱 -->
-  <g transform="translate(64, 64)">
-    <!-- 底部 -->
-    <rect x="-30" y="5" width="60" height="25" rx="3" fill="#ffffff" opacity="0.95"/>
-    
-    <!-- 顶部 -->
-    <rect x="-30" y="-15" width="60" height="18" rx="3" fill="#ffffff" opacity="0.95"/>
-    
-    <!-- 手柄 -->
-    <path d="M -20 -15 Q -20 -25, -10 -25 L 10 -25 Q 20 -25, 20 -15" 
-          fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.95"/>
-    
-    <!-- 工具 - 扳手 -->
-    <g transform="translate(-15, 15)">
-      <path d="M 0 -4 L 0 -6 L 2.5 -6 L 2.5 -4 L 5 -1 L 5 4 L 2.5 4 L 0 1 Z" 
-            fill="#3b82f6" opacity="0.8"/>
-      <circle cx="1.2" cy="-5" r="2" fill="#3b82f6" opacity="0.8"/>
-    </g>
-    
-    <!-- 工具 - 螺丝刀 -->
-    <g transform="translate(0, 15)">
-      <rect x="-0.8" y="-6" width="1.6" height="8" fill="#8b5cf6" opacity="0.8"/>
-      <rect x="-1.2" y="2" width="2.4" height="5" fill="#8b5cf6" opacity="0.8"/>
-      <polygon points="-1.2,7 0,9 1.2,7" fill="#8b5cf6" opacity="0.8"/>
-    </g>
-    
-    <!-- 工具 - 齿轮 -->
-    <g transform="translate(15, 15)">
-      <circle cx="0" cy="0" r="3" fill="none" stroke="#6366f1" stroke-width="1" opacity="0.8"/>
-      <circle cx="0" cy="0" r="1.2" fill="#6366f1" opacity="0.8"/>
-      <rect x="-0.5" y="-4.5" width="1" height="2" fill="#6366f1" opacity="0.8"/>
-      <rect x="-0.5" y="2.5" width="1" height="2" fill="#6366f1" opacity="0.8"/>
-      <rect x="-4.5" y="-0.5" width="2" height="1" fill="#6366f1" opacity="0.8"/>
-      <rect x="2.5" y="-0.5" width="2" height="1" fill="#6366f1" opacity="0.8"/>
-    </g>
-    
-    <!-- 代码符号 -->
-    <text x="0" y="42" font-family="monospace" font-size="16" font-weight="bold" 
-          fill="#ffffff" text-anchor="middle" opacity="0.9">&lt;/&gt;</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#3b82f6" />
+  <path d="M53.3 106.7l21.4-85.4M96 42.7l21.3 21.3-21.3 21.3M32 85.3L10.7 64 32 42.7" 
+        fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
-
