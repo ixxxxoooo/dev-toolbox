@@ -5,9 +5,9 @@
     :style="{ width: sidebarWidth + 'px' }"
   >
     <!-- Header -->
-    <div class="h-[49px] px-4 border-b border-border flex items-center justify-between shrink-0 overflow-hidden">
+    <div class="h-[49px] px-4 border-b border-border flex items-center shrink-0 overflow-hidden">
       <div 
-        class="flex items-center space-x-3 overflow-hidden min-w-0 cursor-pointer group/sidebar-toggle"
+        class="flex items-center space-x-3 cursor-pointer group/sidebar-toggle"
         @click="toggleCollapse"
         :title="isCollapsed ? 'Expand' : 'Collapse'"
       >
@@ -23,8 +23,8 @@
           </svg>
         </div>
         <span
-          class="font-bold text-lg tracking-tight whitespace-nowrap transition-opacity duration-300"
-          :class="{ 'opacity-0 w-0': isCollapsed, 'opacity-100': !isCollapsed }"
+          class="font-bold text-lg tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300"
+          :class="isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'"
         >
           Dev Toolbox
         </span>
@@ -37,26 +37,24 @@
         v-for="route in routes"
         :key="route.name"
         :to="{ name: route.name }"
-        class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+        class="flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all duration-300 group relative overflow-hidden"
         :class="[
           $route.name === route.name
             ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-          isCollapsed ? 'justify-center' : ''
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         ]"
         :title="isCollapsed ? $t(route.meta?.title as string) : ''"
       >
-        <component
-          :is="getIcon(route.meta?.icon as string)"
-          class="w-5 h-5 shrink-0 transition-colors"
-          :class="[
-             $route.name === route.name ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
-             isCollapsed ? 'mr-0' : 'mr-3'
-          ]"
-        />
+        <div class="w-6 h-6 shrink-0 flex items-center justify-center transition-all duration-300" :class="isCollapsed ? 'mr-0' : 'mr-3'">
+          <component
+            :is="getIcon(route.meta?.icon as string)"
+            class="w-5 h-5 transition-colors"
+            :class="$route.name === route.name ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
+          />
+        </div>
         <span
           class="whitespace-nowrap transition-all duration-300 overflow-hidden"
-          :class="{ 'w-0 opacity-0': isCollapsed, 'w-auto opacity-100': !isCollapsed }"
+          :class="isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'"
         >
           {{ $t(route.meta?.title as string) }}
         </span>
@@ -65,7 +63,7 @@
 
     <!-- Footer -->
     <div class="flex items-center h-[49px] px-3 border-t border-border shrink-0">
-      <SettingsPanel :collapsed="isCollapsed" />
+      <SettingsPanel :collapsed="isCollapsed" class="w-full" />
     </div>
 
     <!-- Resize Handle -->

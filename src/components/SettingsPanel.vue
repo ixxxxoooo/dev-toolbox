@@ -1,14 +1,26 @@
 <template>
-  <div class="relative">
+  <div class="relative w-full">
     <!-- Trigger Button -->
     <button
       @click.stop="isOpen = !isOpen"
-      class="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-all duration-200 group/btn w-full"
-      :class="isOpen ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+      class="flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all duration-300 group/btn w-full overflow-hidden"
+      :class="[
+        isOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+      ]"
       :title="$t('common.settings.title')"
     >
-      <Settings class="w-4 h-4 transition-transform duration-300" :class="{ 'rotate-90': isOpen }" />
-      <span v-if="!collapsed" class="font-medium">{{ $t('common.settings.title') }}</span>
+      <div class="w-6 h-6 shrink-0 flex items-center justify-center transition-all duration-300" :class="collapsed ? 'mr-0' : 'mr-3'">
+        <Settings 
+          class="w-5 h-5 transition-transform duration-300 shrink-0" 
+          :class="{ 'rotate-90': isOpen }" 
+        />
+      </div>
+      <span 
+        class="whitespace-nowrap transition-all duration-300 overflow-hidden"
+        :class="collapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'"
+      >
+        {{ $t('common.settings.title') }}
+      </span>
     </button>
 
     <!-- Settings Modal (Centered Overlay) -->
