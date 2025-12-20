@@ -135,7 +135,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, Binary, Upload, Download, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 
@@ -238,6 +238,7 @@ const initEditors = async () => {
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     inputThemeWatcher = watchThemeChange(inputEditor);
+    registerGlobalShortcuts(inputEditor);
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
@@ -247,6 +248,7 @@ const initEditors = async () => {
     });
     outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     outputThemeWatcher = watchThemeChange(outputEditor);
+    registerGlobalShortcuts(outputEditor);
   }
   processText();
 };

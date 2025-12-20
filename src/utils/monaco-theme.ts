@@ -1,6 +1,8 @@
 import { watch, type WatchStopHandle } from 'vue'
 import { useThemeStore } from '../stores/theme'
 import { defineCustomThemes } from './monaco-themes'
+import * as monaco from 'monaco-editor'
+import { useCommandPaletteStore } from '../stores/commandPalette'
 
 // Ensure custom themes are defined once
 let themesDefined = false
@@ -77,4 +79,33 @@ export function watchThemeChangeForDiffEditor(diffEditor: any): WatchStopHandle 
       updateTheme()
     }
   )
+}
+
+/**
+ * 为 Monaco Editor 实例注册全局快捷键
+ * @param editor Monaco Editor 实例
+ */
+export function registerGlobalShortcuts(editor: any) {
+  const commandPaletteStore = useCommandPaletteStore()
+
+  if (editor && typeof editor.addCommand === 'function') {
+    // 注册 Cmd+K / Ctrl+K 打开命令面板
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+      commandPaletteStore.toggle()
+    })
+  }
+}
+
+/**
+ * 为 Diff Editor 注册全局快捷键
+ * @param diffEditor Monaco Diff Editor 实例
+ */
+export function registerGlobalShortcutsForDiffEditor(diffEditor: any) {
+  if (!diffEditor) return
+
+  const originalEditor = diffEditor.getOriginalEditor()
+  const modifiedEditor = diffEditor.getModifiedEditor()
+
+  registerGlobalShortcuts(originalEditor)
+  registerGlobalShortcuts(modifiedEditor)
 }

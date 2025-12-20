@@ -49,7 +49,8 @@ export default {
       regenerate: '重新生成',
       process: '处理',
       compare: '对比',
-      history: '历史记录'
+      history: '历史记录',
+      select: '进入'
     },
 
     // 历史记录
@@ -83,7 +84,9 @@ export default {
       treeView: '树状视图',
       indent: '缩进',
       spaces2: '2空格',
-      spaces4: '4空格'
+      spaces4: '4空格',
+      navigate: '导航',
+      toolCount: '个工具'
     },
 
     // 占位符
@@ -102,7 +105,9 @@ export default {
       minifyFailed: '压缩失败',
       unrecognizedDateFormat: '无法识别的日期格式',
       copied: '已复制到剪贴板',
-      pasted: '已从剪贴板粘贴'
+      pasted: '已从剪贴板粘贴',
+      searchPlaceholder: '搜索工具... (↑↓ 选择, Enter 进入)',
+      noResults: '未找到符合条件的工具'
     }
   },
 

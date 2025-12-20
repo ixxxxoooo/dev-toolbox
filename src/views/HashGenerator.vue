@@ -103,7 +103,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, Hash, ClipboardPaste, Trash2, Copy, X } from 'lucide-vue-next';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 
 type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512';
 
@@ -167,6 +167,7 @@ const initEditor = async () => {
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     themeWatcher = watchThemeChange(editor);
+    registerGlobalShortcuts(editor);
   }
   generateHashes();
 };

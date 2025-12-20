@@ -91,7 +91,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, FileText, ClipboardPaste, Trash2, X } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 
 const editorRef = ref<HTMLElement | null>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -138,6 +138,7 @@ const initEditor = async () => {
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     themeWatcher = watchThemeChange(editor);
+    registerGlobalShortcuts(editor);
   }
   analyzeText();
 };

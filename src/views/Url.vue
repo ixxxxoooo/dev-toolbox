@@ -140,7 +140,7 @@ import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, 
 import CustomSelect from '../components/CustomSelect.vue';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useI18n } from 'vue-i18n';
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 
 const inputEditorRef = ref<HTMLElement | null>(null);
@@ -244,6 +244,7 @@ const initEditors = async () => {
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     inputThemeWatcher = watchThemeChange(inputEditor);
+    registerGlobalShortcuts(inputEditor);
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
@@ -253,6 +254,7 @@ const initEditors = async () => {
     });
     outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     outputThemeWatcher = watchThemeChange(outputEditor);
+    registerGlobalShortcuts(outputEditor);
   }
   processText();
 };

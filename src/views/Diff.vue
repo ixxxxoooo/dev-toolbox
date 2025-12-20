@@ -168,7 +168,7 @@
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChangeForDiffEditor } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useHistory } from '../composables/useHistory';
@@ -243,6 +243,7 @@ const initMonacoDiffEditor = async () => {
   }, 100);
 
   themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
+  registerGlobalShortcutsForDiffEditor(diffEditor);
 
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();

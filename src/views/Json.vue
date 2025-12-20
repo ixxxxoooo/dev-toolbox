@@ -220,7 +220,7 @@ import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
 import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History, Map } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme';
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
 import { useThemeStore } from '../stores/theme';
@@ -467,6 +467,7 @@ const initEditors = async () => {
     });
 
     themeWatcher = watchThemeChange(editor);
+    registerGlobalShortcuts(editor);
   }
 };
 

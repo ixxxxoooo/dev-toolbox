@@ -166,7 +166,7 @@ import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
 import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History, Map } from 'lucide-vue-next'
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
 import { useThemeStore } from '../stores/theme'
@@ -396,6 +396,7 @@ const initEditor = async () => {
     sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo)
     sqlEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
     themeWatcher = watchThemeChange(sqlEditor)
+    registerGlobalShortcuts(sqlEditor)
   }
 }
 

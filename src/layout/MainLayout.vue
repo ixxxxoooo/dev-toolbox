@@ -8,11 +8,13 @@
         </transition>
       </router-view>
     </main>
+    <CommandPalette />
   </div>
 </template>
 
 <script setup lang="ts">
 import Sidebar from './Sidebar.vue'
+import CommandPalette from '../components/CommandPalette.vue'
 </script>
 
 <style scoped>

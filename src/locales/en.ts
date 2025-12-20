@@ -49,7 +49,8 @@ export default {
       regenerate: 'Regenerate',
       process: 'Process',
       compare: 'Compare',
-      history: 'History'
+      history: 'History',
+      select: 'Select'
     },
 
     // History
@@ -83,7 +84,9 @@ export default {
       treeView: 'Tree View',
       indent: 'Indent',
       spaces2: '2 Spaces',
-      spaces4: '4 Spaces'
+      spaces4: '4 Spaces',
+      navigate: 'Navigate',
+      toolCount: 'tools found'
     },
 
     // Placeholders
@@ -102,7 +105,9 @@ export default {
       minifyFailed: 'Minify failed',
       unrecognizedDateFormat: 'Unrecognized date format',
       copied: 'Copied to clipboard',
-      pasted: 'Pasted from clipboard'
+      pasted: 'Pasted from clipboard',
+      searchPlaceholder: 'Search tools... (↑↓ to navigate, Enter to select)',
+      noResults: 'No tools found matching your search.'
     }
   },
 
