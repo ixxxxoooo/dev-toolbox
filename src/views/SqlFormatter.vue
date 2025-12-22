@@ -95,11 +95,11 @@
       <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
         <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
           <div class="flex items-center space-x-1">
-            <button @click="formatSQL(false)" class="px-2 py-1 text-[10px] font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">{{ $t('common.labels.format') }}</button>
-            <button @click="minifySQL()" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('common.labels.minify') }}</button>
-            <button @click="escapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.escape') }}</button>
-            <button @click="unescapeSQL" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unescape') }}</button>
-            <button @click="decodeUnicode" class="px-2 py-1 text-[10px] font-medium bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">{{ $t('tools.sql.unicode') }}</button>
+            <button @click="formatSQL(false)" :class="['px-2 py-1 text-[10px] font-medium rounded transition-colors', activeAction === 'format' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80']">{{ $t('common.labels.format') }}</button>
+            <button @click="minifySQL()" :class="['px-2 py-1 text-[10px] font-medium rounded transition-colors', activeAction === 'minify' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80']">{{ $t('common.labels.minify') }}</button>
+            <button @click="escapeSQL" :class="['px-2 py-1 text-[10px] font-medium rounded transition-colors', activeAction === 'escape' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80']">{{ $t('tools.sql.escape') }}</button>
+            <button @click="unescapeSQL" :class="['px-2 py-1 text-[10px] font-medium rounded transition-colors', activeAction === 'unescape' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80']">{{ $t('tools.sql.unescape') }}</button>
+            <button @click="decodeUnicode" :class="['px-2 py-1 text-[10px] font-medium rounded transition-colors', activeAction === 'unicode' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80']">{{ $t('tools.sql.unicode') }}</button>
             <div class="h-4 w-px bg-border mx-1"></div>
             <button @click="undo" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.undo') + ' (Ctrl+Z)'">
               <Undo2 class="w-3.5 h-3.5" />
@@ -230,6 +230,10 @@ const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false))
 const errorMessage = ref('')
 
+// 追踪当前激活的操作按钮
+type ActionType = 'format' | 'minify' | 'escape' | 'unescape' | 'unicode' | null
+const activeAction = ref<ActionType>('format')
+
 const getSelectedTextOrAll = () => {
   if (!sqlEditor) return { text: sqlText.value, isSelection: false, selection: null }
   const selection = sqlEditor.getSelection()
@@ -258,8 +262,8 @@ const showError = (error: any, prefix = 'Error') => {
   console.error(prefix, error)
   const message = error instanceof Error ? error.message : String(error)
   // Truncate error message if it's too long
-  errorMessage.value = message.length > 150 
-    ? message.substring(0, 150) + '...' 
+  errorMessage.value = message.length > 150
+    ? message.substring(0, 150) + '...'
     : message
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
@@ -271,6 +275,7 @@ const useHistoryItem = (content: string) => {
 }
 
 const formatSQL = (isAuto = false) => {
+  if (!isAuto) activeAction.value = 'format'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   try {
@@ -283,7 +288,7 @@ const formatSQL = (isAuto = false) => {
       dataTypeCase: 'upper'
     })
     replaceTextInEditor(formatted, isSelection, selection)
-    
+
     // Add to history if it's not an automatic format or if the content has changed significantly
     if (!isAuto && !isSelection) {
       addHistory(text)
@@ -299,6 +304,7 @@ const splitSQLStatements = (text: string) => {
 }
 
 const minifySQL = () => {
+  activeAction.value = 'minify'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   try {
@@ -325,6 +331,7 @@ const minifySQL = () => {
 }
 
 const escapeSQL = () => {
+  activeAction.value = 'escape'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   const escaped = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
@@ -332,6 +339,7 @@ const escapeSQL = () => {
 }
 
 const unescapeSQL = () => {
+  activeAction.value = 'unescape'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   const unescaped = text.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\')
@@ -339,6 +347,7 @@ const unescapeSQL = () => {
 }
 
 const decodeUnicode = () => {
+  activeAction.value = 'unicode'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
   try {
