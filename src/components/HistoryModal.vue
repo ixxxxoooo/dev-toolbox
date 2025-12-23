@@ -175,6 +175,10 @@ let themeWatcher: (() => void) | null = null
 
 const detectLanguage = (text: string | null) => {
   if (!text) return 'text'
+  
+  // 如果指定了类型，直接使用
+  if (props.type === 'mermaid') return 'mermaid'
+  
   const trimmed = text.trim()
   if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
     try {

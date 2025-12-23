@@ -74,6 +74,14 @@ export const modules: ToolModule[] = [
     route: '/sql-formatter'
   },
   {
+    id: 'mermaid',
+    name: 'tools.mermaid.name',
+    description: 'tools.mermaid.description',
+    icon: 'share-2',
+    category: 'categories.data',
+    route: '/mermaid'
+  },
+  {
     id: 'password-generator',
     name: 'tools.password.name',
     description: 'tools.password.description',

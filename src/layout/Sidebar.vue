@@ -101,7 +101,8 @@ import {
   FileCode,
   Image,
   Eraser,
-  Languages
+  Languages,
+  Share2
 } from 'lucide-vue-next'
 import SettingsPanel from '../components/SettingsPanel.vue'
 
@@ -111,8 +112,9 @@ const router = useRouter()
 const MIN_WIDTH = 240
 const MAX_WIDTH = 480
 const COLLAPSED_WIDTH = 80
-const sidebarWidth = ref(260)
 const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
+const savedWidth = parseInt(localStorage.getItem('sidebarWidth') || '260')
+const sidebarWidth = ref(isCollapsed.value ? COLLAPSED_WIDTH : Math.max(MIN_WIDTH, Math.min(savedWidth, MAX_WIDTH)))
 const isResizing = ref(false)
 
 // Routes
@@ -140,7 +142,8 @@ const icons: Record<string, any> = {
   FileCode,
   Image,
   Eraser,
-  Languages
+  Languages,
+  Share2
 }
 
 const getIcon = (name: string) => {

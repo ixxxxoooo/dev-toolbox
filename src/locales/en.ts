@@ -491,6 +491,36 @@ export default {
       outputPlaceholder: 'Conversion result will appear here...',
       swap: 'Swap input/output',
       features: 'Features'
+    },
+
+    // Mermaid Diagram
+    mermaid: {
+      name: 'Mermaid Diagram',
+      description: 'Mermaid code editor with live preview',
+      downloadPng: 'Download PNG',
+      downloadSvg: 'Download SVG',
+      helpDrag: 'Drag to pan the diagram',
+      helpZoom: 'Scroll to zoom in/out',
+      theme: 'Theme',
+      look: 'Look',
+      curve: 'Curve',
+      themes: {
+        default: 'Default',
+        dark: 'Dark',
+        forest: 'Forest',
+        neutral: 'Neutral',
+        base: 'Base'
+      },
+      looks: {
+        classic: 'Classic',
+        handDrawn: 'Hand Drawn'
+      },
+      curves: {
+        linear: 'Linear',
+        basis: 'Basis',
+        cardinal: 'Cardinal',
+        step: 'Step'
+      }
     }
   },
 

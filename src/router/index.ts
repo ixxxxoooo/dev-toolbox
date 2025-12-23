@@ -26,6 +26,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'tools.sql.name', icon: 'Database' },
       },
       {
+        path: 'mermaid',
+        name: 'Mermaid',
+        component: () => import('../views/Mermaid.vue'),
+        meta: { title: 'tools.mermaid.name', icon: 'Share2' },
+      },
+      {
         path: 'timestamp',
         name: 'Timestamp',
         component: () => import('../views/Timestamp.vue'),

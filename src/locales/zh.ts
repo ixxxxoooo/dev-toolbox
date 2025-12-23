@@ -491,6 +491,36 @@ export default {
       outputPlaceholder: '转换结果将显示在这里...',
       swap: '交换输入输出',
       features: '功能特性'
+    },
+
+    // Mermaid 图表
+    mermaid: {
+      name: 'Mermaid 图表',
+      description: 'Mermaid 代码编辑与实时预览',
+      downloadPng: '下载 PNG',
+      downloadSvg: '下载 SVG',
+      helpDrag: '拖动鼠标可平移图表',
+      helpZoom: '滚轮可缩放图表',
+      theme: '主题',
+      look: '外观',
+      curve: '曲线',
+      themes: {
+        default: '默认',
+        dark: '深色',
+        forest: '森林',
+        neutral: '中性',
+        base: '基础'
+      },
+      looks: {
+        classic: '经典',
+        handDrawn: '手绘'
+      },
+      curves: {
+        linear: '直线',
+        basis: '平滑',
+        cardinal: '基数',
+        step: '阶梯'
+      }
     }
   },
 
