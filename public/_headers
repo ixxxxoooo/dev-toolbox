@@ -1,41 +1,51 @@
 # Cloudflare Pages 缓存配置
+# 参考: https://developers.cloudflare.com/pages/configuration/headers/
 
-# 静态资源 - 长期缓存
+# 所有静态资源 - 长期缓存 (1年)
+# /assets/ 目录包含所有带 hash 的 JS、CSS、字体等文件
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# JS 文件
-/*.js
+# 根目录的 Workbox 文件 - 长期缓存
+/workbox-*.js
   Cache-Control: public, max-age=31536000, immutable
 
-# CSS 文件
-/*.css
+# PWA 图标
+/pwa-*.png
   Cache-Control: public, max-age=31536000, immutable
 
-# 字体文件
-/*.woff
+# 其他图片资源
+/favicon.ico
   Cache-Control: public, max-age=31536000, immutable
-/*.woff2
+/favicon.svg
   Cache-Control: public, max-age=31536000, immutable
-
-# 图片
-/*.png
+/logo.svg
   Cache-Control: public, max-age=31536000, immutable
-/*.svg
+/image.png
   Cache-Control: public, max-age=31536000, immutable
-/*.ico
+/json.png
   Cache-Control: public, max-age=31536000, immutable
 
-# Service Worker - 不缓存
+# Service Worker - 必须不缓存，确保及时更新
 /sw.js
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
 
-# Manifest - 不缓存
+# registerSW.js - 必须不缓存
+/registerSW.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# PWA Manifest - 短期缓存以便及时更新
 /manifest.webmanifest
   Cache-Control: public, max-age=0, must-revalidate
 
-# HTML - 短期缓存
+# HTML 入口页面 - 不缓存，始终获取最新版本
 /
-  Cache-Control: public, max-age=0, must-revalidate
-/*.html
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 所有页面通用安全头
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
