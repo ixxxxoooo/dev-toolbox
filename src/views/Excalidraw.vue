@@ -50,6 +50,7 @@ import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
 import { useI18n } from 'vue-i18n';
 
 const STORAGE_KEY = 'excalidraw-data';
+const FILES_KEY = 'excalidraw-files';
 const showHelp = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
 const themeStore = useThemeStore();
@@ -61,7 +62,12 @@ const renderExcalidraw = () => {
   if (!containerRef.value || !root) return;
   
   const savedData = loadFromStorage(STORAGE_KEY, null);
-  const initialData = savedData ? { elements: savedData.elements, appState: { ...savedData.appState, collaborators: [] } } : undefined;
+  const savedFiles = loadFromStorage(FILES_KEY, {});
+  const initialData = savedData ? { 
+    elements: savedData.elements, 
+    appState: { ...savedData.appState, collaborators: [] },
+    files: savedFiles
+  } : undefined;
   
   root.render(
     React.createElement(Excalidraw, {
@@ -78,8 +84,11 @@ const renderExcalidraw = () => {
         tools: { image: true },
         welcomeScreen: false,
       },
-      onChange: (elements: any, appState: any) => {
+      onChange: (elements: any, appState: any, files: any) => {
         saveToStorage(STORAGE_KEY, { elements, appState: { ...appState, collaborators: undefined } });
+        if (files && Object.keys(files).length > 0) {
+          saveToStorage(FILES_KEY, files);
+        }
       }
     })
   );
