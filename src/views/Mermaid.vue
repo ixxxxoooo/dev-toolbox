@@ -83,6 +83,15 @@
             <button @click="zoomOut" class="p-1 hover:bg-muted rounded" title="Zoom Out">
               <ZoomOut class="w-4 h-4" />
             </button>
+            <input 
+              type="range" 
+              :value="currentScale * 100" 
+              @input="onScaleInput" 
+              min="10" 
+              max="1000" 
+              step="10"
+              class="w-20 h-1 accent-primary cursor-pointer"
+            />
             <span class="text-xs w-12 text-center">{{ Math.round(currentScale * 100) }}%</span>
             <button @click="zoomIn" class="p-1 hover:bg-muted rounded" title="Zoom In">
               <ZoomIn class="w-4 h-4" />
@@ -467,6 +476,15 @@ const zoomOut = () => {
   }
 };
 const resetZoom = () => { fitToCenter(); };
+
+const onScaleInput = (e: Event) => {
+  const value = (e.target as HTMLInputElement).valueAsNumber / 100;
+  if (isFullscreen.value) {
+    fullscreenScale.value = value;
+  } else {
+    scale.value = value;
+  }
+};
 
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value;
