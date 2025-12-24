@@ -27,6 +27,10 @@
           <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.curve') }}:</span>
           <CustomSelect v-model="mermaidCurve" :options="curveOptions" />
         </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.background') }}:</span>
+          <CustomSelect v-model="exportBg" :options="bgOptions" />
+        </div>
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
         <button @click="showHistory = true" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1">
           <History class="w-4 h-4" />
@@ -201,6 +205,34 @@ const THEME_STORAGE_KEY = 'mermaid-theme';
 const LOOK_STORAGE_KEY = 'mermaid-look';
 const CURVE_STORAGE_KEY = 'mermaid-curve';
 
+// 自定义主题配色
+const customThemes: Record<string, object> = {
+  github: {
+    primaryColor: '#0969da',
+    primaryTextColor: '#fff',
+    primaryBorderColor: '#0550ae',
+    lineColor: '#57606a',
+    secondaryColor: '#ddf4ff',
+    tertiaryColor: '#f6f8fa',
+  },
+  dracula: {
+    primaryColor: '#bd93f9',
+    primaryTextColor: '#f8f8f2',
+    primaryBorderColor: '#6272a4',
+    lineColor: '#f8f8f2',
+    secondaryColor: '#44475a',
+    tertiaryColor: '#282a36',
+  },
+  nord: {
+    primaryColor: '#5e81ac',
+    primaryTextColor: '#eceff4',
+    primaryBorderColor: '#4c566a',
+    lineColor: '#d8dee9',
+    secondaryColor: '#81a1c1',
+    tertiaryColor: '#3b4252',
+  },
+};
+
 // Mermaid 主题选项
 const themeOptions = computed(() => [
   { label: t('tools.mermaid.themes.default'), value: 'default' },
@@ -208,6 +240,9 @@ const themeOptions = computed(() => [
   { label: t('tools.mermaid.themes.forest'), value: 'forest' },
   { label: t('tools.mermaid.themes.neutral'), value: 'neutral' },
   { label: t('tools.mermaid.themes.base'), value: 'base' },
+  { label: 'GitHub', value: 'github' },
+  { label: 'Dracula', value: 'dracula' },
+  { label: 'Nord', value: 'nord' },
 ]);
 
 // Mermaid 外观选项
@@ -222,6 +257,16 @@ const curveOptions = computed(() => [
   { label: t('tools.mermaid.curves.basis'), value: 'basis' },
   { label: t('tools.mermaid.curves.cardinal'), value: 'cardinal' },
   { label: t('tools.mermaid.curves.step'), value: 'step' },
+  { label: t('tools.mermaid.curves.stepBefore'), value: 'stepBefore' },
+  { label: t('tools.mermaid.curves.stepAfter'), value: 'stepAfter' },
+  { label: t('tools.mermaid.curves.natural'), value: 'natural' },
+  { label: t('tools.mermaid.curves.monotoneX'), value: 'monotoneX' },
+]);
+
+// 背景色选项
+const bgOptions = computed(() => [
+  { label: t('tools.mermaid.backgrounds.white'), value: 'white' },
+  { label: t('tools.mermaid.backgrounds.transparent'), value: 'transparent' },
 ]);
 
 const themeStore = useThemeStore();
@@ -235,6 +280,7 @@ const code = ref(loadFromStorage(STORAGE_KEY, DEFAULT_CODE));
 const mermaidTheme = ref(loadFromStorage(THEME_STORAGE_KEY, 'default'));
 const mermaidLook = ref(loadFromStorage(LOOK_STORAGE_KEY, 'classic'));
 const mermaidCurve = ref(loadFromStorage(CURVE_STORAGE_KEY, 'linear'));
+const exportBg = ref(loadFromStorage('mermaid-bg', 'white'));
 const svgOutput = ref('');
 const error = ref('');
 const showHelp = ref(false);
@@ -294,9 +340,11 @@ const renderMermaid = async (resetView = false) => {
   }
   try {
     // 每次渲染前重新初始化主题和外观
+    const isCustomTheme = mermaidTheme.value in customThemes;
     mermaid.initialize({ 
       startOnLoad: false, 
-      theme: mermaidTheme.value as any, 
+      theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
+      themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
       look: mermaidLook.value as any,
       flowchart: { curve: mermaidCurve.value as any },
       securityLevel: 'loose' 
@@ -375,6 +423,11 @@ watch(mermaidLook, (newLook) => {
 watch(mermaidCurve, (newCurve) => {
   saveToStorage(CURVE_STORAGE_KEY, newCurve);
   renderMermaid();
+});
+
+// 监听背景色变化
+watch(exportBg, (newBg) => {
+  saveToStorage('mermaid-bg', newBg);
 });
 
 // 监听左侧宽度变化，调整编辑器大小
@@ -527,8 +580,10 @@ const downloadPng = async () => {
   img.onload = () => {
     canvas.width = width * exportScale;
     canvas.height = height * exportScale;
-    ctx!.fillStyle = '#ffffff';
-    ctx!.fillRect(0, 0, canvas.width, canvas.height);
+    if (exportBg.value === 'white') {
+      ctx!.fillStyle = '#ffffff';
+      ctx!.fillRect(0, 0, canvas.width, canvas.height);
+    }
     ctx!.scale(exportScale, exportScale);
     ctx!.drawImage(img, 0, 0);
     const a = document.createElement('a');

@@ -519,8 +519,17 @@ export default {
         linear: '直线',
         basis: '平滑',
         cardinal: '基数',
-        step: '阶梯'
-      }
+        step: '阶梯',
+        stepBefore: '先垂直阶梯',
+        stepAfter: '先水平阶梯',
+        natural: '自然样条',
+        monotoneX: '单调曲线'
+      },
+      backgrounds: {
+        white: '白色',
+        transparent: '透明'
+      },
+      background: '背景'
     }
   },
 

@@ -519,8 +519,17 @@ export default {
         linear: 'Linear',
         basis: 'Basis',
         cardinal: 'Cardinal',
-        step: 'Step'
-      }
+        step: 'Step',
+        stepBefore: 'Step Before',
+        stepAfter: 'Step After',
+        natural: 'Natural',
+        monotoneX: 'Monotone X'
+      },
+      backgrounds: {
+        white: 'White',
+        transparent: 'Transparent'
+      },
+      background: 'Background'
     }
   },
 
