@@ -556,42 +556,67 @@ const downloadSvg = () => {
 };
 
 const downloadPng = async () => {
-  if (!svgOutput.value) return;
-  const svg = svgContainer.value?.querySelector('svg');
-  if (!svg) return;
+  if (!code.value.trim()) return;
   
-  const clonedSvg = svg.cloneNode(true) as SVGElement;
-  // 获取原始尺寸（不受缩放影响）
-  const bbox = svg.getBBox();
-  const width = Math.ceil(bbox.width + bbox.x * 2);
-  const height = Math.ceil(bbox.height + bbox.y * 2);
-  clonedSvg.setAttribute('width', String(width));
-  clonedSvg.setAttribute('height', String(height));
-  
-  const svgData = new XMLSerializer().serializeToString(clonedSvg);
-  const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
-  const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
-  
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  const exportScale = 2; // 2x for Retina
-  
-  img.onload = () => {
-    canvas.width = width * exportScale;
-    canvas.height = height * exportScale;
-    if (exportBg.value === 'white') {
-      ctx!.fillStyle = '#ffffff';
-      ctx!.fillRect(0, 0, canvas.width, canvas.height);
+  try {
+    // 重新渲染一个不使用 foreignObject 的版本
+    const isCustomTheme = mermaidTheme.value in customThemes;
+    mermaid.initialize({ 
+      startOnLoad: false, 
+      theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
+      themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
+      look: mermaidLook.value as any,
+      flowchart: { curve: mermaidCurve.value as any, htmlLabels: false },
+      securityLevel: 'loose'
+    });
+    const { svg: pngSvg } = await mermaid.render(`mermaid-png-${++renderId}`, code.value);
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(pngSvg, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+    if (!svg) return;
+    
+    let width = parseFloat(svg.getAttribute('width') || '0');
+    let height = parseFloat(svg.getAttribute('height') || '0');
+    if (!width || !height) {
+      const viewBox = svg.getAttribute('viewBox')?.split(' ').map(Number);
+      if (viewBox && viewBox.length === 4) {
+        width = viewBox[2];
+        height = viewBox[3];
+      }
     }
-    ctx!.scale(exportScale, exportScale);
-    ctx!.drawImage(img, 0, 0);
-    const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png', 1.0);
-    a.download = 'mermaid-diagram.png';
-    a.click();
-  };
-  img.src = dataUrl;
+    const padding = 20;
+    width += padding * 2;
+    height += padding * 2;
+    svg.setAttribute('width', String(width));
+    svg.setAttribute('height', String(height));
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const exportScale = 2;
+    
+    img.onload = () => {
+      canvas.width = width * exportScale;
+      canvas.height = height * exportScale;
+      if (exportBg.value === 'white') {
+        ctx!.fillStyle = '#ffffff';
+        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx!.scale(exportScale, exportScale);
+      ctx!.drawImage(img, 0, 0);
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png', 1.0);
+      a.download = 'mermaid-diagram.png';
+      a.click();
+    };
+    img.src = dataUrl;
+  } catch (e) {
+    console.error('PNG export failed:', e);
+  }
 };
 
 onUnmounted(() => {
