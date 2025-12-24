@@ -113,7 +113,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'markdown',
         name: 'Markdown',
         component: () => import('../views/Markdown.vue'),
-        meta: { title: 'tools.markdown.name', icon: 'FileCode' },
+        meta: { title: 'tools.markdown.name', icon: 'NotebookText' },
       },
       {
         path: 'image-tools',

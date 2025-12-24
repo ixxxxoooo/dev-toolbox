@@ -5,7 +5,7 @@
       <div class="flex items-center space-x-4">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <FileText class="w-5 h-5" />
+          <NotebookText class="w-5 h-5" />
           <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.markdown.name') }}</span>
         </div>
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { FileText, HelpCircle, X } from 'lucide-vue-next';
+import { NotebookText, HelpCircle, X } from 'lucide-vue-next';
 import { marked } from 'marked';
 
 const markdown = ref('# Hello World\n\nStart typing markdown here...');
