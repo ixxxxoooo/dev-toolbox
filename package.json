@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite",
-    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build",
+    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vite build",
     "preview": "vite preview"
   },
   "keywords": [
