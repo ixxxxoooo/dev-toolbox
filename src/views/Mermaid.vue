@@ -398,6 +398,15 @@ onMounted(() => {
       code.value = editor?.getValue() || '';
     });
     
+    editor.onDidPaste(() => {
+      setTimeout(() => {
+        const content = editor?.getValue() || '';
+        if (content.trim()) {
+          addHistory(content);
+        }
+      }, 50);
+    });
+    
     themeWatcher = watchThemeChange(editor);
   }
 });
