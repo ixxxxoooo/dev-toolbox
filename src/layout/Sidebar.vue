@@ -102,7 +102,8 @@ import {
   Image,
   Eraser,
   Languages,
-  Share2
+  Share2,
+  PenTool
 } from 'lucide-vue-next'
 import SettingsPanel from '../components/SettingsPanel.vue'
 
@@ -143,7 +144,8 @@ const icons: Record<string, any> = {
   Image,
   Eraser,
   Languages,
-  Share2
+  Share2,
+  PenTool
 }
 
 const getIcon = (name: string) => {

@@ -493,6 +493,15 @@ export default {
       features: '功能特性'
     },
 
+    // Excalidraw 白板
+    excalidraw: {
+      name: 'Excalidraw 白板',
+      description: '手绘风格的在线白板工具',
+      helpDraw: '使用工具栏绘制各种形状和图形',
+      helpExport: '支持导出为 PNG、SVG 等格式',
+      helpSave: '数据自动保存在浏览器本地'
+    },
+
     // Mermaid 图表
     mermaid: {
       name: 'Mermaid 图表',

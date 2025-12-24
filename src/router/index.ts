@@ -32,6 +32,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'tools.mermaid.name', icon: 'Share2' },
       },
       {
+        path: 'excalidraw',
+        name: 'Excalidraw',
+        component: () => import('../views/Excalidraw.vue'),
+        meta: { title: 'tools.excalidraw.name', icon: 'PenTool' },
+      },
+      {
         path: 'timestamp',
         name: 'Timestamp',
         component: () => import('../views/Timestamp.vue'),
