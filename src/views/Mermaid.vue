@@ -437,17 +437,17 @@ const handleWheel = (e: WheelEvent) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? 0.9 : 1.1;
   if (isFullscreen.value) {
-    fullscreenScale.value = Math.min(Math.max(0.1, fullscreenScale.value * delta), 5);
+    fullscreenScale.value = Math.min(Math.max(0.1, fullscreenScale.value * delta), 10);
   } else {
-    scale.value = Math.min(Math.max(0.1, scale.value * delta), 5);
+    scale.value = Math.min(Math.max(0.1, scale.value * delta), 10);
   }
 };
 
 const zoomIn = () => {
   if (isFullscreen.value) {
-    fullscreenScale.value = Math.min(fullscreenScale.value * 1.2, 5);
+    fullscreenScale.value = Math.min(fullscreenScale.value * 1.2, 10);
   } else {
-    scale.value = Math.min(scale.value * 1.2, 5);
+    scale.value = Math.min(scale.value * 1.2, 10);
   }
 };
 const zoomOut = () => {
@@ -481,7 +481,10 @@ const downloadPng = async () => {
   if (!svg) return;
   
   const clonedSvg = svg.cloneNode(true) as SVGElement;
-  const { width, height } = svg.getBoundingClientRect();
+  // 获取原始尺寸（不受缩放影响）
+  const bbox = svg.getBBox();
+  const width = Math.ceil(bbox.width + bbox.x * 2);
+  const height = Math.ceil(bbox.height + bbox.y * 2);
   clonedSvg.setAttribute('width', String(width));
   clonedSvg.setAttribute('height', String(height));
   
@@ -492,16 +495,17 @@ const downloadPng = async () => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const img = new Image();
+  const exportScale = 2; // 2x for Retina
   
   img.onload = () => {
-    canvas.width = width * 2;
-    canvas.height = height * 2;
+    canvas.width = width * exportScale;
+    canvas.height = height * exportScale;
     ctx!.fillStyle = '#ffffff';
     ctx!.fillRect(0, 0, canvas.width, canvas.height);
-    ctx!.scale(2, 2);
+    ctx!.scale(exportScale, exportScale);
     ctx!.drawImage(img, 0, 0);
     const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
+    a.href = canvas.toDataURL('image/png', 1.0);
     a.download = 'mermaid-diagram.png';
     a.click();
   };
