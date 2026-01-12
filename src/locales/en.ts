@@ -495,6 +495,15 @@ export default {
       features: 'Features'
     },
 
+    // Excalidraw Whiteboard
+    excalidraw: {
+      name: 'Excalidraw',
+      description: 'Hand-drawn style online whiteboard tool',
+      helpDraw: 'Use the toolbar to draw various shapes and graphics',
+      helpExport: 'Export to PNG, SVG and other formats',
+      helpSave: 'Data is automatically saved in browser local storage'
+    },
+
     // Mermaid Diagram
     mermaid: {
       name: 'Mermaid Diagram',

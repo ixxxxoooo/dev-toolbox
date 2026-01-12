@@ -32,6 +32,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'tools.mermaid.name', icon: 'Share2' },
       },
       {
+        path: 'excalidraw',
+        name: 'Excalidraw',
+        component: () => import('../views/Excalidraw.vue'),
+        meta: { title: 'tools.excalidraw.name', icon: 'PenTool' },
+      },
+      {
         path: 'timestamp',
         name: 'Timestamp',
         component: () => import('../views/Timestamp.vue'),
@@ -107,7 +113,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'markdown',
         name: 'Markdown',
         component: () => import('../views/Markdown.vue'),
-        meta: { title: 'tools.markdown.name', icon: 'FileCode' },
+        meta: { title: 'tools.markdown.name', icon: 'NotebookText' },
       },
       {
         path: 'image-tools',

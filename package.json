@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite",
-    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite build",
+    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vite build",
     "preview": "vite preview"
   },
   "keywords": [
@@ -39,9 +39,12 @@
     "vue-tsc": "^2.0.26"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@techstark/opencv-js": "^4.12.0-release.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vueuse/core": "^13.6.0",
     "browser-image-compression": "^2.0.2",
     "cropperjs": "^1.6.2",
@@ -56,6 +59,8 @@
     "monaco-editor": "^0.52.2",
     "pinia": "^3.0.3",
     "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "sql-formatter": "^15.6.6",
     "ua-parser-js": "^2.0.6",
     "vue": "^3.4.31",

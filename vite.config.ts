@@ -9,10 +9,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      // 开发环境也启用 SW 便于调试
+      // 开发环境配置
       devOptions: {
-        enabled: false // 生产构建时设为 false
+        enabled: true,
+        type: 'module'
       },
+      // 显式包含公共资源，确保它们被预缓存
+      includeAssets: ['favicon.ico', 'favicon.svg', 'logo.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       workbox: {
         // 预缓存所有静态资源
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
