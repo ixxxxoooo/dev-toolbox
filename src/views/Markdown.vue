@@ -41,9 +41,11 @@
         </div>
         <div class="flex-1 relative">
           <textarea
+            ref="editorRef"
             v-model="markdown"
             class="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent border-none outline-none resize-none"
             placeholder="# Hello World"
+            @scroll="onEditorScroll"
           ></textarea>
         </div>
       </div>
@@ -64,11 +66,38 @@
 
       <!-- Preview -->
       <div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0d1117]">
-        <div class="px-3 py-1.5 bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground">
-          Preview
+        <div class="px-3 py-1.5 bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground flex items-center justify-between">
+          <span>Preview</span>
+          <button
+            @click="showToc = !showToc"
+            :class="{ 'text-primary': showToc }"
+            class="hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted/50"
+            title="Table of Contents"
+          >
+            <List class="w-4 h-4" />
+          </button>
         </div>
-        <div ref="previewContainer" class="flex-1 relative overflow-auto p-8 prose dark:prose-invert max-w-none">
-          <div v-html="html"></div>
+        <div class="flex-1 flex overflow-hidden">
+          <div ref="previewContainer" class="flex-1 relative overflow-auto p-8 prose dark:prose-invert max-w-none" @scroll="onPreviewScroll">
+            <div v-html="html"></div>
+          </div>
+          <!-- TOC Sidebar -->
+          <div v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-4 flex-shrink-0 text-sm">
+            <div class="font-medium mb-3 text-muted-foreground text-xs uppercase tracking-wider">Outline</div>
+            <div v-if="toc.length === 0" class="text-xs text-muted-foreground italic">No headings</div>
+            <ul class="space-y-1">
+              <li v-for="(item, index) in toc" :key="index" :style="{ paddingLeft: (item.depth - 1) * 0.75 + 'rem' }">
+                <button
+                  @click="scrollToHeading(item.slug)"
+                  class="text-xs text-muted-foreground hover:text-primary text-left truncate w-full py-1 block transition-colors border-l-2 border-transparent hover:border-primary pl-2 -ml-2"
+                  :class="{ '!text-primary font-medium !border-primary bg-primary/5': activeSlug === item.slug }"
+                  :title="item.text"
+                >
+                  {{ item.text }}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </main>
@@ -103,7 +132,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { FileText, HelpCircle, X, History as HistoryIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
+import { NotebookText, HelpCircle, X, History as HistoryIcon, PanelLeftClose, PanelLeftOpen, List } from 'lucide-vue-next';
 import { marked } from 'marked';
 import mermaid from 'mermaid';
 import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
@@ -114,15 +143,21 @@ import HistoryModal from '@/components/HistoryModal.vue';
 const STORAGE_KEY = 'markdown-content';
 const LEFT_WIDTH_KEY = 'markdown-left-width';
 const COLLAPSED_KEY = 'markdown-editor-collapsed';
+const SHOW_TOC_KEY = 'markdown-show-toc';
 
 const markdown = ref(loadFromStorage(STORAGE_KEY, '# Hello World\n\nStart typing markdown here...\n\n```mermaid\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;\n```'));
 const showHelp = ref(false);
 const showHistory = ref(false);
+const showToc = ref(loadFromStorage(SHOW_TOC_KEY, false));
 const editorCollapsed = ref(loadFromStorage(COLLAPSED_KEY, false));
 const leftWidth = ref(loadFromStorage(LEFT_WIDTH_KEY, window.innerWidth / 2));
 const mainContainer = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
 const previewContainer = ref<HTMLElement | null>(null);
+const editorRef = ref<HTMLElement | null>(null);
+const activeSlug = ref('');
+const isScrolling = ref<'editor' | 'preview' | null>(null);
+let scrollTimeout: NodeJS.Timeout | null = null;
 
 const themeStore = useThemeStore();
 const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('markdown', themeStore.historyLimit.value);
@@ -131,7 +166,50 @@ watch(() => themeStore.historyLimit.value, (newLimit) => {
   updateMaxItems(newLimit);
 });
 
-// Configure marked to handle mermaid code blocks via string replacement (safer than renderer hook)
+// Slugify function for IDs
+const slugify = (text: string) => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\u4e00-\u9fa5-]/g, '') // Keep Chinese characters, letters, numbers, dashes
+    .replace(/^-+|-+$/g, '');
+};
+
+// Configure marked renderer for headings
+// Using 'any' type to bypass marked version discrepancies
+const renderer = {
+  heading(token: any) {
+    // Check if token has text and depth (object format) or arguments
+    const text = token.text || arguments[0];
+    const depth = token.depth || arguments[1];
+
+    const slug = slugify(text);
+    return `<h${depth} id="${slug}">${text}</h${depth}>`;
+  }
+};
+
+marked.use({ renderer: renderer as any });
+
+// Generate TOC from tokens
+const toc = computed(() => {
+  const tokens = marked.lexer(markdown.value);
+  const headings: { text: string; depth: number; slug: string }[] = [];
+
+  tokens.forEach((token: any) => {
+    if (token.type === 'heading') {
+      headings.push({
+        text: token.text,
+        depth: token.depth,
+        slug: slugify(token.text)
+      });
+    }
+  });
+
+  return headings;
+});
+
+// Configure marked to handle mermaid code blocks via string replacement
 const html = computed(() => {
   const rawHtml = marked(markdown.value) as string;
   // Replace standard code block with mermaid div
@@ -159,6 +237,85 @@ const copyHtml = () => {
   navigator.clipboard.writeText(html.value);
 };
 
+const scrollToHeading = (slug: string) => {
+  if (!previewContainer.value) return;
+  const element = previewContainer.value.querySelector(`#${slug}`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+    activeSlug.value = slug;
+  }
+};
+
+const onEditorScroll = (e: Event) => {
+  if (isScrolling.value === 'preview') return;
+
+  isScrolling.value = 'editor';
+  const el = e.target as HTMLElement;
+  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+
+  if (previewContainer.value) {
+    previewContainer.value.scrollTop = percentage * (previewContainer.value.scrollHeight - previewContainer.value.clientHeight);
+  }
+
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    isScrolling.value = null;
+  }, 50);
+};
+
+const onPreviewScroll = (e: Event) => {
+  // Update TOC active state
+  updateActiveHeading();
+
+  if (isScrolling.value === 'editor') return;
+
+  isScrolling.value = 'preview';
+  const el = e.target as HTMLElement;
+  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+
+  if (editorRef.value) {
+    editorRef.value.scrollTop = percentage * (editorRef.value.scrollHeight - editorRef.value.clientHeight);
+  }
+
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    isScrolling.value = null;
+  }, 50);
+};
+
+const updateActiveHeading = () => {
+  if (!previewContainer.value || !showToc.value) return;
+
+  const headings = Array.from(previewContainer.value.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+  if (headings.length === 0) return;
+
+  const containerTop = previewContainer.value.getBoundingClientRect().top;
+
+  // Find the first heading that is visible or about to be visible
+  // Or simply find the last heading that is above a certain threshold
+  let currentId = '';
+
+  for (const heading of headings) {
+    const rect = heading.getBoundingClientRect();
+    // Use a small offset (e.g., 50px) to determine if it's "active"
+    if (rect.top <= containerTop + 100) {
+      currentId = heading.id;
+    } else {
+      break;
+    }
+  }
+
+  if (!currentId && headings.length > 0) {
+    // If scrolled to top and no heading crossed threshold, confirm first heading?
+    // Only if scroll is near top
+    if (previewContainer.value.scrollTop < 50) {
+      currentId = headings[0].id;
+    }
+  }
+
+  if (currentId) activeSlug.value = currentId;
+};
+
 // Auto-save and History
 let saveTimer: NodeJS.Timeout | null = null;
 watch(markdown, (newVal) => {
@@ -175,6 +332,10 @@ watch(markdown, (newVal) => {
 // Watch html output to trigger mermaid render
 watch(html, () => {
   renderMermaid();
+});
+
+watch(showToc, (newVal) => {
+  saveToStorage(SHOW_TOC_KEY, newVal);
 });
 
 watch(editorCollapsed, (newVal) => {
