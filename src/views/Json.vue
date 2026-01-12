@@ -52,14 +52,24 @@
             <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
-          <button
-            @click="goToDiff"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('tools.diff.name')"
-          >
-            <ArrowRightLeft class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
-          </button>
+          <div class="flex items-center space-x-0.5">
+            <button
+              @click="goToDiff('left')"
+              class="px-3 py-1.5 text-xs font-medium rounded-l-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1 border-r border-border/50"
+              :title="$t('tools.diff.putLeft')"
+            >
+              <ArrowLeftFromLine class="w-3.5 h-3.5" />
+              <span>{{ $t('tools.diff.putLeft') }}</span>
+            </button>
+            <button
+              @click="goToDiff('right')"
+              class="px-3 py-1.5 text-xs font-medium rounded-r-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+              :title="$t('tools.diff.putRight')"
+            >
+              <span>{{ $t('tools.diff.putRight') }}</span>
+              <ArrowRightFromLine class="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -219,7 +229,7 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History, Map } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -259,10 +269,10 @@ const showError = (error: any, prefix = 'Error') => {
   if (prefix) {
     message = `${prefix}: ${message}`;
   }
-  
+
   // Truncate error message if it's too long
-  errorMessage.value = message.length > 150 
-    ? message.substring(0, 150) + '...' 
+  errorMessage.value = message.length > 150
+    ? message.substring(0, 150) + '...'
     : message;
 
   if (errorTimer) clearTimeout(errorTimer);
@@ -401,7 +411,7 @@ const processData = (isAuto = false) => {
     }
 
     replaceTextInEditor(resultData);
-    
+
     // Add to history if it's not an automatic format or if it's a manual format
     if (!isAuto && operation.value === 'format') {
       addHistory(currentInput);
@@ -412,7 +422,7 @@ const processData = (isAuto = false) => {
     else if (operation.value === 'unescape') prefix = 'Unescape failed';
     else if (operation.value === 'format') prefix = 'Format failed';
     else if (operation.value === 'minify') prefix = 'Minify failed';
-    
+
     showError(e, prefix);
   } finally {
     setTimeout(() => { isProcessing = false; }, 100);
@@ -454,7 +464,7 @@ const initEditors = async () => {
         if (currentText.trim()) {
           addHistory(currentText);
         }
-        
+
         // Auto-detect if we should format
         try {
            JSON5.parse(currentText);
@@ -489,9 +499,9 @@ const copyInput = () => {
   navigator.clipboard.writeText(text);
 };
 
-const goToDiff = () => {
+const goToDiff = (side: 'left' | 'right') => {
   const text = editor?.getValue() || '';
-  saveToStorage('diff-left-content', text);
+  saveToStorage(side === 'left' ? 'diff-left-content' : 'diff-right-content', text);
   router.push('/diff');
 };
 

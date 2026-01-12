@@ -152,7 +152,9 @@ export default {
       clearAll: '清空全部',
       sideBySideDescription: '左右对比模式',
       inlineDescription: '内联对比模式',
-      ignoreWhitespaceDescription: '忽略空白字符'
+      ignoreWhitespaceDescription: '忽略空白字符',
+      putLeft: '左对比',
+      putRight: '右对比'
     },
 
     // Base64 编解码

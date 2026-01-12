@@ -152,7 +152,9 @@ export default {
       clearAll: 'Clear All',
       sideBySideDescription: 'Side by Side Mode',
       inlineDescription: 'Inline Mode',
-      ignoreWhitespaceDescription: 'Ignore Whitespace'
+      ignoreWhitespaceDescription: 'Ignore Whitespace',
+      putLeft: 'Put Left',
+      putRight: 'Put Right'
     },
 
     // Base64 Encoder/Decoder
