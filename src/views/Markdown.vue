@@ -238,8 +238,9 @@ const copyHtml = () => {
 };
 
 const scrollToHeading = (slug: string) => {
-  if (!previewContainer.value) return;
-  const element = previewContainer.value.querySelector(`#${slug}`);
+  if (!slug || !previewContainer.value) return;
+  // Use attribute selector to handle IDs that might start with digits
+  const element = previewContainer.value.querySelector(`[id="${slug}"]`);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' });
     activeSlug.value = slug;

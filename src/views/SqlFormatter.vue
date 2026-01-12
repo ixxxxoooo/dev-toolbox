@@ -60,14 +60,24 @@
             <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
-          <button
-            @click="goToDiff"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('tools.diff.name')"
-          >
-            <ArrowRightLeft class="w-4 h-4" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
-          </button>
+          <div class="flex items-center space-x-0.5">
+            <button
+              @click="goToDiff('left')"
+              class="px-3 py-1.5 text-xs font-medium rounded-l-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1 border-r border-border/50"
+              :title="$t('tools.diff.putLeft')"
+            >
+              <ArrowLeftFromLine class="w-3.5 h-3.5" />
+              <span>{{ $t('tools.diff.putLeft') }}</span>
+            </button>
+            <button
+              @click="goToDiff('right')"
+              class="px-3 py-1.5 text-xs font-medium rounded-r-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+              :title="$t('tools.diff.putRight')"
+            >
+              <span>{{ $t('tools.diff.putRight') }}</span>
+              <ArrowRightFromLine class="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -165,7 +175,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History, Map } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, History, Map, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
@@ -443,9 +453,9 @@ const pasteInput = async () => {
 }
 const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')
 
-const goToDiff = () => {
+const goToDiff = (side: 'left' | 'right') => {
   const text = sqlEditor?.getValue() || ''
-  saveToStorage('diff-left-content', text)
+  saveToStorage(side === 'left' ? 'diff-left-content' : 'diff-right-content', text)
   router.push('/diff')
 }
 
