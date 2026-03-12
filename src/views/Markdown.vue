@@ -82,7 +82,7 @@
             <div v-html="html"></div>
           </div>
           <!-- TOC Sidebar -->
-          <div v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-4 flex-shrink-0 text-sm">
+          <div ref="tocContainer" v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-4 flex-shrink-0 text-sm">
             <div class="font-medium mb-3 text-muted-foreground text-xs uppercase tracking-wider">Outline</div>
             <div v-if="toc.length === 0" class="text-xs text-muted-foreground italic">No headings</div>
             <ul class="space-y-1">
@@ -92,6 +92,7 @@
                   class="text-xs text-muted-foreground hover:text-primary text-left truncate w-full py-1 block transition-colors border-l-2 border-transparent hover:border-primary pl-2 -ml-2"
                   :class="{ '!text-primary font-medium !border-primary bg-primary/5': activeSlug === item.slug }"
                   :title="item.text"
+                  :data-slug="item.slug"
                 >
                   {{ item.text }}
                 </button>
@@ -154,26 +155,40 @@ const leftWidth = ref(loadFromStorage(LEFT_WIDTH_KEY, window.innerWidth / 2));
 const mainContainer = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
 const previewContainer = ref<HTMLElement | null>(null);
+const tocContainer = ref<HTMLElement | null>(null);
 const editorRef = ref<HTMLElement | null>(null);
 const activeSlug = ref('');
 const isScrolling = ref<'editor' | 'preview' | null>(null);
-let scrollTimeout: NodeJS.Timeout | null = null;
+let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const themeStore = useThemeStore();
 const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('markdown', themeStore.historyLimit.value);
 
-watch(() => themeStore.historyLimit.value, (newLimit) => {
+watch(() => themeStore.historyLimit.value, (newLimit: number) => {
   updateMaxItems(newLimit);
 });
 
+let htmlSlugCounts: Record<string, number> = {};
+
 // Slugify function for IDs
-const slugify = (text: string) => {
-  return text
+const slugify = (text: string, counts: Record<string, number>) => {
+  let baseSlug = text
     .toLowerCase()
     .trim()
+    .replace(/<[^>]*>?/gm, '') // Remove HTML tags
     .replace(/\s+/g, '-')
     .replace(/[^\w\u4e00-\u9fa5-]/g, '') // Keep Chinese characters, letters, numbers, dashes
     .replace(/^-+|-+$/g, '');
+  
+  if (!baseSlug) baseSlug = 'heading';
+
+  if (counts[baseSlug] !== undefined) {
+    counts[baseSlug]++;
+    return `${baseSlug}-${counts[baseSlug]}`;
+  } else {
+    counts[baseSlug] = 0;
+    return baseSlug;
+  }
 };
 
 // Configure marked renderer for headings
@@ -184,7 +199,7 @@ const renderer = {
     const text = token.text || arguments[0];
     const depth = token.depth || arguments[1];
 
-    const slug = slugify(text);
+    const slug = slugify(text, htmlSlugCounts);
     return `<h${depth} id="${slug}">${text}</h${depth}>`;
   }
 };
@@ -195,13 +210,15 @@ marked.use({ renderer: renderer as any });
 const toc = computed(() => {
   const tokens = marked.lexer(markdown.value);
   const headings: { text: string; depth: number; slug: string }[] = [];
+  const tocCounts: Record<string, number> = {};
 
   tokens.forEach((token: any) => {
     if (token.type === 'heading') {
+      let displayText = token.text.replace(/<[^>]*>?/gm, '');
       headings.push({
-        text: token.text,
+        text: displayText,
         depth: token.depth,
-        slug: slugify(token.text)
+        slug: slugify(token.text, tocCounts)
       });
     }
   });
@@ -211,6 +228,7 @@ const toc = computed(() => {
 
 // Configure marked to handle mermaid code blocks via string replacement
 const html = computed(() => {
+  htmlSlugCounts = {}; // Reset counts before each render
   const rawHtml = marked(markdown.value) as string;
   // Replace standard code block with mermaid div
   return rawHtml.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, '<div class="mermaid">$1</div>');
@@ -287,7 +305,7 @@ const onPreviewScroll = (e: Event) => {
 const updateActiveHeading = () => {
   if (!previewContainer.value || !showToc.value) return;
 
-  const headings = Array.from(previewContainer.value.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+  const headings = Array.from(previewContainer.value.querySelectorAll('h1, h2, h3, h4, h5, h6')) as HTMLElement[];
   if (headings.length === 0) return;
 
   const containerTop = previewContainer.value.getBoundingClientRect().top;
@@ -317,9 +335,28 @@ const updateActiveHeading = () => {
   if (currentId) activeSlug.value = currentId;
 };
 
+watch(activeSlug, (newSlug) => {
+  if (!newSlug || !tocContainer.value) return;
+
+  nextTick(() => {
+    if (!tocContainer.value) return;
+    const activeBtn = tocContainer.value.querySelector(`button[data-slug="${newSlug}"]`) as HTMLElement;
+    if (activeBtn) {
+      const containerRect = tocContainer.value.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+
+      // Only scroll if the active button is out of view (or very close to edge)
+      if (btnRect.top < containerRect.top + 20 || btnRect.bottom > containerRect.bottom - 20) {
+        const scrollOffset = tocContainer.value.scrollTop + (btnRect.top - containerRect.top) - (containerRect.height / 2) + (btnRect.height / 2);
+        tocContainer.value.scrollTo({ top: scrollOffset, behavior: 'smooth' });
+      }
+    }
+  });
+});
+
 // Auto-save and History
-let saveTimer: NodeJS.Timeout | null = null;
-watch(markdown, (newVal) => {
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+watch(markdown, (newVal: string) => {
   saveToStorage(STORAGE_KEY, newVal);
 
   if (saveTimer) clearTimeout(saveTimer);
@@ -335,15 +372,15 @@ watch(html, () => {
   renderMermaid();
 });
 
-watch(showToc, (newVal) => {
+watch(showToc, (newVal: boolean) => {
   saveToStorage(SHOW_TOC_KEY, newVal);
 });
 
-watch(editorCollapsed, (newVal) => {
+watch(editorCollapsed, (newVal: boolean) => {
   saveToStorage(COLLAPSED_KEY, newVal);
 });
 
-watch(leftWidth, (newVal) => {
+watch(leftWidth, (newVal: number) => {
   saveToStorage(LEFT_WIDTH_KEY, newVal);
 });
 
