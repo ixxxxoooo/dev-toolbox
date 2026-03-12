@@ -117,6 +117,31 @@ export default {
     language: '语言切换'
   },
 
+  // 新手引导
+  onboarding: {
+    buttons: {
+      done: '完成',
+      next: '下一步',
+      prev: '上一步'
+    },
+    welcome: {
+      title: '欢迎体验!',
+      description: '欢迎使用 Dev Toolbox！你可以随时使用 <b>Cmd + K</b> (Mac) 或 <b>Ctrl + K</b> (Windows) 唤起全局命令面板来搜索和切换工具。'
+    },
+    sidebar: {
+      title: '展开/折叠侧边栏',
+      description: '点击这里可以展开或折叠工具列表，方便给你留出更多操作空间。'
+    },
+    tools: {
+      title: '工具列表',
+      description: '这里列出了所有可用的开发者工具，点击即可切换体验。'
+    },
+    settings: {
+      title: '系统设置',
+      description: '您可以在这里通过底部栏切换应用的显示语言 (中/英) 或配置亮暗主题。'
+    }
+  },
+
   // 首页
   home: {
     title: '选择您需要的工具',

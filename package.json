@@ -51,6 +51,7 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "diff-match-patch": "^1.0.5",
+    "driver.js": "^1.4.0",
     "js-yaml": "^4.1.0",
     "json5": "^2.2.3",
     "lucide-vue-next": "^0.408.0",

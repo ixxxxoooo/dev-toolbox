@@ -13,8 +13,37 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import Sidebar from './Sidebar.vue'
 import CommandPalette from '../components/CommandPalette.vue'
+import { useOnboarding } from '@/composables/useOnboarding'
+
+const { startOnboarding } = useOnboarding()
+
+const handleKeydown = (e: KeyboardEvent) => {
+  // Cmd+/ or Ctrl+/
+  if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+    e.preventDefault()
+    startOnboarding()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  
+  // Show onboarding on first visit
+  if (localStorage.getItem('hasSeenOnboarding') !== 'true') {
+    // Slight delay to ensure DOM is fully rendered
+    setTimeout(() => {
+      startOnboarding()
+      localStorage.setItem('hasSeenOnboarding', 'true')
+    }, 500)
+  }
+})
+
+onUnmounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>

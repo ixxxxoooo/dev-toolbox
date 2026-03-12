@@ -117,6 +117,31 @@ export default {
     language: 'Language Switcher'
   },
 
+  // Onboarding
+  onboarding: {
+    buttons: {
+      done: 'Done',
+      next: 'Next',
+      prev: 'Previous'
+    },
+    welcome: {
+      title: 'Welcome!',
+      description: 'Welcome to Dev Toolbox! You can use <b>Cmd + K</b> (Mac) or <b>Ctrl + K</b> (Windows) anytime to open the global command palette to search and switch tools.'
+    },
+    sidebar: {
+      title: 'Expand/Collapse Sidebar',
+      description: 'Click here to expand or collapse the tools list to give you more workspace.'
+    },
+    tools: {
+      title: 'Tools List',
+      description: 'All available developer tools are listed here. Click to switch.'
+    },
+    settings: {
+      title: 'System Settings',
+      description: 'You can switch the application language or toggle dark/light theme at the bottom.'
+    }
+  },
+
   // Home Page
   home: {
     title: 'Choose the tools you need',
