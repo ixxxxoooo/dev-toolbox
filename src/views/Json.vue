@@ -100,12 +100,21 @@
         <div class="h-4 w-px bg-border hidden md:block"></div>
 
         <button
-          @click="showTreeView = !showTreeView"
+          @click="rightPanelView = rightPanelView === 'tree' ? 'none' : 'tree'"
           class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
-          :class="showTreeView ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+          :class="rightPanelView === 'tree' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
         >
           <ListTree class="w-4 h-4" />
-          <span class="hidden sm:inline">{{ showTreeView ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</span>
+          <span class="hidden sm:inline">{{ rightPanelView === 'tree' ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</span>
+        </button>
+
+        <button
+          @click="rightPanelView = rightPanelView === 'graph' ? 'none' : 'graph'"
+          class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
+          :class="rightPanelView === 'graph' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+        >
+          <Network class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ rightPanelView === 'graph' ? $t('common.buttons.hideGraphView') : $t('common.buttons.showGraphView') }}</span>
         </button>
 
         <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground h-8 w-8 flex items-center justify-center">
@@ -115,60 +124,87 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-4">
-      <div class="flex-1 grid gap-4 min-h-0" :class="showTreeView ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'">
-        <!-- Editor Section -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <!-- Editor Toolbar -->
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</span>
-              <span v-if="jsonStats" class="text-xs text-muted-foreground/70 px-2 py-0.5 bg-muted rounded-full">
-                {{ jsonStats }}
-              </span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Undo2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Redo2 class="w-3.5 h-3.5" />
-              </button>
-              <div class="h-3 w-px bg-border mx-1"></div>
-              <button @click="pasteInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.paste')">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.copy')">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-              <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground transition-colors" :title="$t('common.buttons.clearAll')">
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
-            </div>
+    <main ref="mainContainer" class="flex-1 flex min-h-0 p-4 gap-2 relative">
+      <!-- Editor Section -->
+      <div v-show="!editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
+        <!-- Editor Toolbar -->
+        <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</span>
+            <span v-if="jsonStats" class="text-xs text-muted-foreground/70 px-2 py-0.5 bg-muted rounded-full">
+              {{ jsonStats }}
+            </span>
           </div>
-          <div class="flex-1 relative group">
-            <div ref="editorRef" class="absolute inset-0"></div>
-
+          <div class="flex items-center space-x-1">
+            <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Undo2 class="w-3.5 h-3.5" />
+            </button>
+            <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Redo2 class="w-3.5 h-3.5" />
+            </button>
+            <div class="h-3 w-px bg-border mx-1"></div>
+            <button @click="pasteInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.paste')">
+              <ClipboardPaste class="w-3.5 h-3.5" />
+            </button>
+            <button @click="copyInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.copy')">
+              <Copy class="w-3.5 h-3.5" />
+            </button>
+            <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground transition-colors" :title="$t('common.buttons.clearAll')">
+              <Trash2 class="w-3.5 h-3.5" />
+            </button>
+            <div v-if="rightPanelView !== 'none'" class="h-3 w-px bg-border mx-1"></div>
+            <button v-if="rightPanelView !== 'none'" @click="editorCollapsed = true" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Collapse Editor">
+              <PanelLeftClose class="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+        <div class="flex-1 relative group">
+          <div ref="editorRef" class="absolute inset-0"></div>
+        </div>
+      </div>
 
-        <!-- Tree View Section -->
-        <div v-if="showTreeView" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.treeView') }}</h3>
+      <!-- Collapsed Toggle -->
+      <div v-if="editorCollapsed && rightPanelView !== 'none'" class="flex flex-col border border-border rounded-lg bg-muted/30 p-1 shadow-sm h-full">
+        <button @click="editorCollapsed = false" class="p-2 hover:bg-muted rounded hover:text-foreground text-muted-foreground transition-colors" title="Expand Editor">
+          <PanelLeftOpen class="w-4 h-4" />
+        </button>
+      </div>
+
+      <!-- Resizer -->
+      <div
+        v-show="!editorCollapsed && rightPanelView !== 'none'"
+        class="w-1.5 hover:w-2 bg-transparent hover:bg-border/50 active:bg-primary/50 cursor-col-resize flex-shrink-0 transition-all rounded-full z-10 mx-[-4px]"
+        @mousedown="startResize"
+      ></div>
+
+      <!-- Tree / Graph View Section -->
+      <div v-if="rightPanelView !== 'none'" class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full relative">
+          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border z-10">
+            <h3 class="text-xs font-medium text-muted-foreground">
+              <template v-if="rightPanelView === 'tree'">{{ $t('common.labels.treeView') }}</template>
+              <template v-else-if="rightPanelView === 'graph'">{{ $t('common.labels.graphView') }}</template>
+            </h3>
             <div class="flex items-center space-x-2">
-               <button @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
+               <button v-if="rightPanelView === 'tree'" @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
                  {{ isTreeExpanded ? $t('tools.json.collapseAll') : $t('tools.json.expandAll') }}
                </button>
             </div>
           </div>
-          <div class="flex-1 relative overflow-auto bg-background p-4">
-            <JsonTreeView ref="treeViewRef" v-if="isValidJson && parsedJson" :data="parsedJson" />
-            <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
-              <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-              <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+          <div class="flex-1 relative overflow-hidden bg-background">
+            <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-4">
+              <JsonTreeView ref="treeViewRef" v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+              </div>
             </div>
-          </div>
+            <div v-else-if="rightPanelView === 'graph'" class="h-full w-full absolute inset-0">
+              <JsonGraphView v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+              </div>
+            </div>
         </div>
       </div>
     </main>
@@ -229,7 +265,8 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-vue-next';
+import JsonGraphView from '../components/JsonGraphView.vue';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -285,17 +322,45 @@ const STORAGE_KEYS = {
   inputText: 'json-input-text',
   operation: 'json-operation',
   indentSize: 'json-indent-size',
-  showTreeView: 'json-show-tree-view',
+  rightPanelView: 'json-right-panel-view',
   wordWrapEnabled: 'json-word-wrap-enabled',
-  showMinimap: 'json-show-minimap'
+  showMinimap: 'json-show-minimap',
+  leftWidth: 'json-left-width',
+  editorCollapsed: 'json-editor-collapsed'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
 const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
 const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
-const showTreeView = ref(loadFromStorage(STORAGE_KEYS.showTreeView, false));
+const rightPanelView = ref<'none' | 'tree' | 'graph'>(loadFromStorage(STORAGE_KEYS.rightPanelView, 'none'));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
+const leftWidth = ref(loadFromStorage(STORAGE_KEYS.leftWidth, window.innerWidth / 2));
+const editorCollapsed = ref(loadFromStorage(STORAGE_KEYS.editorCollapsed, false));
+const mainContainer = ref<HTMLElement | null>(null);
+const isResizing = ref(false);
+
+const startResize = (e: MouseEvent) => {
+  isResizing.value = true;
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+  e.preventDefault();
+};
+
+const onResize = (e: MouseEvent) => {
+  if (!isResizing.value || !mainContainer.value) return;
+  const rect = mainContainer.value.getBoundingClientRect();
+  const newWidth = e.clientX - rect.left;
+  // Let it resize between 200px and the container width - 200px
+  leftWidth.value = Math.max(200, Math.min(newWidth, rect.width - 200));
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+  if (editor) editor.layout();
+};
 
 const parsedJson = computed(() => {
   try {
@@ -529,7 +594,10 @@ watch(indentSize, (newValue) => {
   if (operation.value === 'format' && inputText.value.trim()) setTimeout(processData, 100);
 });
 
-watch(showTreeView, (newValue) => saveToStorage(STORAGE_KEYS.showTreeView, newValue));
+watch(rightPanelView, (newValue) => {
+  saveToStorage(STORAGE_KEYS.rightPanelView, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
 
 watch(wordWrapEnabled, (newValue) => {
   editor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
@@ -541,10 +609,22 @@ watch(showMinimap, (newValue) => {
   saveToStorage(STORAGE_KEYS.showMinimap, newValue);
 });
 
+watch(leftWidth, (newValue) => {
+  saveToStorage(STORAGE_KEYS.leftWidth, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
+
+watch(editorCollapsed, (newValue) => {
+  saveToStorage(STORAGE_KEYS.editorCollapsed, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
+
 onMounted(initEditors);
 
 onBeforeUnmount(() => {
   if (errorTimer) clearTimeout(errorTimer);
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
   themeWatcher?.();
   editor?.dispose();
 });
