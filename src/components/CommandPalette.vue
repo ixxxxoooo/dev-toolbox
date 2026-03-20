@@ -18,7 +18,7 @@
             :placeholder="$t('common.messages.searchPlaceholder') || 'Search tools... (↑↓ to navigate, Enter to select)'"
             @keydown.down.prevent="navigateDown"
             @keydown.up.prevent="navigateUp"
-            @keydown.enter.prevent="selectCurrent"
+            @keydown.enter.prevent="selectCurrent($event)"
           />
           <div class="flex items-center space-x-1 ml-3">
             <kbd class="px-1.5 py-0.5 text-[10px] font-sans font-medium bg-muted border border-border rounded text-muted-foreground">ESC</kbd>
@@ -192,7 +192,8 @@ const navigateUp = () => {
   }
 }
 
-const selectCurrent = () => {
+const selectCurrent = (e?: KeyboardEvent) => {
+  if (e && e.isComposing) return
   const tool = filteredTools.value[activeIndex.value]
   if (tool) {
     selectTool(tool)
@@ -200,8 +201,12 @@ const selectCurrent = () => {
 }
 
 const selectTool = (tool: any) => {
-  router.push('/' + tool.path)
-  close()
+  router.push('/' + tool.path).catch(err => {
+    // Ignore NavigationDuplicated errors, just proceed
+    console.warn('CommandPalette router push error:', err)
+  }).finally(() => {
+    close()
+  })
 }
 
 const handleKeydown = (e: KeyboardEvent) => {

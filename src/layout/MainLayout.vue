@@ -2,9 +2,9 @@
   <div class="flex h-screen w-screen overflow-hidden bg-background text-foreground">
     <Sidebar />
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-      <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
         <transition name="fade">
-          <component :is="Component" class="h-full w-full overflow-auto" />
+          <component :is="Component" :key="route.path" class="h-full w-full overflow-auto" />
         </transition>
       </router-view>
     </main>
