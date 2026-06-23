@@ -82,14 +82,14 @@ define(['./workbox-ca84f546'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.mhd9233vlp"
+    "revision": "0.v4jrsnv9shk"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/],
     denylist: [/^\/api\//]
   }));
-  workbox.registerRoute(/\/assets\/(monaco|ts\.worker|WatermarkRemover|editor\.worker|json\.worker|css\.worker|html\.worker)-.*\.js$/i, new workbox.CacheFirst({
+  workbox.registerRoute(/\/assets\/(monaco|ts\.worker|editor\.worker|json\.worker|css\.worker|html\.worker)-.*\.js$/i, new workbox.CacheFirst({
     "cacheName": "large-assets-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 20,
