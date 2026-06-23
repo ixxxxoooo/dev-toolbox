@@ -116,18 +116,6 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'tools.markdown.name', icon: 'NotebookText' },
       },
       {
-        path: 'image-tools',
-        name: 'ImageTools',
-        component: () => import('../views/ImageTools.vue'),
-        meta: { title: 'tools.imageTools.name', icon: 'Image' },
-      },
-      {
-        path: 'watermark-remover',
-        name: 'WatermarkRemover',
-        component: () => import('../views/WatermarkRemover.vue'),
-        meta: { title: 'tools.watermark.name', icon: 'Eraser' },
-      },
-      {
         path: 'unicode-converter',
         name: 'UnicodeConverter',
         component: () => import('../views/UnicodeConverter.vue'),

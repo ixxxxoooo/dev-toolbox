@@ -11,7 +11,7 @@ export default defineConfig({
       injectRegister: 'auto',
       // 开发环境配置
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: 'module'
       },
       // 显式包含公共资源，确保它们被预缓存
@@ -20,7 +20,7 @@ export default defineConfig({
         // 预缓存所有静态资源
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
         // 排除特别大的文件从预缓存（它们会在运行时缓存）
-        globIgnores: ['**/monaco-*.js', '**/ts.worker-*.js', '**/WatermarkRemover-*.js'],
+        globIgnores: ['**/monaco-*.js', '**/ts.worker-*.js'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         // 确保离线时能正常导航
         navigateFallback: 'index.html',
@@ -33,7 +33,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             // 缓存大型 JS 文件（Monaco、workers 等）- 运行时缓存
-            urlPattern: /\/assets\/(monaco|ts\.worker|WatermarkRemover|editor\.worker|json\.worker|css\.worker|html\.worker)-.*\.js$/i,
+            urlPattern: /\/assets\/(monaco|ts\.worker|editor\.worker|json\.worker|css\.worker|html\.worker)-.*\.js$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'large-assets-cache',
@@ -170,11 +170,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    strictPort: true,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp'
-    }
+    strictPort: true
   },
   clearScreen: false
 })
