@@ -207,8 +207,11 @@ export default {
       treeViewDescription: '树状结构显示',
       escape: '转义',
       unescape: '反转义',
-      escapeDescription: '转义 SQL 字符串中的特殊字符。',
-      unescapeDescription: '还原 SQL 字符串中的特殊字符。',
+      escapeDescription: '转义 JSON 字符串中的特殊字符。',
+      unescapeDescription: '还原 JSON 字符串中的特殊字符。',
+      decodeUnicode: 'Unicode 解码（\\u 转中文）',
+      unicodeDecode: '\\u转中文',
+      unicodeDecodeDesc: '点击开启：把 JSON 字符串值里的 \\uXXXX 解码成中文；再次点击关闭',
       expandAll: '展开全部',
       collapseAll: '折叠全部'
     },

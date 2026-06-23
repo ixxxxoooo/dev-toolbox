@@ -37,6 +37,17 @@
           >
             {{ $t('tools.json.' + op) }}
           </button>
+
+          <!-- Unicode 解码开关：选中=\\u转中文，去掉=不转换 -->
+          <button
+            @click="toggleDecodeUnicode"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
+            :class="decodeUnicode ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
+            :title="$t('tools.json.unicodeDecodeDesc')"
+          >
+            <Languages class="w-3.5 h-3.5" />
+            <span>{{ $t('tools.json.unicodeDecode') }}</span>
+          </button>
         </div>
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
@@ -126,7 +137,7 @@
     <!-- Main Content -->
     <main ref="mainContainer" class="flex-1 flex min-h-0 p-4 gap-2 relative">
       <!-- Editor Section -->
-      <div v-show="!editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
+      <div v-show="rightPanelView === 'none' || !editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
         <!-- Editor Toolbar -->
         <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
           <div class="flex items-center space-x-2">
@@ -266,7 +277,7 @@ import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
 import JsonGraphView from '../components/JsonGraphView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -326,7 +337,8 @@ const STORAGE_KEYS = {
   wordWrapEnabled: 'json-word-wrap-enabled',
   showMinimap: 'json-show-minimap',
   leftWidth: 'json-left-width',
-  editorCollapsed: 'json-editor-collapsed'
+  editorCollapsed: 'json-editor-collapsed',
+  decodeUnicode: 'json-decode-unicode'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
@@ -335,6 +347,7 @@ const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
 const rightPanelView = ref<'none' | 'tree' | 'graph'>(loadFromStorage(STORAGE_KEYS.rightPanelView, 'none'));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
+const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
 const leftWidth = ref(loadFromStorage(STORAGE_KEYS.leftWidth, window.innerWidth / 2));
 const editorCollapsed = ref(loadFromStorage(STORAGE_KEYS.editorCollapsed, false));
 const mainContainer = ref<HTMLElement | null>(null);
@@ -379,6 +392,19 @@ const jsonStats = computed(() => {
   return `${formatBytes(size)} • ${keys} keys`;
 });
 
+function decodeUnicodeInStrings(obj: any): any {
+  if (typeof obj === 'string') {
+    return obj.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  }
+  if (Array.isArray(obj)) return obj.map(decodeUnicodeInStrings);
+  if (obj !== null && typeof obj === 'object') {
+    const out: any = {};
+    for (const k in obj) out[k] = decodeUnicodeInStrings(obj[k]);
+    return out;
+  }
+  return obj;
+}
+
 function countKeys(obj: any): number {
   if (typeof obj !== 'object' || obj === null) return 0;
   let count = 0;
@@ -408,6 +434,27 @@ const redo = () => editor?.trigger('keyboard', 'redo', null);
 const handleOperation = (op: string) => {
   operation.value = op;
   processData(false);
+};
+
+// Unicode 解码开关：选中=把 \uXXXX 转中文，去掉=还原。点击立即应用。
+// 开启时先保存当前内容，关闭时还原回去（支持来回切换不丢原始数据）。
+const decodeUnicodeSnapshot = ref<string | null>(null);
+const toggleDecodeUnicode = () => {
+  const turningOn = !decodeUnicode.value;
+  decodeUnicode.value = turningOn;
+  if (!inputText.value.trim()) return;
+  if (turningOn) {
+    // 开启：保存解码前的原始内容，然后走 format 应用解码
+    decodeUnicodeSnapshot.value = inputText.value;
+    operation.value = 'format';
+    processData(false);
+  } else {
+    // 关闭：还原为开启前保存的原始内容
+    if (decodeUnicodeSnapshot.value !== null) {
+      replaceTextInEditor(decodeUnicodeSnapshot.value);
+      decodeUnicodeSnapshot.value = null;
+    }
+  }
 };
 
 const replaceTextInEditor = (newText: string) => {
@@ -466,7 +513,11 @@ const processData = (isAuto = false) => {
     } else {
       // Format or Minify
       // Use JSON5 for parsing to be more robust
-      const inputData = JSON5.parse(inputText.value);
+      let inputData = JSON5.parse(inputText.value);
+      if (decodeUnicode.value) {
+        // 选中时：把字符串值里的字面 \uXXXX 解码成中文
+        inputData = decodeUnicodeInStrings(inputData);
+      }
 
       if (operation.value === 'minify') {
         resultData = JSON.stringify(inputData);
@@ -607,6 +658,10 @@ watch(wordWrapEnabled, (newValue) => {
 watch(showMinimap, (newValue) => {
   editor?.updateOptions({ minimap: { enabled: newValue } });
   saveToStorage(STORAGE_KEYS.showMinimap, newValue);
+});
+
+watch(decodeUnicode, (newValue) => {
+  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
 });
 
 watch(leftWidth, (newValue) => {

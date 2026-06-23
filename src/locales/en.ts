@@ -213,6 +213,9 @@ export default {
       unescape: 'Unescape',
       escapeDescription: 'Escape special characters in JSON strings',
       unescapeDescription: 'Unescape special characters in JSON strings',
+      decodeUnicode: 'Unicode Decode (\\u to text)',
+      unicodeDecode: '\\u→Text',
+      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in JSON strings to text; click again to turn off',
       expandAll: 'Expand All',
       collapseAll: 'Collapse All'
     },
