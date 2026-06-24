@@ -423,6 +423,7 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
   if (saveTimer) clearTimeout(saveTimer);
+  if (scrollTimeout) clearTimeout(scrollTimeout);
 });
 </script>
 

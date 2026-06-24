@@ -310,6 +310,14 @@ watch(() => themeStore.historyLimit.value, (newLimit) => {
 });
 
 let errorTimer: NodeJS.Timeout | null = null;
+// 追踪其余 setTimeout（isProcessing 复位、onDidPaste、pasteInput、indentSize watch 等），
+// 组件卸载时统一清理，避免在已卸载的 ref / 已 dispose 的 editor 上触发回调。
+const pendingTimers: ReturnType<typeof setTimeout>[] = [];
+const trackTimer = (handler: () => void, delay: number): ReturnType<typeof setTimeout> => {
+  const id = setTimeout(handler, delay);
+  pendingTimers.push(id);
+  return id;
+};
 
 const showError = (error: any, prefix = 'Error') => {
   console.error(prefix, error);
@@ -541,7 +549,7 @@ const processData = (isAuto = false) => {
 
     showError(e, prefix);
   } finally {
-    setTimeout(() => { isProcessing = false; }, 100);
+    trackTimer(() => { isProcessing = false; }, 100);
   }
 };
 
@@ -574,7 +582,7 @@ const initEditors = async () => {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
 
     editor.onDidPaste(() => {
-      setTimeout(() => {
+      trackTimer(() => {
         const currentText = editor?.getValue() || '';
         // Always record paste to history
         if (currentText.trim()) {
@@ -604,15 +612,19 @@ const pasteInput = async () => {
     const text = await navigator.clipboard.readText();
     replaceTextInEditor(text);
     addHistory(text);
-    setTimeout(() => handleOperation('format'), 100);
+    trackTimer(() => handleOperation('format'), 100);
   } catch (error) {
     console.error('Paste failed:', error);
   }
 };
 
-const copyInput = () => {
-  const text = editor?.getValue() || '';
-  navigator.clipboard.writeText(text);
+const copyInput = async () => {
+  try {
+    const text = editor?.getValue() || '';
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
 };
 
 const goToDiff = (side: 'left' | 'right') => {
@@ -642,7 +654,7 @@ watch(operation, (newValue) => {
 
 watch(indentSize, (newValue) => {
   saveToStorage(STORAGE_KEYS.indentSize, newValue);
-  if (operation.value === 'format' && inputText.value.trim()) setTimeout(processData, 100);
+  if (operation.value === 'format' && inputText.value.trim()) trackTimer(processData, 100);
 });
 
 watch(rightPanelView, (newValue) => {
@@ -678,10 +690,15 @@ onMounted(initEditors);
 
 onBeforeUnmount(() => {
   if (errorTimer) clearTimeout(errorTimer);
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop());
+  }
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
   themeWatcher?.();
+  themeWatcher = null;
   editor?.dispose();
+  editor = null;
 });
 </script>
 
