@@ -212,6 +212,8 @@ export default {
       decodeUnicode: 'Unicode 解码（\\u 转中文）',
       unicodeDecode: '\\u转中文',
       unicodeDecodeDesc: '点击开启：把 JSON 字符串值里的 \\uXXXX 解码成中文；再次点击关闭',
+      expandNested: '展开嵌套',
+      expandNestedDesc: '点击开启：递归把字符串值里的嵌套 JSON 解析成对象/数组；再次点击关闭并还原',
       expandAll: '展开全部',
       collapseAll: '折叠全部'
     },

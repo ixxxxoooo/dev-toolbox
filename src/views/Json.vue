@@ -38,7 +38,7 @@
             {{ $t('tools.json.' + op) }}
           </button>
 
-          <!-- Unicode 解码开关：选中=\\u转中文，去掉=不转换 -->
+          <!-- Unicode 解码开关：选中=\u转中文，去掉=不转换 -->
           <button
             @click="toggleDecodeUnicode"
             class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
@@ -47,6 +47,17 @@
           >
             <Languages class="w-3.5 h-3.5" />
             <span>{{ $t('tools.json.unicodeDecode') }}</span>
+          </button>
+
+          <!-- 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组 -->
+          <button
+            @click="toggleExpandNested"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
+            :class="expandNested ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
+            :title="$t('tools.json.expandNestedDesc')"
+          >
+            <UnfoldVertical class="w-3.5 h-3.5" />
+            <span>{{ $t('tools.json.expandNested') }}</span>
           </button>
         </div>
 
@@ -251,6 +262,8 @@
               <li><strong>{{ $t('common.labels.minify') }}:</strong> {{ $t('tools.json.minifyDescription') }}</li>
               <li><strong>{{ $t('tools.json.escape') }}:</strong> {{ $t('tools.json.escapeDescription') }}</li>
               <li><strong>{{ $t('tools.json.unescape') }}:</strong> {{ $t('tools.json.unescapeDescription') }}</li>
+              <li><strong>{{ $t('tools.json.unicodeDecode') }}:</strong> {{ $t('tools.json.unicodeDecodeDesc') }}</li>
+              <li><strong>{{ $t('tools.json.expandNested') }}:</strong> {{ $t('tools.json.expandNestedDesc') }}</li>
               <li><strong>{{ $t('common.labels.treeView') }}:</strong> {{ $t('tools.json.treeViewDescription') }}</li>
             </ul>
           </div>
@@ -277,7 +290,7 @@ import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
 import JsonGraphView from '../components/JsonGraphView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages, UnfoldVertical } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -346,7 +359,8 @@ const STORAGE_KEYS = {
   showMinimap: 'json-show-minimap',
   leftWidth: 'json-left-width',
   editorCollapsed: 'json-editor-collapsed',
-  decodeUnicode: 'json-decode-unicode'
+  decodeUnicode: 'json-decode-unicode',
+  expandNested: 'json-expand-nested'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
@@ -356,6 +370,7 @@ const rightPanelView = ref<'none' | 'tree' | 'graph'>(loadFromStorage(STORAGE_KE
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
 const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
+const expandNested = ref(loadFromStorage(STORAGE_KEYS.expandNested, false));
 const leftWidth = ref(loadFromStorage(STORAGE_KEYS.leftWidth, window.innerWidth / 2));
 const editorCollapsed = ref(loadFromStorage(STORAGE_KEYS.editorCollapsed, false));
 const mainContainer = ref<HTMLElement | null>(null);
@@ -413,6 +428,41 @@ function decodeUnicodeInStrings(obj: any): any {
   return obj;
 }
 
+/**
+ * 递归把"值为字符串的嵌套 JSON"解析成对象/数组。
+ * 规则：只替换解析结果为 object/array 的字符串（纯标量字符串如 "3306"/"hello" 保持原样，避免误伤）。
+ * 多层嵌套通过递归处理：解析出的对象会继续被遍历，其内部字符串型 JSON 也会被展开。
+ * 解析失败的字符串原样返回（可能是普通文本，也可能是格式错误的 JSON，都不应改动）。
+ */
+function parseNestedJsonStrings(value: any): any {
+  if (typeof value === 'string') {
+    // 快速过滤：必须看起来像 JSON（首尾是 {} 或 [] 的 trim 后内容），避免对普通文本做无谓 parse
+    const trimmed = value.trim();
+    const looksLikeJson =
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'));
+    if (!looksLikeJson) return value;
+    try {
+      const parsed = JSON5.parse(trimmed);
+      // 只展开对象/数组，标量（数字/布尔/null）不替换，避免把电话号码、ID 等字符串误转
+      if (parsed !== null && typeof parsed === 'object') {
+        // 对解析结果继续递归，处理多层嵌套
+        return parseNestedJsonStrings(parsed);
+      }
+      return value;
+    } catch {
+      return value;
+    }
+  }
+  if (Array.isArray(value)) return value.map(parseNestedJsonStrings);
+  if (value !== null && typeof value === 'object') {
+    const out: any = {};
+    for (const k in value) out[k] = parseNestedJsonStrings(value[k]);
+    return out;
+  }
+  return value;
+}
+
 function countKeys(obj: any): number {
   if (typeof obj !== 'object' || obj === null) return 0;
   let count = 0;
@@ -461,6 +511,27 @@ const toggleDecodeUnicode = () => {
     if (decodeUnicodeSnapshot.value !== null) {
       replaceTextInEditor(decodeUnicodeSnapshot.value);
       decodeUnicodeSnapshot.value = null;
+    }
+  }
+};
+
+// 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组，去掉=还原。
+// 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原。
+const expandNestedSnapshot = ref<string | null>(null);
+const toggleExpandNested = () => {
+  const turningOn = !expandNested.value;
+  expandNested.value = turningOn;
+  if (!inputText.value.trim()) return;
+  if (turningOn) {
+    // 开启：保存展开前的原始内容，然后走 format 应用解析
+    expandNestedSnapshot.value = inputText.value;
+    operation.value = 'format';
+    processData(false);
+  } else {
+    // 关闭：还原为开启前保存的原始内容
+    if (expandNestedSnapshot.value !== null) {
+      replaceTextInEditor(expandNestedSnapshot.value);
+      expandNestedSnapshot.value = null;
     }
   }
 };
@@ -525,6 +596,10 @@ const processData = (isAuto = false) => {
       if (decodeUnicode.value) {
         // 选中时：把字符串值里的字面 \uXXXX 解码成中文
         inputData = decodeUnicodeInStrings(inputData);
+      }
+      if (expandNested.value) {
+        // 选中时：递归把字符串值里的嵌套 JSON 解析成对象/数组
+        inputData = parseNestedJsonStrings(inputData);
       }
 
       if (operation.value === 'minify') {
@@ -674,6 +749,10 @@ watch(showMinimap, (newValue) => {
 
 watch(decodeUnicode, (newValue) => {
   saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
+});
+
+watch(expandNested, (newValue) => {
+  saveToStorage(STORAGE_KEYS.expandNested, newValue);
 });
 
 watch(leftWidth, (newValue) => {
