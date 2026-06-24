@@ -244,6 +244,9 @@ const errorMessage = ref('')
 type ActionType = 'format' | 'minify' | 'escape' | 'unescape' | 'unicode' | null
 const activeAction = ref<ActionType>('format')
 
+// 追踪所有 setTimeout，组件卸载时统一清理，避免在已卸载的 ref 上写入
+const pendingTimers: number[] = []
+
 const getSelectedTextOrAll = () => {
   if (!sqlEditor) return { text: sqlText.value, isSelection: false, selection: null }
   const selection = sqlEditor.getSelection()
@@ -275,7 +278,7 @@ const showError = (error: any, prefix = 'Error') => {
   errorMessage.value = message.length > 150
     ? message.substring(0, 150) + '...'
     : message
-  setTimeout(() => { errorMessage.value = '' }, 3000)
+  pendingTimers.push(window.setTimeout(() => { errorMessage.value = '' }, 3000))
 }
 
 const useHistoryItem = (content: string) => {
@@ -310,6 +313,9 @@ const formatSQL = (isAuto = false) => {
 
 const splitSQLStatements = (text: string) => {
   const statements = text.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0)
+  // 边界保护：过滤后无有效语句（如输入仅为 ";;;"）时直接返回空数组，
+  // 否则 statements[statements.length - 1] 为 undefined，会输出字面量 "undefined;"
+  if (statements.length === 0) return []
   return statements.map(stmt => stmt + ';').slice(0, -1).concat(statements[statements.length - 1] + (text.trim().endsWith(';') ? ';' : ''))
 }
 
@@ -405,7 +411,7 @@ const initEditor = async () => {
           isFormatting = true
           addHistory(sqlEditor?.getValue() || '')
           formatSQL(true)
-          setTimeout(() => { isFormatting = false }, 200)
+          pendingTimers.push(window.setTimeout(() => { isFormatting = false }, 200))
         }
       }, 150)
     })
@@ -451,7 +457,13 @@ const pasteInput = async () => {
     formatSQL(true)
   } catch (error) { console.error('Paste failed:', error) }
 }
-const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')
+const copyInput = async () => {
+  try {
+    await navigator.clipboard.writeText(sqlEditor?.getValue() || '')
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err)
+  }
+}
 
 const goToDiff = (side: 'left' | 'right') => {
   const text = sqlEditor?.getValue() || ''
@@ -474,8 +486,14 @@ watch(showMinimap, (newValue) => {
 
 onMounted(initEditor)
 onBeforeUnmount(() => {
+  // 清理所有未触发的 timer，避免在已卸载的 ref 上写入
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop())
+  }
   themeWatcher?.()
+  themeWatcher = null
   sqlEditor?.dispose()
+  sqlEditor = null
 })
 </script>
 

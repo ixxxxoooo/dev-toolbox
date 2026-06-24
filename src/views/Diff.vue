@@ -178,6 +178,20 @@ import HistoryModal from '../components/HistoryModal.vue';
 const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
 let themeWatcher: (() => void) | null = null;
+// 追踪 model 与定时器，确保卸载时正确释放，避免内存泄漏
+let originalModel: monaco.editor.ITextModel | null = null;
+let modifiedModel: monaco.editor.ITextModel | null = null;
+const pendingTimers: number[] = [];
+const trackTimer = (handler: () => void, delay: number): number => {
+  const id = window.setTimeout(handler, delay);
+  pendingTimers.push(id);
+  return id;
+};
+const clearPendingTimers = () => {
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop());
+  }
+};
 const showHelp = ref(false);
 const showHistory = ref(false);
 
@@ -213,8 +227,12 @@ const initMonacoDiffEditor = async () => {
 
   diffEditor?.dispose();
 
-  const originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
-  const modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
+  // 释放上一次创建的 model，避免反复进出页面时累积泄漏
+  originalModel?.dispose();
+  modifiedModel?.dispose();
+
+  originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
+  modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
 
   diffEditor = monaco.editor.createDiffEditor(diffEditorRef.value, {
     theme: getMonacoTheme(),
@@ -238,7 +256,7 @@ const initMonacoDiffEditor = async () => {
   diffEditor.setModel({ original: originalModel, modified: modifiedModel });
 
   // Use a small delay to ensure sub-editors are fully ready to accept options
-  setTimeout(() => {
+  trackTimer(() => {
     applyMinimapOption();
   }, 100);
 
@@ -261,13 +279,13 @@ const initMonacoDiffEditor = async () => {
   });
 
   originalEditor.onDidPaste(() => {
-    setTimeout(() => {
+    trackTimer(() => {
       addHistory(originalEditor.getValue());
     }, 50);
   });
 
   modifiedEditor.onDidPaste(() => {
-    setTimeout(() => {
+    trackTimer(() => {
       addHistory(modifiedEditor.getValue());
     }, 50);
   });
@@ -384,8 +402,16 @@ const applyMinimapOption = () => {
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
+  clearPendingTimers();
   themeWatcher?.();
+  themeWatcher = null;
   diffEditor?.dispose();
+  diffEditor = null;
+  // 显式释放 model：diffEditor.dispose() 不会自动释放它持有的 model
+  originalModel?.dispose();
+  modifiedModel?.dispose();
+  originalModel = null;
+  modifiedModel = null;
 });
 
 watch(diffMode, (newMode) => {

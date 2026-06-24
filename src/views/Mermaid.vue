@@ -172,6 +172,14 @@ import CustomSelect from '@/components/CustomSelect.vue';
 
 const { t } = useI18n();
 
+// 追踪 onDidPaste 内的 setTimeout，组件卸载时统一清理
+const pendingTimers: ReturnType<typeof setTimeout>[] = [];
+const trackTimer = (handler: () => void, delay: number): ReturnType<typeof setTimeout> => {
+  const id = setTimeout(handler, delay);
+  pendingTimers.push(id);
+  return id;
+};
+
 // 注册 Mermaid 语言
 monaco.languages.register({ id: 'mermaid' });
 monaco.languages.setMonarchTokensProvider('mermaid', {
@@ -461,7 +469,7 @@ onMounted(() => {
     });
     
     editor.onDidPaste(() => {
-      setTimeout(() => {
+      trackTimer(() => {
         const content = editor?.getValue() || '';
         if (content.trim()) {
           addHistory(content);
@@ -620,8 +628,13 @@ const downloadPng = async () => {
 };
 
 onUnmounted(() => {
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop());
+  }
   themeWatcher?.();
+  themeWatcher = null;
   editor?.dispose();
+  editor = null;
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
   document.removeEventListener('mousemove', onResize);
