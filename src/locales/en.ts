@@ -216,6 +216,8 @@ export default {
       decodeUnicode: 'Unicode Decode (\\u to text)',
       unicodeDecode: '\\u→Text',
       unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in JSON strings to text; click again to turn off',
+      expandNested: 'Expand Nested',
+      expandNestedDesc: 'Click to enable: recursively parse JSON embedded in string values into objects/arrays; click again to turn off and restore',
       expandAll: 'Expand All',
       collapseAll: 'Collapse All'
     },
