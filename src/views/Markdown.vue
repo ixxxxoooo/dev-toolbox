@@ -136,9 +136,21 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { NotebookText, HelpCircle, X, History as HistoryIcon, PanelLeftClose, PanelLeftOpen, List } from 'lucide-vue-next';
 import { marked } from 'marked';
 import mermaid from 'mermaid';
+import DOMPurify from 'dompurify';
 import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
 import { useHistory } from '@/composables/useHistory';
 import { useThemeStore } from '@/stores/theme';
+
+// 配置 DOMPurify：默认会剥离 <script>/事件属性等 XSS 向量。
+// 对 mermaid 代码块做白名单：保留 .mermaid div 及其内部纯文本（mermaid DSL），
+// 但仍清洗掉其中可能混入的 HTML 标签。
+DOMPurify.addHook('uponSanitizeElement', (node, data) => {
+  const el = node as HTMLElement;
+  // mermaid 块内容应为纯文本，强制转成 textContent 防止标签注入
+  if (el.classList?.contains('mermaid') && data.tagName === 'div') {
+    el.textContent = el.textContent;
+  }
+});
 import HistoryModal from '@/components/HistoryModal.vue';
 
 const STORAGE_KEY = 'markdown-content';
@@ -230,8 +242,13 @@ const toc = computed(() => {
 const html = computed(() => {
   htmlSlugCounts = {}; // Reset counts before each render
   const rawHtml = marked(markdown.value) as string;
-  // Replace standard code block with mermaid div
-  return rawHtml.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, '<div class="mermaid">$1</div>');
+  // Replace standard code block with mermaid div（先做替换，便于后续 mermaid.run 识别）
+  const withMermaid = rawHtml.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, '<div class="mermaid">$1</div>');
+  // XSS 防护：用 DOMPurify 清洗整个 HTML 输出，剥离 <script>、onerror 等事件属性、
+  // javascript: 链接等攻击向量。配置的 hook 会保留 .mermaid 块的纯文本内容。
+  return DOMPurify.sanitize(withMermaid, {
+    ADD_ATTR: ['target'], // 允许 <a target="_blank"> 等
+  });
 });
 
 // Initialize and re-render mermaid
@@ -414,7 +431,9 @@ onMounted(() => {
   mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
-    securityLevel: 'loose'
+    // strict：禁止在 mermaid 图内注入 HTML 标签/事件属性，降低 XSS 风险。
+    // 用户需要完整 HTML 能力时可用专门的 Mermaid 工具页面。
+    securityLevel: 'strict'
   });
   renderMermaid();
 });

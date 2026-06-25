@@ -96,17 +96,39 @@ import CustomInput from '../components/CustomInput.vue';
 const uuid = ref('');
 const showHelp = ref(false);
 
+/**
+ * 生成符合 RFC 4122 的 v4 UUID，使用 crypto.getRandomValues 保证密码学强度。
+ * v4 规则：第 7 字节高 4 位固定为 0100（version=4），第 9 字节高 2 位固定为 10（variant）。
+ */
 const generateUuid = () => {
-  uuid.value = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0,
-      v = c === 'x' ? r : (r & 0x3 | 0x8);
+  const cryptoObj = globalThis.crypto;
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const bytes = new Uint8Array(16);
+    cryptoObj.getRandomValues(bytes);
+    // version = 4
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    // variant = 10xx
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0'));
+    uuid.value = `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
+    return;
+  }
+  // 降级：仅在 crypto API 缺失时使用 Math.random（带警告，非安全场景）
+  console.warn('crypto.getRandomValues unavailable, falling back to Math.random (NOT secure)');
+  uuid.value = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.floor(Math.random() * 16);
+    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
     return v.toString(16);
   });
 };
 
 const copyUuid = () => {
   if (uuid.value) {
-    navigator.clipboard.writeText(uuid.value);
+    try {
+      navigator.clipboard.writeText(uuid.value);
+    } catch (err) {
+      console.error('Cannot copy to clipboard:', err);
+    }
   }
 };
 

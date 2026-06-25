@@ -182,7 +182,9 @@ export default {
       inlineDescription: '内联对比模式',
       ignoreWhitespaceDescription: '忽略空白字符',
       putLeft: '左对比',
-      putRight: '右对比'
+      putRight: '右对比',
+      unicodeDecode: '\\u转中文',
+      unicodeDecodeDesc: '点击开启：把左右两侧文本里的 \\uXXXX 解码成中文；再次点击关闭并还原'
     },
 
     // Base64 编解码
@@ -335,6 +337,7 @@ export default {
       charsetSize: '字符集大小',
       securityAdvice: '安全建议',
       entropy: '熵值',
+      emptyCharsetError: '请至少选择一种字符类型（大写/小写/数字/符号）',
       types: {
         strong: '强密码 (推荐)',
         strongDesc: '包含大小写字母、数字和符号的高强度密码',

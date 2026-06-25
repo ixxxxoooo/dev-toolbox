@@ -117,7 +117,6 @@ dayjs.extend(relativeTime);
 
 const userInput = ref('');
 const parsedDate = ref<dayjs.Dayjs | null>(null);
-const errorMessage = ref('');
 const showHelp = ref(false);
 
 const isValid = computed(() => parsedDate.value !== null && parsedDate.value.isValid());
@@ -140,18 +139,21 @@ const parseInput = () => {
   const input = userInput.value.trim();
   if (!input) {
     parsedDate.value = null;
-    errorMessage.value = '';
     return;
   }
 
   let d: dayjs.Dayjs | null = null;
 
   if (/^\d{8}$/.test(input)) {
-    d = dayjs(input, 'YYYYMMDD');
+    d = dayjs(input, 'YYYYMMDD', true);
+    // 严格校验：dayjs 默认宽松解析会把 20231345 这类溢出值规整成"有效"日期，
+    // 这里用 strict 模式 + 合理性边界（年 1900-2100）双重保险。
     if (d.isValid()) {
-      parsedDate.value = d;
-      errorMessage.value = '';
-      return;
+      const year = d.year();
+      if (year >= 1900 && year <= 2100) {
+        parsedDate.value = d;
+        return;
+      }
     }
   }
 
@@ -160,18 +162,22 @@ const parseInput = () => {
     d = input.length === 10 ? dayjs.unix(num) : dayjs(num);
     if (d.isValid()) {
       parsedDate.value = d;
-      errorMessage.value = '';
       return;
     }
+  }
+
+  // 纯数字（非 10/13 位）不应走通用解析：dayjs("12345") 会被当作 epoch，
+  // 产生 1970 年的"有效"日期，误导用户。直接判定无效。
+  if (/^\d+$/.test(input)) {
+    parsedDate.value = null;
+    return;
   }
 
   d = dayjs(input);
   if (d.isValid()) {
     parsedDate.value = d;
-    errorMessage.value = '';
   } else {
     parsedDate.value = null;
-    errorMessage.value = $t('errors.invalidTimestamp');
   }
 };
 
@@ -184,13 +190,18 @@ const pasteAndParse = async () => {
   try {
     userInput.value = await navigator.clipboard.readText();
     parseInput();
-  } catch (e) {
-    errorMessage.value = $t('common.messages.cannotReadClipboard');
+  } catch (err) {
+    // 模板未渲染 errorMessage，这里仅记录；剪贴板读取失败不阻塞用户手动输入
+    console.error('Cannot read clipboard:', err);
   }
 };
 
 const copyToClipboard = (text: string | number) => {
-  navigator.clipboard.writeText(String(text));
+  try {
+    navigator.clipboard.writeText(String(text));
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
 };
 
 onMounted(() => {

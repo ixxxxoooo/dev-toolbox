@@ -82,6 +82,10 @@
               <CustomCheckbox v-model="options.symbols" @change="generatePassword" :label="$t('tools.password.symbols') + ' (!@#$)'" class="p-2 rounded hover:bg-muted/50 transition-colors w-full" />
               <CustomCheckbox v-model="options.excludeAmbiguous" @change="generatePassword" :label="$t('tools.password.excludeAmbiguous') + ' (0 O 1 l I | `)'" class="p-2 rounded hover:bg-muted/50 transition-colors col-span-2 w-full" />
             </div>
+            <p v-if="charsetError" class="mt-3 text-xs text-destructive flex items-center animate-pulse">
+              <AlertCircle class="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+              {{ charsetError }}
+            </p>
           </div>
 
           <!-- Memorable Options -->
@@ -212,7 +216,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { HelpCircle, KeyRound, RefreshCw, Trash2, Settings2, Ruler, Info, Sliders, List, Copy, ShieldCheck, Lightbulb, X } from 'lucide-vue-next';
+import { HelpCircle, KeyRound, RefreshCw, Trash2, Settings2, Ruler, Info, Sliders, List, Copy, ShieldCheck, Lightbulb, AlertCircle, X } from 'lucide-vue-next';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import CustomRadio from '../components/CustomRadio.vue';
 import CustomRange from '../components/CustomRange.vue';
@@ -247,6 +251,8 @@ const selectedType = ref('strong');
 const passwordLength = ref(16);
 const generatedPasswords = ref<string[]>([]);
 const showHelp = ref(false);
+// 空字符集提示：用户取消勾选所有字符类时显示，避免静默生成空密码
+const charsetError = ref('');
 
 const passwordTypes = [
   { key: 'strong', label: 'tools.password.types.strong', description: 'tools.password.types.strongDesc' },
@@ -332,21 +338,38 @@ const getCharacterSet = () => {
   return chars;
 };
 
+/**
+ * 生成 [0, max) 范围内均匀分布的随机整数，用 crypto.getRandomValues 实现，
+ * 并用拒绝采样消除模偏差（直接 % max 会让小余数出现概率更高）。
+ * 仅在 crypto API 不可用时降级到 Math.random（带控制台警告）。
+ */
+const secureRandomInt = (max: number): number => {
+  if (max <= 0) return 0;
+  const cryptoObj = globalThis.crypto;
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    // 拒绝采样：max 能整除 2^8 的最大倍数，超过该阈值的随机字节直接丢弃重抽
+    const maxUint8 = 256;
+    const limit = maxUint8 - (maxUint8 % max);
+    const buf = new Uint8Array(1);
+    let x: number;
+    do {
+      cryptoObj.getRandomValues(buf);
+      x = buf[0];
+    } while (x >= limit);
+    return x % max;
+  }
+  // 降级：仅在非浏览器/测试环境等 crypto 缺失场景，提示用户
+  console.warn('crypto.getRandomValues unavailable, falling back to Math.random (NOT secure)');
+  return Math.floor(Math.random() * max);
+};
+
 const generateStrongPassword = (length: number) => {
   const chars = getCharacterSet();
   if (!chars) return '';
   let password = '';
-  const array = new Uint32Array(length);
-  // if (window.crypto && window.crypto.getRandomValues) {
-  //   window.crypto.getRandomValues(array);
-  // } else {
-    // Fallback for environments where crypto is not available (e.g. build time)
-    for (let i = 0; i < length; i++) {
-      array[i] = Math.floor(Math.random() * 4294967296);
-    }
-  // }
   for (let i = 0; i < length; i++) {
-    password += chars[array[i] % chars.length];
+    // secureRandomInt 内部已消除模偏差，每个字符概率均匀
+    password += chars[secureRandomInt(chars.length)];
   }
   return password;
 };
@@ -356,9 +379,13 @@ const generateMemorablePassword = () => {
   const usedIndices = new Set();
   for (let i = 0; i < memorableOptions.value.wordCount; i++) {
     let randomIndex;
+    // 防御：理论上 wordCount <= commonWords.length，但若配置异常导致无法去重，
+    // 避免死循环（尝试上限后允许重复）
+    let attempts = 0;
     do {
-      randomIndex = Math.floor(Math.random() * commonWords.length);
-    } while (usedIndices.has(randomIndex));
+      randomIndex = secureRandomInt(commonWords.length);
+      attempts++;
+    } while (usedIndices.has(randomIndex) && attempts < commonWords.length);
     usedIndices.add(randomIndex);
     let word = commonWords[randomIndex];
     if (memorableOptions.value.capitalizeWords) {
@@ -368,7 +395,8 @@ const generateMemorablePassword = () => {
   }
   let password = words.join('-');
   if (memorableOptions.value.includeNumbers) {
-    const randomNum = Math.floor(Math.random() * 9999) + 1;
+    // 1-9999 用安全随机数生成
+    const randomNum = secureRandomInt(9999) + 1;
     password += randomNum.toString();
   }
   return password;
@@ -377,6 +405,14 @@ const generateMemorablePassword = () => {
 const generatePassword = () => {
   const count = 3;
   generatedPasswords.value = [];
+
+  // 强密码模式下必须保证字符集非空，否则会生成空密码 + 显示误导性的破解时间
+  if (selectedType.value === 'strong' && !getCharacterSet()) {
+    charsetError.value = $t('tools.password.emptyCharsetError');
+    return;
+  }
+  charsetError.value = '';
+
   for (let i = 0; i < count; i++) {
     let password = '';
     if (selectedType.value === 'memorable') {
@@ -391,7 +427,11 @@ const generatePassword = () => {
 };
 
 const copyPassword = (password: string) => {
-  navigator.clipboard.writeText(password);
+  try {
+    navigator.clipboard.writeText(password);
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
 };
 
 const clearPasswords = () => {
