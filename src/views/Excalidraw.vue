@@ -47,6 +47,7 @@ import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { useThemeStore } from '@/stores/theme';
 import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
+import { useDebounceFn } from '@/composables/useDebounceFn';
 import { useI18n } from 'vue-i18n';
 
 const STORAGE_KEY = 'excalidraw-data';
@@ -58,13 +59,30 @@ const { locale } = useI18n();
 
 let root: Root | null = null;
 
+// 防抖持久化：Excalidraw 的 onChange 在拖拽时每帧触发数十次，直接 saveToStorage
+// 会同步 JSON.stringify 整张图 + 写 localStorage，严重阻塞主线程。
+// 这里用 400ms 防抖，拖拽过程中只在停顿后落盘一次。卸载时自动清理挂起的定时器。
+const debouncedPersist = useDebounceFn(
+  (elements: any, appState: any, files: any) => {
+    saveToStorage(STORAGE_KEY, { elements, appState: { ...appState, collaborators: undefined } });
+    if (files && Object.keys(files).length > 0) {
+      saveToStorage(FILES_KEY, files);
+    }
+  },
+  400
+);
+
 const renderExcalidraw = () => {
   if (!containerRef.value || !root) return;
   
   const savedData = loadFromStorage(STORAGE_KEY, null);
   const savedFiles = loadFromStorage(FILES_KEY, {});
-  const initialData = savedData ? { 
-    elements: savedData.elements, 
+  // 校验持久化数据的形状，避免损坏/版本不兼容的数据导致渲染崩溃。
+  // elements 必须是数组；appState 必须是对象（或缺失）。不满足时丢弃，回到空白画布。
+  const hasValidElements = !!savedData && Array.isArray(savedData.elements);
+  const hasValidAppState = !savedData || (typeof savedData.appState === 'object' && savedData.appState !== null);
+  const initialData = (hasValidElements && hasValidAppState) ? {
+    elements: savedData.elements,
     appState: { ...savedData.appState, collaborators: [] },
     files: savedFiles
   } : undefined;
@@ -85,10 +103,8 @@ const renderExcalidraw = () => {
         welcomeScreen: false,
       },
       onChange: (elements: any, appState: any, files: any) => {
-        saveToStorage(STORAGE_KEY, { elements, appState: { ...appState, collaborators: undefined } });
-        if (files && Object.keys(files).length > 0) {
-          saveToStorage(FILES_KEY, files);
-        }
+        // 走防抖持久化，避免每帧写 localStorage
+        debouncedPersist.run(elements, appState, files);
       }
     })
   );

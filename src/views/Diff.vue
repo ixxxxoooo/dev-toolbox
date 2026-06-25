@@ -58,6 +58,17 @@
             :label="$t('tools.diff.wordWrap')"
           />
 
+          <!-- Unicode 解码开关：选中=把左右两侧的 \uXXXX 解码成中文 -->
+          <button
+            @click="toggleDecodeUnicode"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
+            :class="decodeUnicode ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
+            :title="$t('tools.diff.unicodeDecodeDesc')"
+          >
+            <Languages class="w-3.5 h-3.5" />
+            <span>{{ $t('tools.diff.unicodeDecode') }}</span>
+          </button>
+
           <button
             @click="showMinimap = !showMinimap"
             class="p-1.5 rounded-md transition-colors h-7 w-7 flex items-center justify-center border border-transparent"
@@ -146,6 +157,7 @@
             <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
             <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
             <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
+            <li><strong>{{ $t('tools.diff.unicodeDecode') }}:</strong> {{ $t('tools.diff.unicodeDecodeDesc') }}</li>
           </ul>
         </div>
       </div>
@@ -167,7 +179,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map } from 'lucide-vue-next';
+import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
@@ -210,7 +222,8 @@ const STORAGE_KEYS = {
   showLineNumbers: 'diff-show-line-numbers',
   theme: 'diff-theme',
   wordWrapEnabled: 'diff-word-wrap-enabled',
-  showMinimap: 'diff-show-minimap'
+  showMinimap: 'diff-show-minimap',
+  decodeUnicode: 'diff-decode-unicode'
 };
 
 const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'));
@@ -220,6 +233,7 @@ const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, fals
 const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
+const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
 
 const initMonacoDiffEditor = async () => {
   await nextTick();
@@ -380,6 +394,46 @@ const handleHistorySelect = ({ content, side }: { content: string, side: 'origin
   showHistory.value = false;
 };
 
+/**
+ * 把文本里的字面量 \uXXXX 解码成对应字符（如 \u4e2d → 中）。
+ * 与 JSON 工具的 decodeUnicodeInStrings 思路一致，但 Diff 是纯文本，
+ * 直接对整段字符串做正则替换即可。
+ */
+const decodeUnicodeText = (text: string): string => {
+  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+};
+
+// Unicode 解码开关：选中=两边都把 \uXXXX 解码成中文，去掉=两边都还原。
+// 快照还原模式：开启时分别保存左右原始内容，关闭时一键还原（支持来回切换不丢数据）。
+const leftDecodeSnapshot = ref<string | null>(null);
+const rightDecodeSnapshot = ref<string | null>(null);
+
+const toggleDecodeUnicode = () => {
+  if (!diffEditor) return;
+  const originalEditor = diffEditor.getOriginalEditor();
+  const modifiedEditor = diffEditor.getModifiedEditor();
+  const turningOn = !decodeUnicode.value;
+  decodeUnicode.value = turningOn;
+
+  if (turningOn) {
+    // 开启：保存两侧原始内容，然后对当前内容应用解码
+    leftDecodeSnapshot.value = originalEditor.getValue() || '';
+    rightDecodeSnapshot.value = modifiedEditor.getValue() || '';
+    originalEditor.setValue(decodeUnicodeText(leftDecodeSnapshot.value));
+    modifiedEditor.setValue(decodeUnicodeText(rightDecodeSnapshot.value));
+  } else {
+    // 关闭：还原为开启前保存的两侧原始内容
+    if (leftDecodeSnapshot.value !== null) {
+      originalEditor.setValue(leftDecodeSnapshot.value);
+    }
+    if (rightDecodeSnapshot.value !== null) {
+      modifiedEditor.setValue(rightDecodeSnapshot.value);
+    }
+    leftDecodeSnapshot.value = null;
+    rightDecodeSnapshot.value = null;
+  }
+};
+
 const copyFrom = async (side: 'original' | 'modified') => {
   try {
     const text = side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue();
@@ -439,6 +493,10 @@ watch(wordWrapEnabled, (newValue) => {
 watch(showMinimap, (newValue) => {
   applyMinimapOption();
   saveToStorage(STORAGE_KEYS.showMinimap, newValue);
+});
+
+watch(decodeUnicode, (newValue) => {
+  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
 });
 </script>
 

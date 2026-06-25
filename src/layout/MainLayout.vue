@@ -42,7 +42,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.addEventListener('keydown', handleKeydown)
+  // 修复：原本误写成 addEventListener，导致卸载时再次绑定（泄漏），应为移除
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 

@@ -104,6 +104,7 @@ import * as monaco from 'monaco-editor';
 import { HelpCircle, Hash, ClipboardPaste, Trash2, Copy, X } from 'lucide-vue-next';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
+import { useDebounceFn } from '../composables/useDebounceFn';
 
 type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512';
 
@@ -135,6 +136,10 @@ const generateHashes = () => {
   hashes.value.sha512 = SHA512(text).toString();
 };
 
+// 防抖版：连续输入时每次按键都重算 4 种哈希，对 MB 级文本会明显卡顿。
+// 用 200ms 防抖，停顿后才计算。粘贴/清空等场景仍用上面的立即版本。
+const generateHashesDebounced = useDebounceFn(generateHashes, 200);
+
 const replaceTextInEditor = (newText: string) => {
   if (!editor) return;
   const model = editor.getModel();
@@ -163,7 +168,8 @@ const initEditor = async () => {
     });
     editor.onDidChangeModelContent(() => {
       inputText.value = editor?.getValue() || '';
-      generateHashes();
+      // 连续输入走防抖，避免大文本时每次按键都重算 4 种哈希
+      generateHashesDebounced.run();
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     themeWatcher = watchThemeChange(editor);
@@ -175,18 +181,29 @@ const initEditor = async () => {
 const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText();
+    // 取消可能挂起的防抖计算，避免和下面的立即计算重复
+    generateHashesDebounced.cancel();
     replaceTextInEditor(text);
+    // 粘贴后立即计算哈希，给用户即时反馈（不防抖）
+    generateHashes();
   } catch (err) {
     console.error('Failed to read clipboard:', err);
   }
 };
 
 const clearInput = () => {
+  generateHashesDebounced.cancel();
   replaceTextInEditor('');
+  // 清空后立即重算（显示空输入的哈希），不防抖
+  generateHashes();
 };
 
 const copyHash = (key: HashKey) => {
-  navigator.clipboard.writeText(hashes.value[key]);
+  try {
+    navigator.clipboard.writeText(hashes.value[key]);
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
 };
 
 onMounted(initEditor);

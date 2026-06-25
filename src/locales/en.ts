@@ -182,7 +182,9 @@ export default {
       inlineDescription: 'Inline Mode',
       ignoreWhitespaceDescription: 'Ignore Whitespace',
       putLeft: 'Put Left',
-      putRight: 'Put Right'
+      putRight: 'Put Right',
+      unicodeDecode: '\\u→Text',
+      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in both panels to text; click again to turn off and restore'
     },
 
     // Base64 Encoder/Decoder
@@ -335,6 +337,7 @@ export default {
       charsetSize: 'Charset Size',
       securityAdvice: 'Security Advice',
       entropy: 'Entropy',
+      emptyCharsetError: 'Please select at least one character type (uppercase/lowercase/numbers/symbols)',
       types: {
         strong: 'Strong (Recommended)',
         strongDesc: 'High entropy password with mixed characters',
