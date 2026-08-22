@@ -53,20 +53,28 @@
         <div class="flex items-center space-x-1 flex-shrink-0">
           <button
             @click="showHistory = true"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
             :title="$t('common.buttons.history')"
           >
-            <History class="w-4 h-4" />
+            <History class="w-3.5 h-3.5" />
             <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
           <button
-            @click="goToDiff"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('tools.diff.name')"
+            @click="goToDiff('left')"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.compareLeft')"
           >
-            <ArrowRightLeft class="w-4 h-4" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
+            <ArrowLeftToLine class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compareLeft') }}</span>
+          </button>
+          <button
+            @click="goToDiff('right')"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.compareRight')"
+          >
+            <ArrowRightToLine class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compareRight') }}</span>
           </button>
         </div>
       </div>
@@ -165,7 +173,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowRightLeft, History, Map } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowLeftToLine, ArrowRightToLine, History, Map } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
@@ -360,6 +368,10 @@ const decodeUnicode = () => {
   }
 }
 
+let contentChangeListener: monaco.IDisposable | null = null
+let pasteListener: monaco.IDisposable | null = null
+let pasteTimer: number | null = null
+
 const initEditor = async () => {
   await nextTick()
   const editorOptions = {
@@ -379,21 +391,23 @@ const initEditor = async () => {
 
   if (sqlEditorRef.value) {
     sqlEditor = monaco.editor.create(sqlEditorRef.value, { value: sqlText.value, ...editorOptions })
-    let pasteTimer: number | null = null
     let isFormatting = false
 
-    sqlEditor.onDidChangeModelContent(() => {
-      sqlText.value = sqlEditor?.getValue() || ''
-      saveToStorage(STORAGE_KEYS.sqlText, sqlText.value)
+    contentChangeListener = sqlEditor.onDidChangeModelContent(() => {
+      if (sqlEditor) {
+        const val = sqlEditor.getValue()
+        sqlText.value = val
+        saveToStorage(STORAGE_KEYS.sqlText, val)
+      }
     })
 
-    sqlEditor.onDidPaste(() => {
+    pasteListener = sqlEditor.onDidPaste(() => {
       if (pasteTimer) clearTimeout(pasteTimer)
       pasteTimer = window.setTimeout(() => {
         pasteTimer = null
-        if (!isFormatting) {
+        if (!isFormatting && sqlEditor) {
           isFormatting = true
-          addHistory(sqlEditor?.getValue() || '')
+          addHistory(sqlEditor.getValue() || '')
           formatSQL(true)
           setTimeout(() => { isFormatting = false }, 200)
         }
@@ -443,9 +457,18 @@ const pasteInput = async () => {
 }
 const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')
 
-const goToDiff = () => {
-  const text = sqlEditor?.getValue() || ''
-  saveToStorage('diff-left-content', text)
+const goToDiff = (side: 'left' | 'right' = 'left') => {
+  const text = sqlEditor?.getValue() ?? sqlText.value
+  const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content'
+  const currentContent = loadFromStorage(storageKey, '')
+  const { addHistory: addDiffHistory } = useHistory('diff', themeStore.historyLimit.value)
+  if (currentContent && currentContent !== text) {
+    addDiffHistory(currentContent)
+  }
+  if (text.trim()) {
+    addDiffHistory(text)
+  }
+  saveToStorage(storageKey, text)
   router.push('/diff')
 }
 
@@ -464,7 +487,16 @@ watch(showMinimap, (newValue) => {
 
 onMounted(initEditor)
 onBeforeUnmount(() => {
+  if (pasteTimer) clearTimeout(pasteTimer)
+  contentChangeListener?.dispose()
+  pasteListener?.dispose()
   themeWatcher?.()
+  if (sqlEditor) {
+    const finalVal = sqlEditor.getValue()
+    if (finalVal !== undefined && finalVal !== '') {
+      saveToStorage(STORAGE_KEYS.sqlText, finalVal)
+    }
+  }
   sqlEditor?.dispose()
 })
 </script>
