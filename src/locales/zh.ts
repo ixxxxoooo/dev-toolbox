@@ -49,6 +49,8 @@ export default {
       regenerate: '重新生成',
       process: '处理',
       compare: '对比',
+      compareLeft: '左对比',
+      compareRight: '右对比',
       history: '历史记录',
       select: '进入'
     },

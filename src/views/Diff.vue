@@ -177,6 +177,15 @@ import HistoryModal from '../components/HistoryModal.vue';
 
 const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
+let originalModel: monaco.editor.ITextModel | null = null;
+let modifiedModel: monaco.editor.ITextModel | null = null;
+let originalContentListener: monaco.IDisposable | null = null;
+let modifiedContentListener: monaco.IDisposable | null = null;
+let originalPasteListener: monaco.IDisposable | null = null;
+let modifiedPasteListener: monaco.IDisposable | null = null;
+let originalPasteTimer: NodeJS.Timeout | null = null;
+let modifiedPasteTimer: NodeJS.Timeout | null = null;
+let minimapTimer: NodeJS.Timeout | null = null;
 let themeWatcher: (() => void) | null = null;
 const showHelp = ref(false);
 const showHistory = ref(false);
@@ -207,14 +216,42 @@ const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true))
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
 
+const cleanupEditorResources = () => {
+  if (originalPasteTimer) clearTimeout(originalPasteTimer);
+  if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer);
+  if (minimapTimer) clearTimeout(minimapTimer);
+  originalContentListener?.dispose();
+  modifiedContentListener?.dispose();
+  originalPasteListener?.dispose();
+  modifiedPasteListener?.dispose();
+  themeWatcher?.();
+  themeWatcher = null;
+  if (diffEditor) {
+    diffEditor.dispose();
+    diffEditor = null;
+  }
+  if (originalModel) {
+    originalModel.dispose();
+    originalModel = null;
+  }
+  if (modifiedModel) {
+    modifiedModel.dispose();
+    modifiedModel = null;
+  }
+};
+
 const initMonacoDiffEditor = async () => {
   await nextTick();
   if (!diffEditorRef.value) return;
 
-  diffEditor?.dispose();
+  cleanupEditorResources();
 
-  const originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
-  const modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
+  // Reload freshest content from storage
+  leftContent.value = loadFromStorage(STORAGE_KEYS.leftContent, leftContent.value);
+  rightContent.value = loadFromStorage(STORAGE_KEYS.rightContent, rightContent.value);
+
+  originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
+  modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
 
   diffEditor = monaco.editor.createDiffEditor(diffEditorRef.value, {
     theme: getMonacoTheme(),
@@ -237,8 +274,7 @@ const initMonacoDiffEditor = async () => {
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel });
 
-  // Use a small delay to ensure sub-editors are fully ready to accept options
-  setTimeout(() => {
+  minimapTimer = setTimeout(() => {
     applyMinimapOption();
   }, 100);
 
@@ -251,24 +287,34 @@ const initMonacoDiffEditor = async () => {
   originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
   modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
 
-  originalEditor.onDidChangeModelContent(() => {
-    leftContent.value = originalEditor.getValue() || '';
-    saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
+  originalContentListener = originalEditor.onDidChangeModelContent(() => {
+    if (originalEditor) {
+      leftContent.value = originalEditor.getValue() || '';
+      saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
+    }
   });
-  modifiedEditor.onDidChangeModelContent(() => {
-    rightContent.value = modifiedEditor.getValue() || '';
-    saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
+  modifiedContentListener = modifiedEditor.onDidChangeModelContent(() => {
+    if (modifiedEditor) {
+      rightContent.value = modifiedEditor.getValue() || '';
+      saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
+    }
   });
 
-  originalEditor.onDidPaste(() => {
-    setTimeout(() => {
-      addHistory(originalEditor.getValue());
+  originalPasteListener = originalEditor.onDidPaste(() => {
+    if (originalPasteTimer) clearTimeout(originalPasteTimer);
+    originalPasteTimer = setTimeout(() => {
+      if (originalEditor) {
+        addHistory(originalEditor.getValue());
+      }
     }, 50);
   });
 
-  modifiedEditor.onDidPaste(() => {
-    setTimeout(() => {
-      addHistory(modifiedEditor.getValue());
+  modifiedPasteListener = modifiedEditor.onDidPaste(() => {
+    if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer);
+    modifiedPasteTimer = setTimeout(() => {
+      if (modifiedEditor) {
+        addHistory(modifiedEditor.getValue());
+      }
     }, 50);
   });
 };
@@ -384,8 +430,7 @@ const applyMinimapOption = () => {
 onMounted(initMonacoDiffEditor);
 
 onBeforeUnmount(() => {
-  themeWatcher?.();
-  diffEditor?.dispose();
+  cleanupEditorResources();
 });
 
 watch(diffMode, (newMode) => {

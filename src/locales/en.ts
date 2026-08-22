@@ -49,6 +49,8 @@ export default {
       regenerate: 'Regenerate',
       process: 'Process',
       compare: 'Compare',
+      compareLeft: 'Compare Left',
+      compareRight: 'Compare Right',
       history: 'History',
       select: 'Select'
     },

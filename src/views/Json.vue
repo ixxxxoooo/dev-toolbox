@@ -45,7 +45,7 @@
         <div class="flex items-center space-x-1 flex-shrink-0">
           <button
             @click="showHistory = true"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
             :title="$t('common.buttons.history')"
           >
             <History class="w-3.5 h-3.5" />
@@ -53,12 +53,20 @@
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
           <button
-            @click="goToDiff"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('tools.diff.name')"
+            @click="goToDiff('left')"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.compareLeft')"
           >
-            <ArrowRightLeft class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compare') }}</span>
+            <ArrowLeftToLine class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compareLeft') }}</span>
+          </button>
+          <button
+            @click="goToDiff('right')"
+            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+            :title="$t('common.buttons.compareRight')"
+          >
+            <ArrowRightToLine class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ $t('common.buttons.compareRight') }}</span>
           </button>
         </div>
       </div>
@@ -219,7 +227,7 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowRightLeft, History, Map } from 'lucide-vue-next';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowLeftToLine, ArrowRightToLine, History, Map } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -419,6 +427,10 @@ const processData = (isAuto = false) => {
   }
 };
 
+let contentChangeListener: monaco.IDisposable | null = null;
+let pasteListener: monaco.IDisposable | null = null;
+let pasteTimer: NodeJS.Timeout | null = null;
+
 const initEditors = async () => {
   await nextTick();
   if (editorRef.value) {
@@ -436,9 +448,9 @@ const initEditors = async () => {
       formatOnType: true,
     });
 
-    editor.onDidChangeModelContent(() => {
-      const newValue = editor?.getValue() || '';
-      if (!isProcessing) {
+    contentChangeListener = editor.onDidChangeModelContent(() => {
+      if (!isProcessing && editor) {
+        const newValue = editor.getValue();
         inputText.value = newValue;
       }
     });
@@ -447,9 +459,11 @@ const initEditors = async () => {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
 
-    editor.onDidPaste(() => {
-      setTimeout(() => {
-        const currentText = editor?.getValue() || '';
+    pasteListener = editor.onDidPaste(() => {
+      if (pasteTimer) clearTimeout(pasteTimer);
+      pasteTimer = setTimeout(() => {
+        if (!editor) return;
+        const currentText = editor.getValue() || '';
         // Always record paste to history
         if (currentText.trim()) {
           addHistory(currentText);
@@ -489,9 +503,19 @@ const copyInput = () => {
   navigator.clipboard.writeText(text);
 };
 
-const goToDiff = () => {
-  const text = editor?.getValue() || '';
-  saveToStorage('diff-left-content', text);
+const goToDiff = (side: 'left' | 'right' = 'left') => {
+  const text = editor?.getValue() ?? inputText.value;
+  const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content';
+  // Ensure we don't lose previous diff content by backing it up to diff history
+  const currentContent = loadFromStorage(storageKey, '');
+  const { addHistory: addDiffHistory } = useHistory('diff', themeStore.historyLimit.value);
+  if (currentContent && currentContent !== text) {
+    addDiffHistory(currentContent);
+  }
+  if (text.trim()) {
+    addDiffHistory(text);
+  }
+  saveToStorage(storageKey, text);
   router.push('/diff');
 };
 
@@ -535,7 +559,16 @@ onMounted(initEditors);
 
 onBeforeUnmount(() => {
   if (errorTimer) clearTimeout(errorTimer);
+  if (pasteTimer) clearTimeout(pasteTimer);
+  contentChangeListener?.dispose();
+  pasteListener?.dispose();
   themeWatcher?.();
+  if (editor) {
+    const finalVal = editor.getValue();
+    if (finalVal !== undefined && finalVal !== '') {
+      saveToStorage(STORAGE_KEYS.inputText, finalVal);
+    }
+  }
   editor?.dispose();
 });
 </script>
