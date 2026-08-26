@@ -12,6 +12,15 @@
         <button @click="copyHtml" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
           {{ $t('tools.markdown.copyHtml') }}
         </button>
+        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+        <button
+          @click="showHistory = true"
+          class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+          :title="$t('common.buttons.history')"
+        >
+          <HistoryIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
+        </button>
       </div>
       <div class="flex items-center space-x-3">
         <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
@@ -21,28 +30,75 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden flex">
+    <main ref="mainContainer" class="flex-1 overflow-hidden flex">
       <!-- Editor -->
-      <div class="flex-1 flex flex-col border-r border-border min-w-0">
-        <div class="px-3 py-1.5 bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground">
-          Markdown
+      <div v-show="!editorCollapsed" class="flex flex-col min-w-0" :style="{ width: leftWidth + 'px' }">
+        <div class="h-8 px-3 flex items-center justify-between bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground">
+          <span>Markdown</span>
+          <button @click="editorCollapsed = true" class="p-1 hover:bg-muted rounded" title="Collapse">
+            <PanelLeftClose class="w-4 h-4" />
+          </button>
         </div>
         <div class="flex-1 relative">
           <textarea
+            ref="editorRef"
             v-model="markdown"
             class="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent border-none outline-none resize-none"
             placeholder="# Hello World"
+            @scroll="onEditorScroll"
           ></textarea>
         </div>
       </div>
 
+      <!-- Collapsed Editor Toggle -->
+      <div v-if="editorCollapsed" class="flex flex-col border-r border-border bg-muted/30">
+        <button @click="editorCollapsed = false" class="p-2 hover:bg-muted" title="Expand Editor">
+          <PanelLeftOpen class="w-4 h-4" />
+        </button>
+      </div>
+
+       <!-- Resizer -->
+      <div
+        v-show="!editorCollapsed"
+        class="w-1 bg-border hover:bg-primary/50 cursor-col-resize flex-shrink-0 transition-colors"
+        @mousedown="startResize"
+      ></div>
+
       <!-- Preview -->
       <div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0d1117]">
-        <div class="px-3 py-1.5 bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground">
-          Preview
+        <div class="px-3 py-1.5 bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground flex items-center justify-between">
+          <span>Preview</span>
+          <button
+            @click="showToc = !showToc"
+            :class="{ 'text-primary': showToc }"
+            class="hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted/50"
+            title="Table of Contents"
+          >
+            <List class="w-4 h-4" />
+          </button>
         </div>
-        <div class="flex-1 relative overflow-auto p-8 prose dark:prose-invert max-w-none">
-          <div v-html="html"></div>
+        <div class="flex-1 flex overflow-hidden">
+          <div ref="previewContainer" class="flex-1 relative overflow-auto p-8 prose dark:prose-invert max-w-none" @scroll="onPreviewScroll">
+            <div v-html="html"></div>
+          </div>
+          <!-- TOC Sidebar -->
+          <div ref="tocContainer" v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-4 flex-shrink-0 text-sm">
+            <div class="font-medium mb-3 text-muted-foreground text-xs uppercase tracking-wider">Outline</div>
+            <div v-if="toc.length === 0" class="text-xs text-muted-foreground italic">No headings</div>
+            <ul class="space-y-1">
+              <li v-for="(item, index) in toc" :key="index" :style="{ paddingLeft: (item.depth - 1) * 0.75 + 'rem' }">
+                <button
+                  @click="scrollToHeading(item.slug)"
+                  class="text-xs text-muted-foreground hover:text-primary text-left truncate w-full py-1 block transition-colors border-l-2 border-transparent hover:border-primary pl-2 -ml-2"
+                  :class="{ '!text-primary font-medium !border-primary bg-primary/5': activeSlug === item.slug }"
+                  :title="item.text"
+                  :data-slug="item.slug"
+                >
+                  {{ item.text }}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </main>
@@ -61,24 +117,333 @@
         </div>
       </div>
     </div>
+
+    <!-- History Modal -->
+    <HistoryModal
+      :show="showHistory"
+      :history="history"
+      type="markdown"
+      @close="showHistory = false"
+      @select="useHistoryItem"
+      @delete="deleteHistory"
+      @clear="clearHistory"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { NotebookText, HelpCircle, X } from 'lucide-vue-next';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { NotebookText, HelpCircle, X, History as HistoryIcon, PanelLeftClose, PanelLeftOpen, List } from 'lucide-vue-next';
 import { marked } from 'marked';
+import mermaid from 'mermaid';
+import DOMPurify from 'dompurify';
+import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
+import { useHistory } from '@/composables/useHistory';
+import { useThemeStore } from '@/stores/theme';
 
-const markdown = ref('# Hello World\n\nStart typing markdown here...');
+// 配置 DOMPurify：默认会剥离 <script>/事件属性等 XSS 向量。
+// 对 mermaid 代码块做白名单：保留 .mermaid div 及其内部纯文本（mermaid DSL），
+// 但仍清洗掉其中可能混入的 HTML 标签。
+DOMPurify.addHook('uponSanitizeElement', (node, data) => {
+  const el = node as HTMLElement;
+  // mermaid 块内容应为纯文本，强制转成 textContent 防止标签注入
+  if (el.classList?.contains('mermaid') && data.tagName === 'div') {
+    el.textContent = el.textContent;
+  }
+});
+import HistoryModal from '@/components/HistoryModal.vue';
+
+const STORAGE_KEY = 'markdown-content';
+const LEFT_WIDTH_KEY = 'markdown-left-width';
+const COLLAPSED_KEY = 'markdown-editor-collapsed';
+const SHOW_TOC_KEY = 'markdown-show-toc';
+
+const markdown = ref(loadFromStorage(STORAGE_KEY, '# Hello World\n\nStart typing markdown here...\n\n```mermaid\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;\n```'));
 const showHelp = ref(false);
+const showHistory = ref(false);
+const showToc = ref(loadFromStorage(SHOW_TOC_KEY, false));
+const editorCollapsed = ref(loadFromStorage(COLLAPSED_KEY, false));
+const leftWidth = ref(loadFromStorage(LEFT_WIDTH_KEY, window.innerWidth / 2));
+const mainContainer = ref<HTMLElement | null>(null);
+const isResizing = ref(false);
+const previewContainer = ref<HTMLElement | null>(null);
+const tocContainer = ref<HTMLElement | null>(null);
+const editorRef = ref<HTMLElement | null>(null);
+const activeSlug = ref('');
+const isScrolling = ref<'editor' | 'preview' | null>(null);
+let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const html = computed(() => {
-  return marked(markdown.value);
+const themeStore = useThemeStore();
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('markdown', themeStore.historyLimit.value);
+
+watch(() => themeStore.historyLimit.value, (newLimit: number) => {
+  updateMaxItems(newLimit);
 });
 
-const copyHtml = () => {
-  navigator.clipboard.writeText(html.value as string);
+let htmlSlugCounts: Record<string, number> = {};
+
+// Slugify function for IDs
+const slugify = (text: string, counts: Record<string, number>) => {
+  let baseSlug = text
+    .toLowerCase()
+    .trim()
+    .replace(/<[^>]*>?/gm, '') // Remove HTML tags
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\u4e00-\u9fa5-]/g, '') // Keep Chinese characters, letters, numbers, dashes
+    .replace(/^-+|-+$/g, '');
+  
+  if (!baseSlug) baseSlug = 'heading';
+
+  if (counts[baseSlug] !== undefined) {
+    counts[baseSlug]++;
+    return `${baseSlug}-${counts[baseSlug]}`;
+  } else {
+    counts[baseSlug] = 0;
+    return baseSlug;
+  }
 };
+
+// Configure marked renderer for headings
+// Using 'any' type to bypass marked version discrepancies
+const renderer = {
+  heading(token: any) {
+    // Check if token has text and depth (object format) or arguments
+    const text = token.text || arguments[0];
+    const depth = token.depth || arguments[1];
+
+    const slug = slugify(text, htmlSlugCounts);
+    return `<h${depth} id="${slug}">${text}</h${depth}>`;
+  }
+};
+
+marked.use({ renderer: renderer as any });
+
+// Generate TOC from tokens
+const toc = computed(() => {
+  const tokens = marked.lexer(markdown.value);
+  const headings: { text: string; depth: number; slug: string }[] = [];
+  const tocCounts: Record<string, number> = {};
+
+  tokens.forEach((token: any) => {
+    if (token.type === 'heading') {
+      let displayText = token.text.replace(/<[^>]*>?/gm, '');
+      headings.push({
+        text: displayText,
+        depth: token.depth,
+        slug: slugify(token.text, tocCounts)
+      });
+    }
+  });
+
+  return headings;
+});
+
+// Configure marked to handle mermaid code blocks via string replacement
+const html = computed(() => {
+  htmlSlugCounts = {}; // Reset counts before each render
+  const rawHtml = marked(markdown.value) as string;
+  // Replace standard code block with mermaid div（先做替换，便于后续 mermaid.run 识别）
+  const withMermaid = rawHtml.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, '<div class="mermaid">$1</div>');
+  // XSS 防护：用 DOMPurify 清洗整个 HTML 输出，剥离 <script>、onerror 等事件属性、
+  // javascript: 链接等攻击向量。配置的 hook 会保留 .mermaid 块的纯文本内容。
+  return DOMPurify.sanitize(withMermaid, {
+    ADD_ATTR: ['target'], // 允许 <a target="_blank"> 等
+  });
+});
+
+// Initialize and re-render mermaid
+const renderMermaid = async () => {
+  await nextTick();
+  if (previewContainer.value) {
+    const mermaidDivs = previewContainer.value.querySelectorAll('.mermaid');
+    if (mermaidDivs.length > 0) {
+      try {
+        await mermaid.run({
+          nodes: mermaidDivs as any
+        });
+      } catch (e) {
+        console.error('Mermaid rendering error:', e);
+      }
+    }
+  }
+};
+
+const copyHtml = () => {
+  navigator.clipboard.writeText(html.value);
+};
+
+const scrollToHeading = (slug: string) => {
+  if (!slug || !previewContainer.value) return;
+  // Use attribute selector to handle IDs that might start with digits
+  const element = previewContainer.value.querySelector(`[id="${slug}"]`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+    activeSlug.value = slug;
+  }
+};
+
+const onEditorScroll = (e: Event) => {
+  if (isScrolling.value === 'preview') return;
+
+  isScrolling.value = 'editor';
+  const el = e.target as HTMLElement;
+  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+
+  if (previewContainer.value) {
+    previewContainer.value.scrollTop = percentage * (previewContainer.value.scrollHeight - previewContainer.value.clientHeight);
+  }
+
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    isScrolling.value = null;
+  }, 50);
+};
+
+const onPreviewScroll = (e: Event) => {
+  // Update TOC active state
+  updateActiveHeading();
+
+  if (isScrolling.value === 'editor') return;
+
+  isScrolling.value = 'preview';
+  const el = e.target as HTMLElement;
+  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+
+  if (editorRef.value) {
+    editorRef.value.scrollTop = percentage * (editorRef.value.scrollHeight - editorRef.value.clientHeight);
+  }
+
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    isScrolling.value = null;
+  }, 50);
+};
+
+const updateActiveHeading = () => {
+  if (!previewContainer.value || !showToc.value) return;
+
+  const headings = Array.from(previewContainer.value.querySelectorAll('h1, h2, h3, h4, h5, h6')) as HTMLElement[];
+  if (headings.length === 0) return;
+
+  const containerTop = previewContainer.value.getBoundingClientRect().top;
+
+  // Find the first heading that is visible or about to be visible
+  // Or simply find the last heading that is above a certain threshold
+  let currentId = '';
+
+  for (const heading of headings) {
+    const rect = heading.getBoundingClientRect();
+    // Use a small offset (e.g., 50px) to determine if it's "active"
+    if (rect.top <= containerTop + 100) {
+      currentId = heading.id;
+    } else {
+      break;
+    }
+  }
+
+  if (!currentId && headings.length > 0) {
+    // If scrolled to top and no heading crossed threshold, confirm first heading?
+    // Only if scroll is near top
+    if (previewContainer.value.scrollTop < 50) {
+      currentId = headings[0].id;
+    }
+  }
+
+  if (currentId) activeSlug.value = currentId;
+};
+
+watch(activeSlug, (newSlug) => {
+  if (!newSlug || !tocContainer.value) return;
+
+  nextTick(() => {
+    if (!tocContainer.value) return;
+    const activeBtn = tocContainer.value.querySelector(`button[data-slug="${newSlug}"]`) as HTMLElement;
+    if (activeBtn) {
+      const containerRect = tocContainer.value.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+
+      // Only scroll if the active button is out of view (or very close to edge)
+      if (btnRect.top < containerRect.top + 20 || btnRect.bottom > containerRect.bottom - 20) {
+        const scrollOffset = tocContainer.value.scrollTop + (btnRect.top - containerRect.top) - (containerRect.height / 2) + (btnRect.height / 2);
+        tocContainer.value.scrollTo({ top: scrollOffset, behavior: 'smooth' });
+      }
+    }
+  });
+});
+
+// Auto-save and History
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+watch(markdown, (newVal: string) => {
+  saveToStorage(STORAGE_KEY, newVal);
+
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    if (newVal.trim()) {
+      addHistory(newVal);
+    }
+  }, 2000); // Debounce history save
+});
+
+// Watch html output to trigger mermaid render
+watch(html, () => {
+  renderMermaid();
+});
+
+watch(showToc, (newVal: boolean) => {
+  saveToStorage(SHOW_TOC_KEY, newVal);
+});
+
+watch(editorCollapsed, (newVal: boolean) => {
+  saveToStorage(COLLAPSED_KEY, newVal);
+});
+
+watch(leftWidth, (newVal: number) => {
+  saveToStorage(LEFT_WIDTH_KEY, newVal);
+});
+
+const useHistoryItem = (content: string) => {
+  markdown.value = content;
+  showHistory.value = false;
+};
+
+// Resizing Logic
+const startResize = (e: MouseEvent) => {
+  isResizing.value = true;
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+  e.preventDefault();
+};
+
+const onResize = (e: MouseEvent) => {
+  if (!isResizing.value || !mainContainer.value) return;
+  const rect = mainContainer.value.getBoundingClientRect();
+  const newWidth = e.clientX - rect.left;
+  leftWidth.value = Math.max(200, Math.min(newWidth, rect.width - 200));
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+};
+
+onMounted(() => {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    // strict：禁止在 mermaid 图内注入 HTML 标签/事件属性，降低 XSS 风险。
+    // 用户需要完整 HTML 能力时可用专门的 Mermaid 工具页面。
+    securityLevel: 'strict'
+  });
+  renderMermaid();
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+  if (saveTimer) clearTimeout(saveTimer);
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+});
 </script>
 
 <style>

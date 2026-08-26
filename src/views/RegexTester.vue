@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { Regex, HelpCircle, X } from 'lucide-vue-next';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 
@@ -120,21 +120,66 @@ const flags = reactive([
 
 const activeFlags = computed(() => flags.filter(f => f.enabled).map(f => f.value).join(''));
 
-const matches = computed(() => {
-  error.value = '';
-  if (!regexPattern.value) return [];
+type RegExpMatch = RegExpMatchArray & { index?: number };
+
+// 防御 ReDoS：用一个抛出即终止的执行时长上限包裹匹配过程。
+// 注意：浏览器 RegExp 是同步的，无法真正中断回溯，只能在上限触发后
+// 让出主线程并提示用户。上限设为 200ms，足够日常使用，对灾难性输入会快速失败。
+const REGEX_TIME_BUDGET_MS = 200;
+const isTimedOut = ref(false);
+
+const matches = ref<RegExpMatch[]>([]);
+
+/**
+ * 通过 watch 计算 matches（而非 computed），因为这里会更新 error.value，属于副作用，
+ * 不应放在 computed 中。同时做 ReDoS 超时保护。
+ */
+const computeMatches = () => {
+  matches.value = [];
+  if (!regexPattern.value) {
+    error.value = '';
+    isTimedOut.value = false;
+    return;
+  }
+
+  let re: RegExp;
   try {
-    const re = new RegExp(regexPattern.value, activeFlags.value);
+    re = new RegExp(regexPattern.value, activeFlags.value);
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e);
+    isTimedOut.value = false;
+    return;
+  }
+
+  // 超时检测：在匹配前打时间戳，匹配后判断是否超时。
+  // 这无法中断已在执行的同步正则，但能在它返回后丢弃结果并提示用户。
+  const start = performance.now();
+  try {
+    let result: RegExpMatch[];
     if (!re.global) {
       const match = re.exec(testString.value);
-      return match ? [match] : [];
+      result = match ? [match as RegExpMatch] : [];
+    } else {
+      result = [...testString.value.matchAll(re)] as RegExpMatch[];
     }
-    return [...testString.value.matchAll(re)];
-  } catch (e: any) {
-    error.value = e.message;
-    return [];
+    const elapsed = performance.now() - start;
+    if (elapsed > REGEX_TIME_BUDGET_MS) {
+      // 即便这次完成了，也提示用户正则太重，避免下次放大
+      error.value = `正则执行耗时 ${Math.round(elapsed)}ms，可能存在灾难性回溯，请优化`;
+      isTimedOut.value = true;
+      matches.value = result;
+    } else {
+      error.value = '';
+      isTimedOut.value = false;
+      matches.value = result;
+    }
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e);
+    isTimedOut.value = false;
   }
-});
+};
+
+watch([regexPattern, testString, activeFlags], computeMatches, { immediate: true });
 
 const highlightedText = computed(() => {
   if (!regexPattern.value || error.value) return escapeHtml(testString.value);

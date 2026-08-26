@@ -37,6 +37,28 @@
           >
             {{ $t('tools.json.' + op) }}
           </button>
+
+          <!-- Unicode 解码开关：选中=\u转中文，去掉=不转换 -->
+          <button
+            @click="toggleDecodeUnicode"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
+            :class="decodeUnicode ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
+            :title="$t('tools.json.unicodeDecodeDesc')"
+          >
+            <Languages class="w-3.5 h-3.5" />
+            <span>{{ $t('tools.json.unicodeDecode') }}</span>
+          </button>
+
+          <!-- 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组 -->
+          <button
+            @click="toggleExpandNested"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
+            :class="expandNested ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
+            :title="$t('tools.json.expandNestedDesc')"
+          >
+            <UnfoldVertical class="w-3.5 h-3.5" />
+            <span>{{ $t('tools.json.expandNested') }}</span>
+          </button>
         </div>
 
         <div class="h-4 w-px bg-border flex-shrink-0"></div>
@@ -52,22 +74,24 @@
             <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
-          <button
-            @click="goToDiff('left')"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.compareLeft')"
-          >
-            <ArrowLeftToLine class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compareLeft') }}</span>
-          </button>
-          <button
-            @click="goToDiff('right')"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.compareRight')"
-          >
-            <ArrowRightToLine class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compareRight') }}</span>
-          </button>
+<div class="flex items-center space-x-0.5">
+            <button
+              @click="goToDiff('left')"
+              class="px-3 py-1.5 text-xs font-medium rounded-l-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1 border-r border-border/50"
+              :title="$t('tools.diff.putLeft')"
+            >
+              <ArrowLeftFromLine class="w-3.5 h-3.5" />
+              <span>{{ $t('tools.diff.putLeft') }}</span>
+            </button>
+            <button
+              @click="goToDiff('right')"
+              class="px-3 py-1.5 text-xs font-medium rounded-r-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+              :title="$t('tools.diff.putRight')"
+            >
+              <span>{{ $t('tools.diff.putRight') }}</span>
+              <ArrowRightFromLine class="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -98,12 +122,21 @@
         <div class="h-4 w-px bg-border hidden md:block"></div>
 
         <button
-          @click="showTreeView = !showTreeView"
+          @click="rightPanelView = rightPanelView === 'tree' ? 'none' : 'tree'"
           class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
-          :class="showTreeView ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+          :class="rightPanelView === 'tree' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
         >
           <ListTree class="w-4 h-4" />
-          <span class="hidden sm:inline">{{ showTreeView ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</span>
+          <span class="hidden sm:inline">{{ rightPanelView === 'tree' ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</span>
+        </button>
+
+        <button
+          @click="rightPanelView = rightPanelView === 'graph' ? 'none' : 'graph'"
+          class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
+          :class="rightPanelView === 'graph' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
+        >
+          <Network class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ rightPanelView === 'graph' ? $t('common.buttons.hideGraphView') : $t('common.buttons.showGraphView') }}</span>
         </button>
 
         <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground h-8 w-8 flex items-center justify-center">
@@ -113,60 +146,87 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-4">
-      <div class="flex-1 grid gap-4 min-h-0" :class="showTreeView ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'">
-        <!-- Editor Section -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <!-- Editor Toolbar -->
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</span>
-              <span v-if="jsonStats" class="text-xs text-muted-foreground/70 px-2 py-0.5 bg-muted rounded-full">
-                {{ jsonStats }}
-              </span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Undo2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Redo2 class="w-3.5 h-3.5" />
-              </button>
-              <div class="h-3 w-px bg-border mx-1"></div>
-              <button @click="pasteInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.paste')">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.copy')">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-              <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground transition-colors" :title="$t('common.buttons.clearAll')">
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
-            </div>
+    <main ref="mainContainer" class="flex-1 flex min-h-0 p-4 gap-2 relative">
+      <!-- Editor Section -->
+      <div v-show="rightPanelView === 'none' || !editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
+        <!-- Editor Toolbar -->
+        <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</span>
+            <span v-if="jsonStats" class="text-xs text-muted-foreground/70 px-2 py-0.5 bg-muted rounded-full">
+              {{ jsonStats }}
+            </span>
           </div>
-          <div class="flex-1 relative group">
-            <div ref="editorRef" class="absolute inset-0"></div>
-
+          <div class="flex items-center space-x-1">
+            <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Undo2 class="w-3.5 h-3.5" />
+            </button>
+            <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Redo2 class="w-3.5 h-3.5" />
+            </button>
+            <div class="h-3 w-px bg-border mx-1"></div>
+            <button @click="pasteInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.paste')">
+              <ClipboardPaste class="w-3.5 h-3.5" />
+            </button>
+            <button @click="copyInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.copy')">
+              <Copy class="w-3.5 h-3.5" />
+            </button>
+            <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground transition-colors" :title="$t('common.buttons.clearAll')">
+              <Trash2 class="w-3.5 h-3.5" />
+            </button>
+            <div v-if="rightPanelView !== 'none'" class="h-3 w-px bg-border mx-1"></div>
+            <button v-if="rightPanelView !== 'none'" @click="editorCollapsed = true" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Collapse Editor">
+              <PanelLeftClose class="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+        <div class="flex-1 relative group">
+          <div ref="editorRef" class="absolute inset-0"></div>
+        </div>
+      </div>
 
-        <!-- Tree View Section -->
-        <div v-if="showTreeView" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.treeView') }}</h3>
+      <!-- Collapsed Toggle -->
+      <div v-if="editorCollapsed && rightPanelView !== 'none'" class="flex flex-col border border-border rounded-lg bg-muted/30 p-1 shadow-sm h-full">
+        <button @click="editorCollapsed = false" class="p-2 hover:bg-muted rounded hover:text-foreground text-muted-foreground transition-colors" title="Expand Editor">
+          <PanelLeftOpen class="w-4 h-4" />
+        </button>
+      </div>
+
+      <!-- Resizer -->
+      <div
+        v-show="!editorCollapsed && rightPanelView !== 'none'"
+        class="w-1.5 hover:w-2 bg-transparent hover:bg-border/50 active:bg-primary/50 cursor-col-resize flex-shrink-0 transition-all rounded-full z-10 mx-[-4px]"
+        @mousedown="startResize"
+      ></div>
+
+      <!-- Tree / Graph View Section -->
+      <div v-if="rightPanelView !== 'none'" class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full relative">
+          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border z-10">
+            <h3 class="text-xs font-medium text-muted-foreground">
+              <template v-if="rightPanelView === 'tree'">{{ $t('common.labels.treeView') }}</template>
+              <template v-else-if="rightPanelView === 'graph'">{{ $t('common.labels.graphView') }}</template>
+            </h3>
             <div class="flex items-center space-x-2">
-               <button @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
+               <button v-if="rightPanelView === 'tree'" @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
                  {{ isTreeExpanded ? $t('tools.json.collapseAll') : $t('tools.json.expandAll') }}
                </button>
             </div>
           </div>
-          <div class="flex-1 relative overflow-auto bg-background p-4">
-            <JsonTreeView ref="treeViewRef" v-if="isValidJson && parsedJson" :data="parsedJson" />
-            <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
-              <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-              <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+          <div class="flex-1 relative overflow-hidden bg-background">
+            <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-4">
+              <JsonTreeView ref="treeViewRef" v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+              </div>
             </div>
-          </div>
+            <div v-else-if="rightPanelView === 'graph'" class="h-full w-full absolute inset-0">
+              <JsonGraphView v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+              </div>
+            </div>
         </div>
       </div>
     </main>
@@ -202,6 +262,8 @@
               <li><strong>{{ $t('common.labels.minify') }}:</strong> {{ $t('tools.json.minifyDescription') }}</li>
               <li><strong>{{ $t('tools.json.escape') }}:</strong> {{ $t('tools.json.escapeDescription') }}</li>
               <li><strong>{{ $t('tools.json.unescape') }}:</strong> {{ $t('tools.json.unescapeDescription') }}</li>
+              <li><strong>{{ $t('tools.json.unicodeDecode') }}:</strong> {{ $t('tools.json.unicodeDecodeDesc') }}</li>
+              <li><strong>{{ $t('tools.json.expandNested') }}:</strong> {{ $t('tools.json.expandNestedDesc') }}</li>
               <li><strong>{{ $t('common.labels.treeView') }}:</strong> {{ $t('tools.json.treeViewDescription') }}</li>
             </ul>
           </div>
@@ -227,7 +289,8 @@ import { useRouter } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import JSON5 from 'json5';
 import JsonTreeView from '../components/JsonTreeView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, ArrowLeftToLine, ArrowRightToLine, History, Map } from 'lucide-vue-next';
+import JsonGraphView from '../components/JsonGraphView.vue';
+import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages, UnfoldVertical } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
@@ -260,6 +323,14 @@ watch(() => themeStore.historyLimit.value, (newLimit) => {
 });
 
 let errorTimer: NodeJS.Timeout | null = null;
+// 追踪其余 setTimeout（isProcessing 复位、onDidPaste、pasteInput、indentSize watch 等），
+// 组件卸载时统一清理，避免在已卸载的 ref / 已 dispose 的 editor 上触发回调。
+const pendingTimers: ReturnType<typeof setTimeout>[] = [];
+const trackTimer = (handler: () => void, delay: number): ReturnType<typeof setTimeout> => {
+  const id = setTimeout(handler, delay);
+  pendingTimers.push(id);
+  return id;
+};
 
 const showError = (error: any, prefix = 'Error') => {
   console.error(prefix, error);
@@ -267,10 +338,10 @@ const showError = (error: any, prefix = 'Error') => {
   if (prefix) {
     message = `${prefix}: ${message}`;
   }
-  
+
   // Truncate error message if it's too long
-  errorMessage.value = message.length > 150 
-    ? message.substring(0, 150) + '...' 
+  errorMessage.value = message.length > 150
+    ? message.substring(0, 150) + '...'
     : message;
 
   if (errorTimer) clearTimeout(errorTimer);
@@ -283,17 +354,49 @@ const STORAGE_KEYS = {
   inputText: 'json-input-text',
   operation: 'json-operation',
   indentSize: 'json-indent-size',
-  showTreeView: 'json-show-tree-view',
+  rightPanelView: 'json-right-panel-view',
   wordWrapEnabled: 'json-word-wrap-enabled',
-  showMinimap: 'json-show-minimap'
+  showMinimap: 'json-show-minimap',
+  leftWidth: 'json-left-width',
+  editorCollapsed: 'json-editor-collapsed',
+  decodeUnicode: 'json-decode-unicode',
+  expandNested: 'json-expand-nested'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
 const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
 const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
-const showTreeView = ref(loadFromStorage(STORAGE_KEYS.showTreeView, false));
+const rightPanelView = ref<'none' | 'tree' | 'graph'>(loadFromStorage(STORAGE_KEYS.rightPanelView, 'none'));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
+const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
+const expandNested = ref(loadFromStorage(STORAGE_KEYS.expandNested, false));
+const leftWidth = ref(loadFromStorage(STORAGE_KEYS.leftWidth, window.innerWidth / 2));
+const editorCollapsed = ref(loadFromStorage(STORAGE_KEYS.editorCollapsed, false));
+const mainContainer = ref<HTMLElement | null>(null);
+const isResizing = ref(false);
+
+const startResize = (e: MouseEvent) => {
+  isResizing.value = true;
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+  e.preventDefault();
+};
+
+const onResize = (e: MouseEvent) => {
+  if (!isResizing.value || !mainContainer.value) return;
+  const rect = mainContainer.value.getBoundingClientRect();
+  const newWidth = e.clientX - rect.left;
+  // Let it resize between 200px and the container width - 200px
+  leftWidth.value = Math.max(200, Math.min(newWidth, rect.width - 200));
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+  if (editor) editor.layout();
+};
 
 const parsedJson = computed(() => {
   try {
@@ -311,6 +414,54 @@ const jsonStats = computed(() => {
   const keys = countKeys(parsedJson.value);
   return `${formatBytes(size)} • ${keys} keys`;
 });
+
+function decodeUnicodeInStrings(obj: any): any {
+  if (typeof obj === 'string') {
+    return obj.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  }
+  if (Array.isArray(obj)) return obj.map(decodeUnicodeInStrings);
+  if (obj !== null && typeof obj === 'object') {
+    const out: any = {};
+    for (const k in obj) out[k] = decodeUnicodeInStrings(obj[k]);
+    return out;
+  }
+  return obj;
+}
+
+/**
+ * 递归把"值为字符串的嵌套 JSON"解析成对象/数组。
+ * 规则：只替换解析结果为 object/array 的字符串（纯标量字符串如 "3306"/"hello" 保持原样，避免误伤）。
+ * 多层嵌套通过递归处理：解析出的对象会继续被遍历，其内部字符串型 JSON 也会被展开。
+ * 解析失败的字符串原样返回（可能是普通文本，也可能是格式错误的 JSON，都不应改动）。
+ */
+function parseNestedJsonStrings(value: any): any {
+  if (typeof value === 'string') {
+    // 快速过滤：必须看起来像 JSON（首尾是 {} 或 [] 的 trim 后内容），避免对普通文本做无谓 parse
+    const trimmed = value.trim();
+    const looksLikeJson =
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'));
+    if (!looksLikeJson) return value;
+    try {
+      const parsed = JSON5.parse(trimmed);
+      // 只展开对象/数组，标量（数字/布尔/null）不替换，避免把电话号码、ID 等字符串误转
+      if (parsed !== null && typeof parsed === 'object') {
+        // 对解析结果继续递归，处理多层嵌套
+        return parseNestedJsonStrings(parsed);
+      }
+      return value;
+    } catch {
+      return value;
+    }
+  }
+  if (Array.isArray(value)) return value.map(parseNestedJsonStrings);
+  if (value !== null && typeof value === 'object') {
+    const out: any = {};
+    for (const k in value) out[k] = parseNestedJsonStrings(value[k]);
+    return out;
+  }
+  return value;
+}
 
 function countKeys(obj: any): number {
   if (typeof obj !== 'object' || obj === null) return 0;
@@ -341,6 +492,48 @@ const redo = () => editor?.trigger('keyboard', 'redo', null);
 const handleOperation = (op: string) => {
   operation.value = op;
   processData(false);
+};
+
+// Unicode 解码开关：选中=把 \uXXXX 转中文，去掉=还原。点击立即应用。
+// 开启时先保存当前内容，关闭时还原回去（支持来回切换不丢原始数据）。
+const decodeUnicodeSnapshot = ref<string | null>(null);
+const toggleDecodeUnicode = () => {
+  const turningOn = !decodeUnicode.value;
+  decodeUnicode.value = turningOn;
+  if (!inputText.value.trim()) return;
+  if (turningOn) {
+    // 开启：保存解码前的原始内容，然后走 format 应用解码
+    decodeUnicodeSnapshot.value = inputText.value;
+    operation.value = 'format';
+    processData(false);
+  } else {
+    // 关闭：还原为开启前保存的原始内容
+    if (decodeUnicodeSnapshot.value !== null) {
+      replaceTextInEditor(decodeUnicodeSnapshot.value);
+      decodeUnicodeSnapshot.value = null;
+    }
+  }
+};
+
+// 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组，去掉=还原。
+// 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原。
+const expandNestedSnapshot = ref<string | null>(null);
+const toggleExpandNested = () => {
+  const turningOn = !expandNested.value;
+  expandNested.value = turningOn;
+  if (!inputText.value.trim()) return;
+  if (turningOn) {
+    // 开启：保存展开前的原始内容，然后走 format 应用解析
+    expandNestedSnapshot.value = inputText.value;
+    operation.value = 'format';
+    processData(false);
+  } else {
+    // 关闭：还原为开启前保存的原始内容
+    if (expandNestedSnapshot.value !== null) {
+      replaceTextInEditor(expandNestedSnapshot.value);
+      expandNestedSnapshot.value = null;
+    }
+  }
 };
 
 const replaceTextInEditor = (newText: string) => {
@@ -399,7 +592,15 @@ const processData = (isAuto = false) => {
     } else {
       // Format or Minify
       // Use JSON5 for parsing to be more robust
-      const inputData = JSON5.parse(inputText.value);
+      let inputData = JSON5.parse(inputText.value);
+      if (decodeUnicode.value) {
+        // 选中时：把字符串值里的字面 \uXXXX 解码成中文
+        inputData = decodeUnicodeInStrings(inputData);
+      }
+      if (expandNested.value) {
+        // 选中时：递归把字符串值里的嵌套 JSON 解析成对象/数组
+        inputData = parseNestedJsonStrings(inputData);
+      }
 
       if (operation.value === 'minify') {
         resultData = JSON.stringify(inputData);
@@ -409,7 +610,7 @@ const processData = (isAuto = false) => {
     }
 
     replaceTextInEditor(resultData);
-    
+
     // Add to history if it's not an automatic format or if it's a manual format
     if (!isAuto && operation.value === 'format') {
       addHistory(currentInput);
@@ -420,16 +621,14 @@ const processData = (isAuto = false) => {
     else if (operation.value === 'unescape') prefix = 'Unescape failed';
     else if (operation.value === 'format') prefix = 'Format failed';
     else if (operation.value === 'minify') prefix = 'Minify failed';
-    
+
     showError(e, prefix);
   } finally {
-    setTimeout(() => { isProcessing = false; }, 100);
+    trackTimer(() => { isProcessing = false; }, 100);
   }
 };
 
 let contentChangeListener: monaco.IDisposable | null = null;
-let pasteListener: monaco.IDisposable | null = null;
-let pasteTimer: NodeJS.Timeout | null = null;
 
 const initEditors = async () => {
   await nextTick();
@@ -459,16 +658,14 @@ const initEditors = async () => {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
 
-    pasteListener = editor.onDidPaste(() => {
-      if (pasteTimer) clearTimeout(pasteTimer);
-      pasteTimer = setTimeout(() => {
-        if (!editor) return;
-        const currentText = editor.getValue() || '';
+editor.onDidPaste(() => {
+      trackTimer(() => {
+        const currentText = editor?.getValue() || '';
         // Always record paste to history
         if (currentText.trim()) {
           addHistory(currentText);
         }
-        
+
         // Auto-detect if we should format
         try {
            JSON5.parse(currentText);
@@ -492,15 +689,19 @@ const pasteInput = async () => {
     const text = await navigator.clipboard.readText();
     replaceTextInEditor(text);
     addHistory(text);
-    setTimeout(() => handleOperation('format'), 100);
+    trackTimer(() => handleOperation('format'), 100);
   } catch (error) {
     console.error('Paste failed:', error);
   }
 };
 
-const copyInput = () => {
-  const text = editor?.getValue() || '';
-  navigator.clipboard.writeText(text);
+const copyInput = async () => {
+  try {
+    const text = editor?.getValue() || '';
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
 };
 
 const goToDiff = (side: 'left' | 'right' = 'left') => {
@@ -540,10 +741,13 @@ watch(operation, (newValue) => {
 
 watch(indentSize, (newValue) => {
   saveToStorage(STORAGE_KEYS.indentSize, newValue);
-  if (operation.value === 'format' && inputText.value.trim()) setTimeout(processData, 100);
+  if (operation.value === 'format' && inputText.value.trim()) trackTimer(processData, 100);
 });
 
-watch(showTreeView, (newValue) => saveToStorage(STORAGE_KEYS.showTreeView, newValue));
+watch(rightPanelView, (newValue) => {
+  saveToStorage(STORAGE_KEYS.rightPanelView, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
 
 watch(wordWrapEnabled, (newValue) => {
   editor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
@@ -555,14 +759,36 @@ watch(showMinimap, (newValue) => {
   saveToStorage(STORAGE_KEYS.showMinimap, newValue);
 });
 
+watch(decodeUnicode, (newValue) => {
+  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
+});
+
+watch(expandNested, (newValue) => {
+  saveToStorage(STORAGE_KEYS.expandNested, newValue);
+});
+
+watch(leftWidth, (newValue) => {
+  saveToStorage(STORAGE_KEYS.leftWidth, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
+
+watch(editorCollapsed, (newValue) => {
+  saveToStorage(STORAGE_KEYS.editorCollapsed, newValue);
+  nextTick(() => { if (editor) editor.layout(); });
+});
+
 onMounted(initEditors);
 
 onBeforeUnmount(() => {
   if (errorTimer) clearTimeout(errorTimer);
-  if (pasteTimer) clearTimeout(pasteTimer);
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop());
+  }
   contentChangeListener?.dispose();
-  pasteListener?.dispose();
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
   themeWatcher?.();
+  themeWatcher = null;
   if (editor) {
     const finalVal = editor.getValue();
     if (finalVal !== undefined && finalVal !== '') {
@@ -570,6 +796,7 @@ onBeforeUnmount(() => {
     }
   }
   editor?.dispose();
+  editor = null;
 });
 </script>
 

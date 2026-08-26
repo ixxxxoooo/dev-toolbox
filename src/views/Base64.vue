@@ -174,7 +174,17 @@ const processText = () => {
     let result = '';
     if (operation.value === 'encode') {
       const utf8Bytes = new TextEncoder().encode(input);
-      result = btoa(String.fromCharCode.apply(null, Array.from(utf8Bytes)));
+      // 分块拼接，避免 String.fromCharCode.apply 在大输入时栈溢出
+      // （apply 的参数数量上限约为 ~64KB，超过会抛 RangeError）
+      let binary = '';
+      const CHUNK_SIZE = 0x8000; // 32KB，安全裕度
+      for (let i = 0; i < utf8Bytes.length; i += CHUNK_SIZE) {
+        binary += String.fromCharCode.apply(
+          null,
+          utf8Bytes.subarray(i, i + CHUNK_SIZE) as unknown as number[]
+        );
+      }
+      result = btoa(binary);
       if (urlSafe.value) {
         result = result.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
       }
@@ -191,8 +201,8 @@ const processText = () => {
       result = new TextDecoder().decode(bytes);
     }
     outputEditor?.setValue(result);
-  } catch (e: any) {
-    outputEditor?.setValue(`Error: ${e.message}`);
+  } catch (e: unknown) {
+    outputEditor?.setValue(`Error: ${e instanceof Error ? e.message : String(e)}`);
   }
 };
 
@@ -280,9 +290,27 @@ const clearAll = () => {
   replaceTextInEditor('');
   outputEditor?.setValue('');
 };
-const pasteInput = async () => replaceTextInEditor(await navigator.clipboard.readText());
-const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
-const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
+const pasteInput = async () => {
+  try {
+    replaceTextInEditor(await navigator.clipboard.readText());
+  } catch (err) {
+    console.error('Cannot read clipboard:', err);
+  }
+};
+const copyInput = async () => {
+  try {
+    await navigator.clipboard.writeText(inputEditor?.getValue() || '');
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
+};
+const copyOutput = async () => {
+  try {
+    await navigator.clipboard.writeText(outputEditor?.getValue() || '');
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err);
+  }
+};
 const useAsInput = () => {
   const outputValue = outputEditor?.getValue() || '';
   replaceTextInEditor(outputValue);
