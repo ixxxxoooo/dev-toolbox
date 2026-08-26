@@ -186,7 +186,10 @@ export default {
       putLeft: '左对比',
       putRight: '右对比',
       unicodeDecode: '\\u转中文',
-      unicodeDecodeDesc: '点击开启：把左右两侧文本里的 \\uXXXX 解码成中文；再次点击关闭并还原'
+      unicodeDecodeDesc: '点击开启：把左右两侧文本里的 \\uXXXX 解码成中文；再次点击关闭并还原',
+      format: '格式化 (JSON / XML / SQL)',
+      formatLeft: '格式化左侧',
+      formatRight: '格式化右侧'
     },
 
     // Base64 编解码

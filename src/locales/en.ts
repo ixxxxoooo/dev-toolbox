@@ -186,7 +186,10 @@ export default {
       putLeft: 'Put Left',
       putRight: 'Put Right',
       unicodeDecode: '\\u→Text',
-      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in both panels to text; click again to turn off and restore'
+      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in both panels to text; click again to turn off and restore',
+      format: 'Format (JSON / XML / SQL)',
+      formatLeft: 'Format Left',
+      formatRight: 'Format Right'
     },
 
     // Base64 Encoder/Decoder
