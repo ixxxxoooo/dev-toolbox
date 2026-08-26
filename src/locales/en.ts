@@ -46,6 +46,8 @@ export default {
       useAsInput: 'Use as Input',
       showTreeView: 'Show Tree View',
       hideTreeView: 'Hide Tree View',
+      showGraphView: 'Show Graph View',
+      hideGraphView: 'Hide Graph View',
       regenerate: 'Regenerate',
       process: 'Process',
       compare: 'Compare',
@@ -84,6 +86,7 @@ export default {
       autoWrap: 'Auto Wrap',
       urlSafe: 'URL Safe',
       treeView: 'Tree View',
+      graphView: 'Graph View',
       indent: 'Indent',
       spaces2: '2 Spaces',
       spaces4: '4 Spaces',
@@ -117,6 +120,31 @@ export default {
   nav: {
     tools: 'Tools Menu',
     language: 'Language Switcher'
+  },
+
+  // Onboarding
+  onboarding: {
+    buttons: {
+      done: 'Done',
+      next: 'Next',
+      prev: 'Previous'
+    },
+    welcome: {
+      title: 'Welcome!',
+      description: 'Welcome to Dev Toolbox! You can use <b>Cmd + K</b> (Mac) or <b>Ctrl + K</b> (Windows) anytime to open the global command palette to search and switch tools.'
+    },
+    sidebar: {
+      title: 'Expand/Collapse Sidebar',
+      description: 'Click here to expand or collapse the tools list to give you more workspace.'
+    },
+    tools: {
+      title: 'Tools List',
+      description: 'All available developer tools are listed here. Click to switch.'
+    },
+    settings: {
+      title: 'System Settings',
+      description: 'You can switch the application language or toggle dark/light theme at the bottom.'
+    }
   },
 
   // Home Page
@@ -154,7 +182,11 @@ export default {
       clearAll: 'Clear All',
       sideBySideDescription: 'Side by Side Mode',
       inlineDescription: 'Inline Mode',
-      ignoreWhitespaceDescription: 'Ignore Whitespace'
+      ignoreWhitespaceDescription: 'Ignore Whitespace',
+      putLeft: 'Put Left',
+      putRight: 'Put Right',
+      unicodeDecode: '\\u→Text',
+      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in both panels to text; click again to turn off and restore'
     },
 
     // Base64 Encoder/Decoder
@@ -185,6 +217,11 @@ export default {
       unescape: 'Unescape',
       escapeDescription: 'Escape special characters in JSON strings',
       unescapeDescription: 'Unescape special characters in JSON strings',
+      decodeUnicode: 'Unicode Decode (\\u to text)',
+      unicodeDecode: '\\u→Text',
+      unicodeDecodeDesc: 'Click to enable: decode \\uXXXX in JSON strings to text; click again to turn off',
+      expandNested: 'Expand Nested',
+      expandNestedDesc: 'Click to enable: recursively parse JSON embedded in string values into objects/arrays; click again to turn off and restore',
       expandAll: 'Expand All',
       collapseAll: 'Collapse All'
     },
@@ -302,6 +339,7 @@ export default {
       charsetSize: 'Charset Size',
       securityAdvice: 'Security Advice',
       entropy: 'Entropy',
+      emptyCharsetError: 'Please select at least one character type (uppercase/lowercase/numbers/symbols)',
       types: {
         strong: 'Strong (Recommended)',
         strongDesc: 'High entropy password with mixed characters',
@@ -415,70 +453,6 @@ export default {
       name: 'Markdown Preview',
       description: 'Markdown editor with real-time preview',
       copyHtml: 'Copy HTML'
-    },
-
-    // Image Tools
-    imageTools: {
-      name: 'Image Tools',
-      description: 'Compress and crop images',
-      compress: 'Compress',
-      crop: 'Crop',
-      resize: 'Resize',
-      rotate: 'Rotate/Flip',
-      convert: 'Convert',
-      base64: 'Base64',
-      dropText: 'Drop image here',
-      supportText: 'Supports JPG, PNG, WebP',
-      quality: 'Quality',
-      width: 'Width',
-      height: 'Height',
-      maintainAspectRatio: 'Maintain Aspect Ratio',
-      rotateLeft: 'Rotate Left',
-      rotateRight: 'Rotate Right',
-      flipHorizontal: 'Flip Horizontal',
-      flipVertical: 'Flip Vertical',
-      adjustQuality: 'Adjust quality to reduce file size.',
-      dragToCrop: 'Drag to crop. Click Apply to save changes.',
-      base64Help: 'Base64 representation of the current image.',
-      helpTitle: 'Image Tools Help',
-      helpContent: {
-        intro: 'A comprehensive suite of image manipulation tools:',
-        compress: 'Compress: Reduce file size while maintaining quality.',
-        crop: 'Crop: Trim unwanted outer areas.',
-        resize: 'Resize: Change image dimensions.',
-        rotate: 'Rotate/Flip: Orient your image correctly.',
-        convert: 'Convert: Switch between PNG, JPEG, and WEBP formats.',
-        base64: 'Base64: Get the Base64 string for embedding.'
-      }
-    },
-
-    // Watermark Tool
-    watermark: {
-      name: 'Watermark Tool',
-      description: 'Add or remove watermarks from images/videos',
-      remove: 'Remove Watermark',
-      add: 'Add Watermark',
-      mode: 'Mode',
-      removeMode: 'Remove Mode',
-      addMode: 'Add Mode',
-      text: 'Text Watermark',
-      imageType: 'Image',
-      video: 'Video',
-      content: 'Content',
-      color: 'Color',
-      size: 'Size',
-      opacity: 'Opacity',
-      position: 'Position',
-      x: 'X Position',
-      y: 'Y Position',
-      dropImage: 'Drop or click to upload image',
-      dropVideo: 'Drop or click to upload video',
-      supportImage: 'Supports JPG, PNG, WebP',
-      supportVideo: 'Supports MP4, WebM',
-      brushSize: 'Brush Size',
-      paintInstruction: 'Paint over the watermark area',
-      videoInstruction: 'Drag the selection box to mark watermark area',
-      help: 'A powerful watermark processing tool. In "Remove Mode", mark watermark areas by painting (images) or selection box (videos) and remove them. In "Add Mode", add text watermarks to images or videos.'
     },
 
     // Unicode Converter

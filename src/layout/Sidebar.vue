@@ -10,6 +10,7 @@
       :class="isCollapsed ? 'px-[22px]' : 'px-4'"
     >
       <div 
+        id="tour-sidebar-toggle"
         class="flex items-center space-x-3 cursor-pointer group/sidebar-toggle"
         @click="toggleCollapse"
         :title="isCollapsed ? 'Expand' : 'Collapse'"
@@ -35,7 +36,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1">
+    <nav id="tour-tools-list" class="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1">
       <router-link
         v-for="route in routes"
         :key="route.name"
@@ -66,7 +67,7 @@
     </nav>
 
     <!-- Footer -->
-    <div class="flex items-center h-[49px] px-3 border-t border-border shrink-0">
+    <div id="tour-settings-panel" class="flex items-center h-[49px] px-3 border-t border-border shrink-0">
       <SettingsPanel :collapsed="isCollapsed" class="w-full" />
     </div>
 

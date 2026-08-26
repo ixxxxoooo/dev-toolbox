@@ -46,6 +46,8 @@ export default {
       useAsInput: '作为输入',
       showTreeView: '显示树状视图',
       hideTreeView: '隐藏树状视图',
+      showGraphView: '显示关系图',
+      hideGraphView: '隐藏关系图',
       regenerate: '重新生成',
       process: '处理',
       compare: '对比',
@@ -84,6 +86,7 @@ export default {
       autoWrap: '自动换行',
       urlSafe: 'URL安全',
       treeView: '树状视图',
+      graphView: '关系图视图',
       indent: '缩进',
       spaces2: '2空格',
       spaces4: '4空格',
@@ -117,6 +120,31 @@ export default {
   nav: {
     tools: '工具菜单',
     language: '语言切换'
+  },
+
+  // 新手引导
+  onboarding: {
+    buttons: {
+      done: '完成',
+      next: '下一步',
+      prev: '上一步'
+    },
+    welcome: {
+      title: '欢迎体验!',
+      description: '欢迎使用 Dev Toolbox！你可以随时使用 <b>Cmd + K</b> (Mac) 或 <b>Ctrl + K</b> (Windows) 唤起全局命令面板来搜索和切换工具。'
+    },
+    sidebar: {
+      title: '展开/折叠侧边栏',
+      description: '点击这里可以展开或折叠工具列表，方便给你留出更多操作空间。'
+    },
+    tools: {
+      title: '工具列表',
+      description: '这里列出了所有可用的开发者工具，点击即可切换体验。'
+    },
+    settings: {
+      title: '系统设置',
+      description: '您可以在这里通过底部栏切换应用的显示语言 (中/英) 或配置亮暗主题。'
+    }
   },
 
   // 首页
@@ -154,7 +182,11 @@ export default {
       clearAll: '清空全部',
       sideBySideDescription: '左右对比模式',
       inlineDescription: '内联对比模式',
-      ignoreWhitespaceDescription: '忽略空白字符'
+      ignoreWhitespaceDescription: '忽略空白字符',
+      putLeft: '左对比',
+      putRight: '右对比',
+      unicodeDecode: '\\u转中文',
+      unicodeDecodeDesc: '点击开启：把左右两侧文本里的 \\uXXXX 解码成中文；再次点击关闭并还原'
     },
 
     // Base64 编解码
@@ -179,8 +211,13 @@ export default {
       treeViewDescription: '树状结构显示',
       escape: '转义',
       unescape: '反转义',
-      escapeDescription: '转义 SQL 字符串中的特殊字符。',
-      unescapeDescription: '还原 SQL 字符串中的特殊字符。',
+      escapeDescription: '转义 JSON 字符串中的特殊字符。',
+      unescapeDescription: '还原 JSON 字符串中的特殊字符。',
+      decodeUnicode: 'Unicode 解码（\\u 转中文）',
+      unicodeDecode: '\\u转中文',
+      unicodeDecodeDesc: '点击开启：把 JSON 字符串值里的 \\uXXXX 解码成中文；再次点击关闭',
+      expandNested: '展开嵌套',
+      expandNestedDesc: '点击开启：递归把字符串值里的嵌套 JSON 解析成对象/数组；再次点击关闭并还原',
       expandAll: '展开全部',
       collapseAll: '折叠全部'
     },
@@ -302,6 +339,7 @@ export default {
       charsetSize: '字符集大小',
       securityAdvice: '安全建议',
       entropy: '熵值',
+      emptyCharsetError: '请至少选择一种字符类型（大写/小写/数字/符号）',
       types: {
         strong: '强密码 (推荐)',
         strongDesc: '包含大小写字母、数字和符号的高强度密码',
@@ -415,70 +453,6 @@ export default {
       name: 'Markdown 预览',
       description: 'Markdown 编辑与实时预览',
       copyHtml: '复制 HTML'
-    },
-
-    // 图片工具
-    imageTools: {
-      name: '图片工具',
-      description: '图片压缩与裁剪',
-      compress: '压缩',
-      crop: '裁剪',
-      resize: '调整大小',
-      rotate: '旋转/翻转',
-      convert: '格式转换',
-      base64: 'Base64',
-      dropText: '拖拽图片到此处',
-      supportText: '支持 JPG, PNG, WebP',
-      quality: '质量',
-      width: '宽度',
-      height: '高度',
-      maintainAspectRatio: '保持纵横比',
-      rotateLeft: '向左旋转',
-      rotateRight: '向右旋转',
-      flipHorizontal: '水平翻转',
-      flipVertical: '垂直翻转',
-      adjustQuality: '调整质量以减小文件大小',
-      dragToCrop: '拖动以裁剪。点击应用以保存更改。',
-      base64Help: '当前图片的 Base64 表示',
-      helpTitle: '图片工具帮助',
-      helpContent: {
-        intro: '一套全面的图片处理工具：',
-        compress: '压缩：在保持质量的同时减小文件大小。',
-        crop: '裁剪：裁剪掉不需要的外部区域。',
-        resize: '调整大小：更改图片尺寸。',
-        rotate: '旋转/翻转：调整图片方向。',
-        convert: '转换：在 PNG、JPEG 和 WEBP 格式之间切换。',
-        base64: 'Base64：获取用于嵌入的 Base64 字符串。'
-      }
-    },
-
-    // 水印工具
-    watermark: {
-      name: '水印工具',
-      description: '添加或移除图片/视频水印',
-      remove: '去除水印',
-      add: '添加水印',
-      mode: '模式',
-      removeMode: '去除模式',
-      addMode: '添加模式',
-      text: '文字水印',
-      imageType: '图片',
-      video: '视频',
-      content: '内容',
-      color: '颜色',
-      size: '大小',
-      opacity: '透明度',
-      position: '位置',
-      x: 'X坐标',
-      y: 'Y坐标',
-      dropImage: '拖拽或点击上传图片',
-      dropVideo: '拖拽或点击上传视频',
-      supportImage: '支持 JPG, PNG, WebP',
-      supportVideo: '支持 MP4, WebM',
-      brushSize: '画笔大小',
-      paintInstruction: '在水印区域涂抹标记',
-      videoInstruction: '拖动选择框标记水印区域',
-      help: '这是一个强大的水印处理工具。在"去除模式"下，可以通过涂抹(图片)或选择框(视频)标记水印区域并移除。在"添加模式"下，可以添加文字水印到图片或视频上。'
     },
 
     // Unicode 转换器

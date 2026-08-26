@@ -2,9 +2,9 @@
   <div class="flex h-screen w-screen overflow-hidden bg-background text-foreground">
     <Sidebar />
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" class="h-full w-full overflow-auto" />
+<router-view v-slot="{ Component, route }">
+        <transition name="fade">
+          <component :is="Component" :key="route.path" class="h-full w-full overflow-auto" />
         </transition>
       </router-view>
     </main>
@@ -13,8 +13,38 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import Sidebar from './Sidebar.vue'
 import CommandPalette from '../components/CommandPalette.vue'
+import { useOnboarding } from '@/composables/useOnboarding'
+
+const { startOnboarding } = useOnboarding()
+
+const handleKeydown = (e: KeyboardEvent) => {
+  // Cmd+/ or Ctrl+/
+  if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+    e.preventDefault()
+    startOnboarding()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  
+  // Show onboarding on first visit
+  if (localStorage.getItem('hasSeenOnboarding') !== 'true') {
+    // Slight delay to ensure DOM is fully rendered
+    setTimeout(() => {
+      startOnboarding()
+      localStorage.setItem('hasSeenOnboarding', 'true')
+    }, 500)
+  }
+})
+
+onUnmounted(() => {
+  // 修复：原本误写成 addEventListener，导致卸载时再次绑定（泄漏），应为移除
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>

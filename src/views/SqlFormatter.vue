@@ -60,22 +60,24 @@
             <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
           </button>
           <div class="h-4 w-px bg-border flex-shrink-0"></div>
-          <button
-            @click="goToDiff('left')"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.compareLeft')"
-          >
-            <ArrowLeftToLine class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compareLeft') }}</span>
-          </button>
-          <button
-            @click="goToDiff('right')"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.compareRight')"
-          >
-            <ArrowRightToLine class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.compareRight') }}</span>
-          </button>
+<div class="flex items-center space-x-0.5">
+            <button
+              @click="goToDiff('left')"
+              class="px-3 py-1.5 text-xs font-medium rounded-l-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1 border-r border-border/50"
+              :title="$t('tools.diff.putLeft')"
+            >
+              <ArrowLeftFromLine class="w-3.5 h-3.5" />
+              <span>{{ $t('tools.diff.putLeft') }}</span>
+            </button>
+            <button
+              @click="goToDiff('right')"
+              class="px-3 py-1.5 text-xs font-medium rounded-r-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
+              :title="$t('tools.diff.putRight')"
+            >
+              <span>{{ $t('tools.diff.putRight') }}</span>
+              <ArrowRightFromLine class="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -173,7 +175,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import * as monaco from 'monaco-editor'
 import { format } from 'sql-formatter'
-import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, ArrowLeftToLine, ArrowRightToLine, History, Map } from 'lucide-vue-next'
+import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, History, Map, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
@@ -242,6 +244,9 @@ const errorMessage = ref('')
 type ActionType = 'format' | 'minify' | 'escape' | 'unescape' | 'unicode' | null
 const activeAction = ref<ActionType>('format')
 
+// 追踪所有 setTimeout，组件卸载时统一清理，避免在已卸载的 ref 上写入
+const pendingTimers: number[] = []
+
 const getSelectedTextOrAll = () => {
   if (!sqlEditor) return { text: sqlText.value, isSelection: false, selection: null }
   const selection = sqlEditor.getSelection()
@@ -273,7 +278,7 @@ const showError = (error: any, prefix = 'Error') => {
   errorMessage.value = message.length > 150
     ? message.substring(0, 150) + '...'
     : message
-  setTimeout(() => { errorMessage.value = '' }, 3000)
+  pendingTimers.push(window.setTimeout(() => { errorMessage.value = '' }, 3000))
 }
 
 const useHistoryItem = (content: string) => {
@@ -308,6 +313,9 @@ const formatSQL = (isAuto = false) => {
 
 const splitSQLStatements = (text: string) => {
   const statements = text.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0)
+  // 边界保护：过滤后无有效语句（如输入仅为 ";;;"）时直接返回空数组，
+  // 否则 statements[statements.length - 1] 为 undefined，会输出字面量 "undefined;"
+  if (statements.length === 0) return []
   return statements.map(stmt => stmt + ';').slice(0, -1).concat(statements[statements.length - 1] + (text.trim().endsWith(';') ? ';' : ''))
 }
 
@@ -409,7 +417,7 @@ const initEditor = async () => {
           isFormatting = true
           addHistory(sqlEditor.getValue() || '')
           formatSQL(true)
-          setTimeout(() => { isFormatting = false }, 200)
+          pendingTimers.push(window.setTimeout(() => { isFormatting = false }, 200))
         }
       }, 150)
     })
@@ -455,7 +463,13 @@ const pasteInput = async () => {
     formatSQL(true)
   } catch (error) { console.error('Paste failed:', error) }
 }
-const copyInput = () => navigator.clipboard.writeText(sqlEditor?.getValue() || '')
+const copyInput = async () => {
+  try {
+    await navigator.clipboard.writeText(sqlEditor?.getValue() || '')
+  } catch (err) {
+    console.error('Cannot copy to clipboard:', err)
+  }
+}
 
 const goToDiff = (side: 'left' | 'right' = 'left') => {
   const text = sqlEditor?.getValue() ?? sqlText.value
@@ -490,7 +504,12 @@ onBeforeUnmount(() => {
   if (pasteTimer) clearTimeout(pasteTimer)
   contentChangeListener?.dispose()
   pasteListener?.dispose()
+  // 清理所有未触发的 timer，避免在已卸载的 ref 上写入
+  while (pendingTimers.length) {
+    clearTimeout(pendingTimers.pop())
+  }
   themeWatcher?.()
+  themeWatcher = null
   if (sqlEditor) {
     const finalVal = sqlEditor.getValue()
     if (finalVal !== undefined && finalVal !== '') {
@@ -498,6 +517,7 @@ onBeforeUnmount(() => {
     }
   }
   sqlEditor?.dispose()
+  sqlEditor = null
 })
 </script>
 

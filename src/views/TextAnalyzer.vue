@@ -92,6 +92,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, FileText, ClipboardPaste, Trash2, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
+import { useDebounceFn } from '../composables/useDebounceFn';
 
 const editorRef = ref<HTMLElement | null>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -117,6 +118,10 @@ const analyzeText = () => {
   stats.value.paragraphs = text.split(/\r\n\r\n|\r\r|\n\n/).filter((p: string) => p.trim() !== '').length;
 };
 
+// 防抖版：analyzeText 对大文本跑多个正则（match/replace/split），每次按键都执行
+// 会明显卡顿。用 250ms 防抖，停顿后才分析。初始化/粘贴用立即版本保证即时反馈。
+const analyzeTextDebounced = useDebounceFn(analyzeText, 250);
+
 const initEditor = async () => {
   await nextTick();
   if (editorRef.value) {
@@ -134,7 +139,8 @@ const initEditor = async () => {
     });
     editor.onDidChangeModelContent(() => {
       inputText.value = editor?.getValue() || '';
-      analyzeText();
+      // 连续输入走防抖，避免大文本时每次按键都跑多个正则
+      analyzeTextDebounced.run();
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
     themeWatcher = watchThemeChange(editor);
@@ -146,7 +152,11 @@ const initEditor = async () => {
 const pasteInput = async () => {
   try {
     const text = await navigator.clipboard.readText();
+    // 取消可能挂起的防抖分析，避免和下面的立即分析重复计算
+    analyzeTextDebounced.cancel();
     editor?.setValue(text);
+    // 粘贴后立即分析，给用户即时反馈（不防抖）
+    analyzeText();
   } catch (err) {
     console.error('无法读取剪贴板:', err);
   }
