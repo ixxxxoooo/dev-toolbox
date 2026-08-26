@@ -210,9 +210,12 @@ const showHistory = ref(false)
 
 const themeStore = useThemeStore()
 const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('sql', themeStore.historyLimit.value)
+// diff 历史在顶层创建一次，避免在 goToDiff 中反复调用 composable（违反 Vue 组合式 API 约定）
+const { addHistory: addDiffHistory, updateMaxItems: updateDiffMaxItems } = useHistory('diff', themeStore.historyLimit.value)
 
 watch(() => themeStore.historyLimit.value, (newLimit) => {
   updateMaxItems(newLimit)
+  updateDiffMaxItems(newLimit)
 })
 
 const undo = () => sqlEditor?.trigger('keyboard', 'undo', null)
@@ -475,7 +478,6 @@ const goToDiff = (side: 'left' | 'right' = 'left') => {
   const text = sqlEditor?.getValue() ?? sqlText.value
   const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content'
   const currentContent = loadFromStorage(storageKey, '')
-  const { addHistory: addDiffHistory } = useHistory('diff', themeStore.historyLimit.value)
   if (currentContent && currentContent !== text) {
     addDiffHistory(currentContent)
   }

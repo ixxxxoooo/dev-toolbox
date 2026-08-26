@@ -317,9 +317,12 @@ const showHistory = ref(false);
 
 const themeStore = useThemeStore();
 const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('json', themeStore.historyLimit.value);
+// diff 历史在顶层创建一次，避免在 goToDiff 中反复调用 composable（违反 Vue 组合式 API 约定）
+const { addHistory: addDiffHistory, updateMaxItems: updateDiffMaxItems } = useHistory('diff', themeStore.historyLimit.value);
 
 watch(() => themeStore.historyLimit.value, (newLimit) => {
   updateMaxItems(newLimit);
+  updateDiffMaxItems(newLimit);
 });
 
 let errorTimer: NodeJS.Timeout | null = null;
@@ -360,7 +363,9 @@ const STORAGE_KEYS = {
   leftWidth: 'json-left-width',
   editorCollapsed: 'json-editor-collapsed',
   decodeUnicode: 'json-decode-unicode',
-  expandNested: 'json-expand-nested'
+  expandNested: 'json-expand-nested',
+  decodeUnicodeSnapshot: 'json-decode-unicode-snapshot',
+  expandNestedSnapshot: 'json-expand-nested-snapshot'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
@@ -496,43 +501,48 @@ const handleOperation = (op: string) => {
 
 // Unicode 解码开关：选中=把 \uXXXX 转中文，去掉=还原。点击立即应用。
 // 开启时先保存当前内容，关闭时还原回去（支持来回切换不丢原始数据）。
-const decodeUnicodeSnapshot = ref<string | null>(null);
+// 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
+const decodeUnicodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null));
 const toggleDecodeUnicode = () => {
   const turningOn = !decodeUnicode.value;
-  decodeUnicode.value = turningOn;
-  if (!inputText.value.trim()) return;
   if (turningOn) {
     // 开启：保存解码前的原始内容，然后走 format 应用解码
     decodeUnicodeSnapshot.value = inputText.value;
+    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, inputText.value);
+    decodeUnicode.value = true;
     operation.value = 'format';
     processData(false);
   } else {
     // 关闭：还原为开启前保存的原始内容
     if (decodeUnicodeSnapshot.value !== null) {
       replaceTextInEditor(decodeUnicodeSnapshot.value);
-      decodeUnicodeSnapshot.value = null;
     }
+    decodeUnicodeSnapshot.value = null;
+    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null);
+    decodeUnicode.value = false;
   }
 };
 
 // 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组，去掉=还原。
 // 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原。
-const expandNestedSnapshot = ref<string | null>(null);
+const expandNestedSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedSnapshot, null));
 const toggleExpandNested = () => {
   const turningOn = !expandNested.value;
-  expandNested.value = turningOn;
-  if (!inputText.value.trim()) return;
   if (turningOn) {
     // 开启：保存展开前的原始内容，然后走 format 应用解析
     expandNestedSnapshot.value = inputText.value;
+    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, inputText.value);
+    expandNested.value = true;
     operation.value = 'format';
     processData(false);
   } else {
     // 关闭：还原为开启前保存的原始内容
     if (expandNestedSnapshot.value !== null) {
       replaceTextInEditor(expandNestedSnapshot.value);
-      expandNestedSnapshot.value = null;
     }
+    expandNestedSnapshot.value = null;
+    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, null);
+    expandNested.value = false;
   }
 };
 
@@ -709,7 +719,6 @@ const goToDiff = (side: 'left' | 'right' = 'left') => {
   const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content';
   // Ensure we don't lose previous diff content by backing it up to diff history
   const currentContent = loadFromStorage(storageKey, '');
-  const { addHistory: addDiffHistory } = useHistory('diff', themeStore.historyLimit.value);
   if (currentContent && currentContent !== text) {
     addDiffHistory(currentContent);
   }

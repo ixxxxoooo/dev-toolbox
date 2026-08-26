@@ -219,7 +219,9 @@ const STORAGE_KEYS = {
   theme: 'diff-theme',
   wordWrapEnabled: 'diff-word-wrap-enabled',
   showMinimap: 'diff-show-minimap',
-  decodeUnicode: 'diff-decode-unicode'
+  decodeUnicode: 'diff-decode-unicode',
+  leftDecodeSnapshot: 'diff-left-decode-snapshot',
+  rightDecodeSnapshot: 'diff-right-decode-snapshot'
 };
 
 const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'));
@@ -289,7 +291,7 @@ const initMonacoDiffEditor = async () => {
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel });
 
-minimapTimer = setTimeout(() => {
+  minimapTimer = setTimeout(() => {
     applyMinimapOption();
   }, 100);
 
@@ -315,7 +317,7 @@ minimapTimer = setTimeout(() => {
     }
   });
 
-originalPasteListener = originalEditor.onDidPaste(() => {
+  originalPasteListener = originalEditor.onDidPaste(() => {
     if (originalPasteTimer) clearTimeout(originalPasteTimer);
     originalPasteTimer = setTimeout(() => {
       if (originalEditor) {
@@ -434,20 +436,23 @@ const decodeUnicodeText = (text: string): string => {
 
 // Unicode 解码开关：选中=两边都把 \uXXXX 解码成中文，去掉=两边都还原。
 // 快照还原模式：开启时分别保存左右原始内容，关闭时一键还原（支持来回切换不丢数据）。
-const leftDecodeSnapshot = ref<string | null>(null);
-const rightDecodeSnapshot = ref<string | null>(null);
+// 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
+const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null));
+const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null));
 
 const toggleDecodeUnicode = () => {
   if (!diffEditor) return;
   const originalEditor = diffEditor.getOriginalEditor();
   const modifiedEditor = diffEditor.getModifiedEditor();
   const turningOn = !decodeUnicode.value;
-  decodeUnicode.value = turningOn;
 
   if (turningOn) {
     // 开启：保存两侧原始内容，然后对当前内容应用解码
     leftDecodeSnapshot.value = originalEditor.getValue() || '';
     rightDecodeSnapshot.value = modifiedEditor.getValue() || '';
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
+    decodeUnicode.value = true;
     originalEditor.setValue(decodeUnicodeText(leftDecodeSnapshot.value));
     modifiedEditor.setValue(decodeUnicodeText(rightDecodeSnapshot.value));
   } else {
@@ -460,6 +465,9 @@ const toggleDecodeUnicode = () => {
     }
     leftDecodeSnapshot.value = null;
     rightDecodeSnapshot.value = null;
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, null);
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, null);
+    decodeUnicode.value = false;
   }
 };
 
