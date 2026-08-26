@@ -110,6 +110,9 @@
           <div class="flex items-center justify-between px-3 py-1.5 border-r border-border">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.leftPanel') }}</span>
             <div class="flex items-center space-x-1">
+              <button @click="formatSide('original')" :title="$t('tools.diff.format')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Wand2 class="w-3.5 h-3.5" />
+              </button>
               <button @click="pasteTo('original')" :title="$t('tools.diff.pasteLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -121,6 +124,9 @@
           <div class="flex items-center justify-between px-3 py-1.5">
             <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.rightPanel') }}</span>
             <div class="flex items-center space-x-1">
+              <button @click="formatSide('modified')" :title="$t('tools.diff.format')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+                <Wand2 class="w-3.5 h-3.5" />
+              </button>
               <button @click="pasteTo('modified')" :title="$t('tools.diff.pasteRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
                 <ClipboardPaste class="w-3.5 h-3.5" />
               </button>
@@ -133,6 +139,16 @@
         <!-- Header for inline view -->
         <div v-else class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
           <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.name') }} ({{ $t('tools.diff.inline') }})</span>
+          <div class="flex items-center space-x-1">
+            <button @click="formatSide('original')" :title="$t('tools.diff.formatLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Wand2 class="w-3.5 h-3.5" />
+              <span class="sr-only">{{ $t('tools.diff.formatLeft') }}</span>
+            </button>
+            <button @click="formatSide('modified')" :title="$t('tools.diff.formatRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
+              <Wand2 class="w-3.5 h-3.5" />
+              <span class="sr-only">{{ $t('tools.diff.formatRight') }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- The actual editor container -->
@@ -173,19 +189,35 @@
       @delete="deleteHistory"
       @clear="clearHistory"
     />
+
+    <!-- Error Toast -->
+    <Transition name="slide-up">
+      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-start space-x-3 z-50">
+        <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <div class="flex-1">
+          <p class="font-medium text-sm">{{ errorMessage }}</p>
+        </div>
+        <button @click="errorMessage = ''" class="flex-shrink-0 hover:opacity-70">
+          <X class="w-4 h-4" />
+        </button>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as monaco from 'monaco-editor';
-import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages } from 'lucide-vue-next';
+import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages, Wand2, AlertCircle } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useHistory } from '../composables/useHistory';
 import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';
+import JSON5 from 'json5';
+import { format as formatSQL } from 'sql-formatter';
+import { xml2js, js2xml } from 'xml-js';
 
 const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
@@ -202,6 +234,8 @@ let themeWatcher: (() => void) | null = null;
 
 const showHelp = ref(false);
 const showHistory = ref(false);
+const errorMessage = ref('');
+let errorTimer: NodeJS.Timeout | null = null;
 
 const themeStore = useThemeStore();
 const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('diff', themeStore.historyLimit.value);
@@ -434,6 +468,99 @@ const decodeUnicodeText = (text: string): string => {
   return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 };
 
+const showError = (message: string) => {
+  errorMessage.value = message;
+  if (errorTimer) clearTimeout(errorTimer);
+  errorTimer = setTimeout(() => {
+    errorMessage.value = '';
+  }, 5000);
+};
+
+/**
+ * 自动检测文本格式类型：JSON / XML / SQL，无法识别时返回 null。
+ * @param text 待检测的文本
+ * @returns 检测到的格式类型
+ */
+const detectFormat = (text: string): 'json' | 'xml' | 'sql' | null => {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  // JSON：以 { 或 [ 开头并尝试解析
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try {
+      JSON5.parse(trimmed);
+      return 'json';
+    } catch {
+      // 形似 JSON 但解析失败，可能是格式错误的 JSON，不返回 json
+    }
+  }
+
+  // XML：以 < 开头，标签结构闭合
+  if (trimmed.startsWith('<') && trimmed.includes('>')) {
+    try {
+      xml2js(trimmed);
+      return 'xml';
+    } catch {
+      // 解析失败则不是合法 XML
+    }
+  }
+
+  // SQL：以常见 SQL 关键字开头
+  const upper = trimmed.toUpperCase();
+  const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'WITH', 'GRANT', 'REVOKE', 'SET', 'USE', 'SHOW', 'TRUNCATE', 'MERGE', 'REPLACE'];
+  if (sqlKeywords.some(kw => upper.startsWith(kw))) {
+    return 'sql';
+  }
+
+  return null;
+};
+
+/**
+ * 按检测到的类型格式化文本。
+ * @param text 原始文本
+ * @returns 格式化后的文本
+ */
+const formatText = (text: string): string => {
+  const type = detectFormat(text);
+  if (!type) {
+    throw new Error('无法识别内容格式，仅支持 JSON / XML / SQL 格式化');
+  }
+
+  if (type === 'json') {
+    const parsed = JSON5.parse(text);
+    return JSON.stringify(parsed, null, 2);
+  }
+
+  if (type === 'xml') {
+    const compact = xml2js(text, { compact: true });
+    return js2xml(compact, { compact: true, spaces: 2, attributesKey: '_attributes' });
+  }
+
+  // SQL
+  return formatSQL(text, { language: 'sql', tabWidth: 2, keywordCase: 'upper' });
+};
+
+/**
+ * 格式化指定一侧（左侧/右侧）编辑器的内容。
+ * @param side 编辑器侧（original=左，modified=右）
+ */
+const formatSide = (side: 'original' | 'modified') => {
+  if (!diffEditor) return;
+  const editor = side === 'original' ? diffEditor.getOriginalEditor() : diffEditor.getModifiedEditor();
+  const text = editor.getValue() || '';
+  if (!text.trim()) return;
+
+  try {
+    const formatted = formatText(text);
+    if (formatted !== text) {
+      editor.setValue(formatted);
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '格式化失败';
+    showError(message);
+  }
+};
+
 // Unicode 解码开关：选中=两边都把 \uXXXX 解码成中文，去掉=两边都还原。
 // 快照还原模式：开启时分别保存左右原始内容，关闭时一键还原（支持来回切换不丢数据）。
 // 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
@@ -535,5 +662,16 @@ watch(decodeUnicode, (newValue) => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
 }
 </style>
