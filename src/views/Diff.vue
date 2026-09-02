@@ -207,6 +207,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import * as monaco from 'monaco-editor';
 import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages, Wand2, AlertCircle } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
@@ -244,6 +245,8 @@ watch(() => themeStore.historyLimit.value, (newLimit) => {
   updateMaxItems(newLimit);
 });
 
+const route = useRoute();
+
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
   rightContent: 'diff-right-content',
@@ -266,6 +269,40 @@ const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true))
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
 const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
+
+// Unicode 解码快照持久化
+const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null));
+const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null));
+
+/**
+ * 把文本里的字面量 \uXXXX 解码成对应字符（如 \u4e2d → 中）。
+ */
+const decodeUnicodeText = (text: string): string => {
+  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+};
+
+/**
+ * 检查并应用来自路由状态（history.state）中的单侧内容传递
+ */
+const applyRouteStateIfPresent = () => {
+  const state = window.history.state;
+  if (state && (state.targetSide === 'left' || state.targetSide === 'right') && typeof state.content === 'string') {
+    const isLeft = state.targetSide === 'left';
+    const targetContent = state.content;
+    if (isLeft) {
+      leftContent.value = targetContent;
+      saveToStorage(STORAGE_KEYS.leftContent, targetContent);
+      // 清除旧快照，并在开启 Unicode 解码时重新基于新内容建立快照
+      leftDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
+      saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
+    } else {
+      rightContent.value = targetContent;
+      saveToStorage(STORAGE_KEYS.rightContent, targetContent);
+      rightDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
+      saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
+    }
+  }
+};
 
 const cleanupEditorResources = () => {
   if (originalPasteTimer) clearTimeout(originalPasteTimer);
@@ -297,12 +334,31 @@ const initMonacoDiffEditor = async () => {
 
   cleanupEditorResources();
 
-  // Reload freshest content from storage
+  // 1. 优先应用路由定向传参
+  applyRouteStateIfPresent();
+
+  // 2. 加载最新的内容
   leftContent.value = loadFromStorage(STORAGE_KEYS.leftContent, leftContent.value);
   rightContent.value = loadFromStorage(STORAGE_KEYS.rightContent, rightContent.value);
 
-  originalModel = monaco.editor.createModel(leftContent.value, 'text/plain');
-  modifiedModel = monaco.editor.createModel(rightContent.value, 'text/plain');
+  // 3. 计算初始显示内容（若开启 Unicode 解码，则做解码展示并确保快照已存）
+  let initialLeft = leftContent.value;
+  let initialRight = rightContent.value;
+  if (decodeUnicode.value) {
+    if (leftDecodeSnapshot.value === null) {
+      leftDecodeSnapshot.value = leftContent.value;
+      saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
+    }
+    if (rightDecodeSnapshot.value === null) {
+      rightDecodeSnapshot.value = rightContent.value;
+      saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
+    }
+    initialLeft = decodeUnicodeText(leftDecodeSnapshot.value);
+    initialRight = decodeUnicodeText(rightDecodeSnapshot.value);
+  }
+
+  originalModel = monaco.editor.createModel(initialLeft, 'text/plain');
+  modifiedModel = monaco.editor.createModel(initialRight, 'text/plain');
 
   diffEditor = monaco.editor.createDiffEditor(diffEditorRef.value, {
     theme: getMonacoTheme(),
@@ -459,14 +515,6 @@ const handleHistorySelect = ({ content, side }: { content: string, side: 'origin
   showHistory.value = false;
 };
 
-/**
- * 把文本里的字面量 \uXXXX 解码成对应字符（如 \u4e2d → 中）。
- * 与 JSON 工具的 decodeUnicodeInStrings 思路一致，但 Diff 是纯文本，
- * 直接对整段字符串做正则替换即可。
- */
-const decodeUnicodeText = (text: string): string => {
-  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-};
 
 const showError = (message: string) => {
   errorMessage.value = message;
@@ -564,9 +612,6 @@ const formatSide = (side: 'original' | 'modified') => {
 // Unicode 解码开关：选中=两边都把 \uXXXX 解码成中文，去掉=两边都还原。
 // 快照还原模式：开启时分别保存左右原始内容，关闭时一键还原（支持来回切换不丢数据）。
 // 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
-const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null));
-const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null));
-
 const toggleDecodeUnicode = () => {
   if (!diffEditor) return;
   const originalEditor = diffEditor.getOriginalEditor();
@@ -652,6 +697,23 @@ watch(showMinimap, (newValue) => {
 
 watch(decodeUnicode, (newValue) => {
   saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
+});
+
+watch(() => route.fullPath, () => {
+  if (diffEditor) {
+    applyRouteStateIfPresent();
+    const state = window.history.state;
+    if (state && (state.targetSide === 'left' || state.targetSide === 'right') && typeof state.content === 'string') {
+      const isLeft = state.targetSide === 'left';
+      const targetContent = state.content;
+      const displayVal = decodeUnicode.value ? decodeUnicodeText(targetContent) : targetContent;
+      if (isLeft) {
+        diffEditor.getOriginalEditor().setValue(displayVal);
+      } else {
+        diffEditor.getModifiedEditor().setValue(displayVal);
+      }
+    }
+  }
 });
 </script>
 
