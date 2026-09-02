@@ -726,7 +726,18 @@ const goToDiff = (side: 'left' | 'right' = 'left') => {
     addDiffHistory(text);
   }
   saveToStorage(storageKey, text);
-  router.push('/diff');
+  // 清理对应一侧的 Unicode 解码快照，防止在 Diff 页面被旧快照覆盖
+  const snapshotKey = side === 'left' ? 'diff-left-decode-snapshot' : 'diff-right-decode-snapshot';
+  saveToStorage(snapshotKey, null);
+
+  router.push({
+    path: '/diff',
+    state: {
+      targetSide: side,
+      content: text,
+      timestamp: Date.now()
+    }
+  });
 };
 
 const isTreeExpanded = ref(true);
