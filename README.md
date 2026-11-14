@@ -5,7 +5,7 @@
 **A Modern Web Application with Essential Developer Tools**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.19+-green.svg)](https://nodejs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-green.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -50,7 +50,7 @@ English | [简体中文](README_ZH.md)
 - **UI Framework**: TailwindCSS 3
 - **Editor**: Monaco Editor (VS Code Core)
 - **State Management**: Pinia
-- **Utilities**: dayjs, crypto-js, js-yaml, xml-js, etc.
+- **Utilities**: dayjs, crypto-js, json5, lossless-json, xml-js, sql-formatter, marked + DOMPurify, etc.
 
 ## 🌐 Online Access
 
@@ -64,7 +64,7 @@ Experience Dev Toolbox directly in your browser:
 
 ### Requirements
 
-- Node.js 18+
+- Node.js 20.19+ (22 LTS recommended)
 - npm 9+
 
 ### Clone Repository

@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 
 // Vue 模块声明
 declare module '*.vue' {
@@ -16,6 +17,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+// 构建期注入的 @excalidraw/excalidraw 版本号（见 vite.config.ts 的 define）
+declare const __EXCALIDRAW_VERSION__: string;
 
 // 全局类型声明
 declare global {

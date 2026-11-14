@@ -5,7 +5,7 @@
 **一个集成常用开发者工具的现代化 Web 应用**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.19+-green.svg)](https://nodejs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3-green.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -49,7 +49,7 @@
 - **UI框架**: TailwindCSS 3
 - **编辑器**: Monaco Editor (VS Code 核心)
 - **状态管理**: Pinia
-- **工具库**: dayjs、crypto-js、js-yaml、xml-js 等
+- **工具库**: dayjs、crypto-js、json5、lossless-json、xml-js、sql-formatter、marked + DOMPurify 等
 
 ## 🌐 在线访问
 
@@ -63,7 +63,7 @@
 
 ### 环境要求
 
-- Node.js 18+
+- Node.js 20.19+（推荐 22 LTS）
 - npm 9+
 
 ### 克隆仓库

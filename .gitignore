@@ -63,3 +63,9 @@ jspm_packages/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+# PWA 开发模式生成物
+dev-dist/
+
+# Claude / Cursor 本地配置（含个人权限设置，不应入库）
+.claude/settings.local.json

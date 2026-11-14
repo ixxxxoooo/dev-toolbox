@@ -4,9 +4,11 @@
   "description": "集成常用开发者工具的 Web 应用",
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs' vite",
-    "build": "NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vue-tsc && NODE_OPTIONS='--require ./scripts/crypto-polyfill.cjs --max-old-space-size=4096' vite build",
-    "preview": "vite preview"
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "vue-tsc --noEmit && NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "keywords": [
     "developer",
@@ -22,13 +24,10 @@
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
     "@types/dagre": "^0.7.54",
-    "@types/diff-match-patch": "^1.0.36",
-    "@types/dompurify": "^3.0.5",
-    "@types/js-yaml": "^4.0.9",
-    "@types/marked": "^5.0.2",
     "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/ua-parser-js": "^0.7.39",
-    "@types/xml-js": "^0.9.0",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/tsconfig": "^0.5.1",
     "autoprefixer": "^10.4.19",
@@ -38,25 +37,21 @@
     "typescript": "^5.9.2",
     "vite": "^5.2.9",
     "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^3.2.7",
     "vue-tsc": "^2.0.26"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.0",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
     "@vercel/analytics": "^2.0.1",
     "@vue-flow/background": "^1.3.2",
-    "@vue-flow/controls": "^1.1.3",
     "@vue-flow/core": "^1.48.2",
-    "@vueuse/core": "^13.6.0",
     "crypto-js": "^4.2.0",
     "dagre": "^0.8.5",
     "dayjs": "^1.11.13",
-    "diff-match-patch": "^1.0.5",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.17",
     "driver.js": "^1.4.0",
-    "js-yaml": "^4.1.0",
     "json5": "^2.2.3",
+    "lossless-json": "^4.3.3",
     "lucide-vue-next": "^0.408.0",
     "marked": "^17.0.1",
     "mermaid": "^11.12.2",
@@ -66,10 +61,13 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sql-formatter": "^15.6.6",
-    "ua-parser-js": "^2.0.6",
+    "ua-parser-js": "^1.0.41",
     "vue": "^3.4.31",
-    "vue-i18n": "^9.14.5",
+    "vue-i18n": "^11.4.19",
     "vue-router": "^4.4.0",
     "xml-js": "^1.6.11"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }

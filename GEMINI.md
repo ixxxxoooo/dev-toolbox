@@ -1,67 +1,38 @@
-# Project Overview
+# 项目概览
 
-This is a desktop application named "Dev Toolbox" built with Electron and Vue.js. It provides a collection of essential tools for developers, including:
+Dev Toolbox 是一个基于 Vue 3 + Vite 的纯 Web（PWA）开发者工具箱，部署在 Vercel / Cloudflare Pages。
+目前包含的工具（见 `src/router/index.ts`）：
 
-- Text Diff Tool
-- Base64 Encoder/Decoder
-- JSON Toolkit
-- URL Encoder/Decoder
-- Timestamp Converter
-- UUID Generator
-- Text Analyzer
-- Hash Generator
-- SQL Formatter
-- Password Generator
+- JSON 工具、文本对比（Diff）、Base64、URL 编解码、Unicode 转换
+- 时间戳转换、UUID 生成、密码生成、哈希生成、进制转换
+- SQL 格式化、正则测试器、文本分析、HTTP 状态码、User-Agent 解析、二维码
+- Markdown 预览、Mermaid 图表、Excalidraw 白板
 
-The application features a modern interface with a dark mode, and it is designed to be cross-platform (macOS, Windows, and Linux).
+> 注意：本项目**不是** Electron 桌面应用，没有 `electron:dev` / `build:mac` / `build:win` / `build:web` 等脚本。
 
-## Building and Running
+## 构建与运行
 
-### Development
+要求 Node.js 20.19+（推荐 22 LTS）。
 
-- **Web development mode:**
-  ```bash
-  npm run dev
-  ```
+```bash
+npm install
+npm run dev        # 开发服务器（端口 3000）
+npm run typecheck  # vue-tsc 类型检查
+npm test           # Vitest 单元测试
+npm run build      # 类型检查 + 生产构建（输出到 dist/）
+npm run preview    # 预览构建产物
+```
 
-- **Electron development mode:**
-  ```bash
-  npm run electron:dev
-  ```
+## 开发约定
 
-### Building the Application
-
-- **Build for all platforms:**
-  ```bash
-  npm run build
-  ```
-
-- **Platform-specific builds:**
-  ```bash
-  npm run build:mac     # macOS
-  npm run build:win     # Windows
-  ```
-
-### Web Version
-
-- **Build web version:**
-  ```bash
-  npm run build:web
-  ```
-
-- **Preview build result:**
-  ```bash
-  npm run preview
-  ```
-
-## Development Conventions
-
-- **Frontend Framework:** Vue 3 with TypeScript
-- **Build Tool:** Vite
-- **Desktop Framework:** Electron
-- **UI Framework:** TailwindCSS
-- **Editor:** Monaco Editor
-- **State Management:** Pinia
-- **Code Style:** The project uses Prettier and ESLint for code formatting and linting. Configuration can be found in `.prettierrc` and `.eslintrc.js` respectively. (Note: These files were not explicitly read, but are standard for this type of project).
-- **Testing:** There are no explicit testing configurations found in the initial analysis.
-- **Contributing:** The `CONTRIBUTING.md` file provides guidelines for contributing to the project.
+- **前端框架：** Vue 3 `<script setup>` + TypeScript
+- **构建工具：** Vite 5（PWA 由 vite-plugin-pwa 提供，采用"提示用户刷新"的更新策略）
+- **样式：** TailwindCSS
+- **编辑器：** Monaco Editor
+- **状态管理：** Pinia（主题 store 为自定义单例）
+- **国际化：** vue-i18n，`src/locales/zh.ts` 与 `en.ts` 的键必须保持一致
+- **代码风格：** 项目当前未配置 ESLint / Prettier，请保持与周围代码一致的风格；注释使用中文
+- **测试：** 纯逻辑（解析、转换、随机数等）放在 `src/utils/` 并配套 Vitest 测试（`*.test.ts`）
+- **公共能力：** 复制/粘贴统一使用 `src/utils/clipboard.ts`，提示使用 `src/composables/useToast.ts`，
+  大体积持久化数据使用 `src/utils/idbStore.ts`（IndexedDB），工具图标在 `src/utils/toolIcons.ts` 登记
+- **贡献：** 详见 `CONTRIBUTING.md`
