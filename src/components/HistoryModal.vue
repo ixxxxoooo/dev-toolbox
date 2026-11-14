@@ -133,9 +133,10 @@
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { History, X, Trash2, Clock, Search, ChevronRight, Eye, MousePointer2, Copy } from 'lucide-vue-next'
-import * as monaco from 'monaco-editor'
+import * as monaco from '@/utils/monaco'
 import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
 import { useThemeStore } from '../stores/theme'
+import { copyText } from '../utils/clipboard'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -160,11 +161,7 @@ const themeStore = useThemeStore()
 const { locale } = useI18n()
 
 const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch (err) {
-    console.error('Copy failed', err)
-  }
+  await copyText(text)
 }
 
 const searchQuery = ref('')

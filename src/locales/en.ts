@@ -104,6 +104,15 @@ export default {
 
     // Messages
     messages: {
+      expandSidebar: 'Expand sidebar',
+      collapseSidebar: 'Collapse sidebar',
+      historyItemTooLarge: 'Content is too large to add to history',
+      storageFull: 'Browser storage is full. Recent changes may not be saved after refresh',
+      storageTooLarge: 'Content is too large to be saved locally and will be lost after refresh',
+      updateAvailable: 'A new version is available',
+      updateNow: 'Refresh',
+      offlineReady: 'Ready to work offline',
+      copyFailed: 'Copy failed. Please check clipboard permission',
       invalidJson: 'Invalid JSON, cannot generate tree view',
       cannotReadClipboard: 'Cannot read clipboard',
       formatFailed: 'Format failed',
@@ -194,12 +203,12 @@ export default {
 
     // Base64 Encoder/Decoder
     base64: {
+      binaryInput: 'Binary file: {name} ({size}) — will be encoded as raw bytes',
+      binaryOutput: 'Binary data ({size}), not valid UTF-8 text. Use the download button to save it as a file',
+      fileTooLarge: 'File is too large (max {size})',
+      readFileFailed: 'Failed to read file',
       name: 'Base64 Encoder/Decoder',
       description: 'Base64 encoding and decoding tool',
-      encodeMode: 'Encode Mode',
-      decodeMode: 'Decode Mode',
-      encodeModeDescription: 'Encode URL parameter values',
-      decodeModeDescription: 'Automatically decode URL-encoded characters',
       help: {
         features: {
           urlSafe: 'URL Safe'
@@ -226,13 +235,20 @@ export default {
       expandNested: 'Expand Nested',
       expandNestedDesc: 'Click to enable: recursively parse JSON embedded in string values into objects/arrays; click again to turn off and restore',
       expandAll: 'Expand All',
-      collapseAll: 'Collapse All'
+      collapseAll: 'Collapse All',
+      viewTooLarge: 'The content is too large for this view. Use the editor on the left instead',
+      bigIntWarning: 'The input contains integers beyond the safe range (2^53) in non-strict JSON; formatting may lose precision. Use strict JSON to keep full precision.',
+      keepEdited: 'Content was edited after the switch was turned on, so the current content is kept instead of restoring the original'
     },
 
     // URL Encoder/Decoder
     url: {
       name: 'URL Encoder/Decoder',
-      description: 'URL encoding and decoding tool'
+      description: 'URL encoding and decoding tool',
+      encodeMode: 'Encode Mode',
+      decodeMode: 'Decode Mode',
+      encodeModeDescription: 'Encode URL parameter values',
+      decodeModeDescription: 'Automatically decode URL-encoded characters'
     },
 
     // Timestamp Converter
@@ -384,7 +400,10 @@ export default {
       decimal: 'Decimal',
       hex: 'Hexadecimal',
       binary: 'Binary',
-      octal: 'Octal'
+      octal: 'Octal',
+      twosComplement: "Two's complement",
+      invalidInput: 'Invalid input: contains characters not allowed in this base (integers only)',
+      overflow: 'Value exceeds the selected bit width and has been truncated'
     },
 
     // HTTP Status Codes
@@ -440,6 +459,8 @@ export default {
       description: 'Test regular expressions',
       regex: 'Regular Expression',
       testString: 'Test String',
+      timeout: 'Regex execution exceeded {ms}ms and was aborted (possible catastrophic backtracking). Please simplify the pattern',
+      truncated: 'Too many matches; only the first 5000 are shown',
       matches: 'Matches'
     },
 
@@ -469,6 +490,7 @@ export default {
       inputPlaceholder: 'Enter text or Unicode...',
       outputPlaceholder: 'Conversion result will appear here...',
       swap: 'Swap input/output',
+      onlyNonAscii: 'Non-ASCII only',
       features: 'Features'
     },
 
@@ -486,6 +508,7 @@ export default {
       name: 'Mermaid Diagram',
       description: 'Mermaid code editor with live preview',
       downloadPng: 'Download PNG',
+      pngFailed: 'PNG export failed. Try downloading SVG instead',
       downloadSvg: 'Download SVG',
       helpDrag: 'Drag to pan the diagram',
       helpZoom: 'Scroll to zoom in/out',

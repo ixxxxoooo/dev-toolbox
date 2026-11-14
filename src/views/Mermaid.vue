@@ -160,12 +160,13 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, onBeforeUnmount, nextTick, computed } from 'vue';
 import { Share2, HelpCircle, X, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw, History, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import mermaid from 'mermaid';
 import { useI18n } from 'vue-i18n';
 import { getMonacoTheme, watchThemeChange } from '@/utils/monaco-theme';
-import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage';
 import { useHistory } from '@/composables/useHistory';
+import { showToast } from '@/composables/useToast';
 import { useThemeStore } from '@/stores/theme';
 import HistoryModal from '@/components/HistoryModal.vue';
 import CustomSelect from '@/components/CustomSelect.vue';
@@ -340,24 +341,44 @@ const stopResize = () => {
 };
 
 let renderId = 0;
+// 记录上次 initialize 的配置，配置未变化时不重复初始化
+let lastInitKey = '';
+
+const initMermaid = (extra: { htmlLabels?: boolean } = {}) => {
+  const isCustomTheme = mermaidTheme.value in customThemes;
+  const key = JSON.stringify([mermaidTheme.value, mermaidLook.value, mermaidCurve.value, extra]);
+  if (key === lastInitKey) return;
+  lastInitKey = key;
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
+    themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
+    look: mermaidLook.value as any,
+    flowchart: { curve: mermaidCurve.value as any, ...extra },
+    // strict：禁止图内注入 HTML 与点击回调，降低 XSS 风险（输出会被 v-html 渲染）
+    securityLevel: 'strict'
+  });
+};
+
+/** mermaid 渲染失败时会在 body 里留下 #d{id} 残留节点，这里手动清理避免泄漏 */
+const cleanupMermaidLeftovers = (id: string) => {
+  document.getElementById(`d${id}`)?.remove();
+  document.getElementById(id)?.remove();
+};
+
 const renderMermaid = async (resetView = false) => {
   if (!code.value.trim()) {
     svgOutput.value = '';
     error.value = '';
     return;
   }
+  // 每次渲染分配自增 id；异步返回时若已有更新的渲染请求，丢弃过期结果，避免旧图覆盖新图
+  const myId = ++renderId;
+  const domId = `mermaid-svg-${myId}`;
   try {
-    // 每次渲染前重新初始化主题和外观
-    const isCustomTheme = mermaidTheme.value in customThemes;
-    mermaid.initialize({ 
-      startOnLoad: false, 
-      theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
-      themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
-      look: mermaidLook.value as any,
-      flowchart: { curve: mermaidCurve.value as any },
-      securityLevel: 'loose' 
-    });
-    const { svg } = await mermaid.render(`mermaid-svg-${++renderId}`, code.value);
+    initMermaid();
+    const { svg } = await mermaid.render(domId, code.value);
+    if (myId !== renderId) return;
     svgOutput.value = svg;
     error.value = '';
     // 只在代码变化时自动居中适配
@@ -365,8 +386,20 @@ const renderMermaid = async (resetView = false) => {
       nextTick(() => fitToCenter());
     }
   } catch (e: any) {
+    cleanupMermaidLeftovers(domId);
+    if (myId !== renderId) return;
     error.value = e?.message || e?.str || String(e) || 'Render error';
   }
+};
+
+// 输入时防抖，避免每次按键都重新渲染
+let renderDebounce: ReturnType<typeof setTimeout> | null = null;
+const scheduleRender = (resetView: boolean) => {
+  if (renderDebounce) clearTimeout(renderDebounce);
+  renderDebounce = setTimeout(() => {
+    renderDebounce = null;
+    renderMermaid(resetView);
+  }, 300);
 };
 
 // 自动居中并适配大小
@@ -411,9 +444,10 @@ const fitToCenter = () => {
 
 // 保存到 localStorage
 watch(code, (newCode) => {
-  saveToStorage(STORAGE_KEY, newCode);
-  renderMermaid(true);
-}, { immediate: true });
+  saveToStorageDebounced(STORAGE_KEY, newCode);
+  scheduleRender(true);
+});
+renderMermaid(true);
 
 // 监听主题变化
 watch(mermaidTheme, (newTheme) => {
@@ -565,25 +599,20 @@ const downloadSvg = () => {
 
 const downloadPng = async () => {
   if (!code.value.trim()) return;
-  
+
+  const exportId = `mermaid-png-${++renderId}`;
   try {
-    // 重新渲染一个不使用 foreignObject 的版本
-    const isCustomTheme = mermaidTheme.value in customThemes;
-    mermaid.initialize({ 
-      startOnLoad: false, 
-      theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
-      themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
-      look: mermaidLook.value as any,
-      flowchart: { curve: mermaidCurve.value as any, htmlLabels: false },
-      securityLevel: 'loose'
-    });
-    const { svg: pngSvg } = await mermaid.render(`mermaid-png-${++renderId}`, code.value);
-    
+    // 重新渲染一个不使用 foreignObject 的版本（htmlLabels: false）
+    initMermaid({ htmlLabels: false });
+    const { svg: pngSvg } = await mermaid.render(exportId, code.value);
+    // 导出配置不同于预览配置，清空缓存让下次预览渲染时重新初始化
+    lastInitKey = '';
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(pngSvg, 'image/svg+xml');
     const svg = doc.querySelector('svg');
     if (!svg) return;
-    
+
     let width = parseFloat(svg.getAttribute('width') || '0');
     let height = parseFloat(svg.getAttribute('height') || '0');
     if (!width || !height) {
@@ -598,36 +627,50 @@ const downloadPng = async () => {
     height += padding * 2;
     svg.setAttribute('width', String(width));
     svg.setAttribute('height', String(height));
-    
+
     const svgData = new XMLSerializer().serializeToString(svg);
     const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-    
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
     const exportScale = 2;
-    
+
     img.onload = () => {
-      canvas.width = width * exportScale;
-      canvas.height = height * exportScale;
-      if (exportBg.value === 'white') {
-        ctx!.fillStyle = '#ffffff';
-        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+      try {
+        canvas.width = width * exportScale;
+        canvas.height = height * exportScale;
+        if (exportBg.value === 'white') {
+          ctx!.fillStyle = '#ffffff';
+          ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx!.scale(exportScale, exportScale);
+        ctx!.drawImage(img, 0, 0);
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png', 1.0);
+        a.download = 'mermaid-diagram.png';
+        a.click();
+      } catch (err) {
+        // 画布被污染（部分图表含 foreignObject）或超出尺寸限制时会抛 SecurityError / RangeError
+        console.error('PNG export failed:', err);
+        showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
       }
-      ctx!.scale(exportScale, exportScale);
-      ctx!.drawImage(img, 0, 0);
-      const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png', 1.0);
-      a.download = 'mermaid-diagram.png';
-      a.click();
+    };
+    img.onerror = () => {
+      console.error('PNG export failed: image load error');
+      showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
     };
     img.src = dataUrl;
   } catch (e) {
+    cleanupMermaidLeftovers(exportId);
+    lastInitKey = '';
     console.error('PNG export failed:', e);
+    showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
   }
 };
 
 onUnmounted(() => {
+  if (renderDebounce) clearTimeout(renderDebounce);
   while (pendingTimers.length) {
     clearTimeout(pendingTimers.pop());
   }

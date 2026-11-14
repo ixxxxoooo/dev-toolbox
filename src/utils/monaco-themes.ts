@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor'
+import * as monaco from '@/utils/monaco'
 
 export const EDITOR_THEMES = [
     { id: 'auto', name: 'Auto', colors: ['#1e1e1e', '#ffffff'], type: 'auto' },

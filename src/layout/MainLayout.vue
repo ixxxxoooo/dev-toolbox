@@ -9,6 +9,7 @@
       </router-view>
     </main>
     <CommandPalette />
+    <ToastHost />
   </div>
 </template>
 
@@ -16,6 +17,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import Sidebar from './Sidebar.vue'
 import CommandPalette from '../components/CommandPalette.vue'
+import ToastHost from '../components/ToastHost.vue'
 import { useOnboarding } from '@/composables/useOnboarding'
 
 const { startOnboarding } = useOnboarding()

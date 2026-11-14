@@ -214,14 +214,22 @@
           </div>
           <div class="flex-1 relative overflow-hidden bg-background">
             <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-4">
-              <JsonTreeView ref="treeViewRef" v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-if="treeTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
+              </div>
+              <JsonTreeView ref="treeViewRef" v-else-if="isValidJson && parsedJson" :data="parsedJson" />
               <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
                 <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
                 <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
               </div>
             </div>
             <div v-else-if="rightPanelView === 'graph'" class="h-full w-full absolute inset-0">
-              <JsonGraphView v-if="isValidJson && parsedJson" :data="parsedJson" />
+              <div v-if="graphTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
+              </div>
+              <JsonGraphView v-else-if="isValidJson && parsedJson" :data="parsedJson" />
               <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
                 <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
                 <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
@@ -286,14 +294,20 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import JSON5 from 'json5';
+import { parseJsonLossless, stringifyJson } from '../utils/jsonParse';
+import { decodeUnicodeDeep, unescapeCommon } from '../utils/unicode';
+import { hashText } from '../utils/textHash';
+import { showToast } from '../composables/useToast';
+import { copyText, readClipboardText } from '../utils/clipboard';
 import JsonTreeView from '../components/JsonTreeView.vue';
 import JsonGraphView from '../components/JsonGraphView.vue';
 import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages, UnfoldVertical } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
 import { useHistory } from '../composables/useHistory';
+import { useDebounceFn } from '../composables/useDebounceFn';
 import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
@@ -302,10 +316,11 @@ import { useI18n } from 'vue-i18n';
 const router = useRouter();
 const { t } = useI18n();
 
-const indentOptions = [
+// 用 computed，语言切换后下拉文案才会跟着更新
+const indentOptions = computed(() => [
   { label: t('common.labels.spaces2'), value: 2 },
   { label: t('common.labels.spaces4'), value: 4 }
-];
+]);
 const editorRef = ref<HTMLElement | null>(null);
 const treeViewRef = ref<any>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -365,7 +380,9 @@ const STORAGE_KEYS = {
   decodeUnicode: 'json-decode-unicode',
   expandNested: 'json-expand-nested',
   decodeUnicodeSnapshot: 'json-decode-unicode-snapshot',
-  expandNestedSnapshot: 'json-expand-nested-snapshot'
+  expandNestedSnapshot: 'json-expand-nested-snapshot',
+  decodeUnicodeApplied: 'json-decode-unicode-applied',
+  expandNestedApplied: 'json-expand-nested-applied'
 };
 
 const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
@@ -403,9 +420,33 @@ const stopResize = () => {
   if (editor) editor.layout();
 };
 
+// 大数据保护阈值（字符数）
+const LARGE_INPUT_CHARS = 1_000_000;      // 超过后：解析防抖、不再自动解析（除非打开树/图视图）、统计只显示体积
+const GRAPH_MAX_CHARS = 300_000;          // 图视图每个节点都是 DOM + dagre 布局，超过后不再渲染
+const TREE_MAX_CHARS = 3_000_000;         // 树视图超过后不再渲染
+
+const isLargeInput = computed(() => inputText.value.length > LARGE_INPUT_CHARS);
+const graphTooLarge = computed(() => inputText.value.length > GRAPH_MAX_CHARS);
+const treeTooLarge = computed(() => inputText.value.length > TREE_MAX_CHARS);
+
+// 解析用的文本源：小输入即时同步；大输入防抖 300ms，避免每次按键都对几 MB 文本做同步解析
+const parseSource = ref(inputText.value);
+const updateParseSourceDebounced = useDebounceFn((v: string) => { parseSource.value = v; }, 300);
+watch(inputText, (v) => {
+  if (v.length > LARGE_INPUT_CHARS) updateParseSourceDebounced.run(v);
+  else {
+    updateParseSourceDebounced.cancel();
+    parseSource.value = v;
+  }
+});
+
+// 小输入始终解析（用于统计）；大输入只有在树/图视图打开时才解析
+const needParsed = computed(() => !isLargeInput.value || rightPanelView.value !== 'none');
+
 const parsedJson = computed(() => {
+  if (!needParsed.value) return null;
   try {
-    return JSON5.parse(inputText.value);
+    return JSON5.parse(parseSource.value);
   } catch (e) {
     return null;
   }
@@ -414,24 +455,13 @@ const parsedJson = computed(() => {
 const isValidJson = computed(() => parsedJson.value !== null);
 
 const jsonStats = computed(() => {
+  // 体积直接取输入文本的 UTF-8 字节数：避免再 JSON.stringify 一次整份数据
+  const size = new TextEncoder().encode(parseSource.value).length;
+  if (!needParsed.value) return size > 0 ? formatBytes(size) : null;
   if (!isValidJson.value || !parsedJson.value) return null;
-  const size = new TextEncoder().encode(JSON.stringify(parsedJson.value)).length;
   const keys = countKeys(parsedJson.value);
   return `${formatBytes(size)} • ${keys} keys`;
 });
-
-function decodeUnicodeInStrings(obj: any): any {
-  if (typeof obj === 'string') {
-    return obj.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-  }
-  if (Array.isArray(obj)) return obj.map(decodeUnicodeInStrings);
-  if (obj !== null && typeof obj === 'object') {
-    const out: any = {};
-    for (const k in obj) out[k] = decodeUnicodeInStrings(obj[k]);
-    return out;
-  }
-  return obj;
-}
 
 /**
  * 递归把"值为字符串的嵌套 JSON"解析成对象/数组。
@@ -448,7 +478,7 @@ function parseNestedJsonStrings(value: any): any {
       (trimmed.startsWith('[') && trimmed.endsWith(']'));
     if (!looksLikeJson) return value;
     try {
-      const parsed = JSON5.parse(trimmed);
+      const parsed = parseJsonLossless(trimmed).data;
       // 只展开对象/数组，标量（数字/布尔/null）不替换，避免把电话号码、ID 等字符串误转
       if (parsed !== null && typeof parsed === 'object') {
         // 对解析结果继续递归，处理多层嵌套
@@ -460,9 +490,12 @@ function parseNestedJsonStrings(value: any): any {
     }
   }
   if (Array.isArray(value)) return value.map(parseNestedJsonStrings);
-  if (value !== null && typeof value === 'object') {
+  // 仅递归普通对象；LosslessNumber 等类实例原样返回
+  if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
     const out: any = {};
-    for (const k in value) out[k] = parseNestedJsonStrings(value[k]);
+    for (const k of Object.keys(value)) {
+      Object.defineProperty(out, k, { value: parseNestedJsonStrings(value[k]), enumerable: true, writable: true, configurable: true });
+    }
     return out;
   }
   return value;
@@ -503,6 +536,8 @@ const handleOperation = (op: string) => {
 // 开启时先保存当前内容，关闭时还原回去（支持来回切换不丢原始数据）。
 // 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
 const decodeUnicodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null));
+// 开关开启并应用后的内容哈希：关闭时用来判断用户是否又改过内容，改过则不再用旧快照覆盖
+const decodeUnicodeAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeApplied, null));
 const toggleDecodeUnicode = () => {
   const turningOn = !decodeUnicode.value;
   if (turningOn) {
@@ -511,37 +546,54 @@ const toggleDecodeUnicode = () => {
     saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, inputText.value);
     decodeUnicode.value = true;
     operation.value = 'format';
+    isProcessing = false;
     processData(false);
+    decodeUnicodeAppliedHash.value = hashText(inputText.value);
+    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, decodeUnicodeAppliedHash.value);
   } else {
-    // 关闭：还原为开启前保存的原始内容
-    if (decodeUnicodeSnapshot.value !== null) {
-      replaceTextInEditor(decodeUnicodeSnapshot.value);
-    }
+    restoreSnapshotIfUntouched(decodeUnicodeSnapshot.value, decodeUnicodeAppliedHash.value);
     decodeUnicodeSnapshot.value = null;
+    decodeUnicodeAppliedHash.value = null;
     saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null);
+    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, null);
     decodeUnicode.value = false;
   }
 };
 
+/**
+ * 关闭开关时：只有内容仍是“开关应用后的结果”才还原为原文；
+ * 用户在此期间改过内容就保留当前内容（并提示），避免静默丢失编辑。
+ */
+const restoreSnapshotIfUntouched = (snapshot: string | null, appliedHash: string | null) => {
+  if (snapshot === null) return;
+  if (appliedHash === null || hashText(inputText.value) === appliedHash) {
+    replaceTextInEditor(snapshot);
+  } else {
+    showToast(t('tools.json.keepEdited'), 'info', 4000);
+  }
+};
+
 // 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组，去掉=还原。
-// 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原。
+// 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原（内容被改动过则保留）。
 const expandNestedSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedSnapshot, null));
+const expandNestedAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedApplied, null));
 const toggleExpandNested = () => {
   const turningOn = !expandNested.value;
   if (turningOn) {
-    // 开启：保存展开前的原始内容，然后走 format 应用解析
     expandNestedSnapshot.value = inputText.value;
     saveToStorage(STORAGE_KEYS.expandNestedSnapshot, inputText.value);
     expandNested.value = true;
     operation.value = 'format';
+    isProcessing = false;
     processData(false);
+    expandNestedAppliedHash.value = hashText(inputText.value);
+    saveToStorage(STORAGE_KEYS.expandNestedApplied, expandNestedAppliedHash.value);
   } else {
-    // 关闭：还原为开启前保存的原始内容
-    if (expandNestedSnapshot.value !== null) {
-      replaceTextInEditor(expandNestedSnapshot.value);
-    }
+    restoreSnapshotIfUntouched(expandNestedSnapshot.value, expandNestedAppliedHash.value);
     expandNestedSnapshot.value = null;
+    expandNestedAppliedHash.value = null;
     saveToStorage(STORAGE_KEYS.expandNestedSnapshot, null);
+    saveToStorage(STORAGE_KEYS.expandNestedApplied, null);
     expandNested.value = false;
   }
 };
@@ -575,47 +627,45 @@ const processData = (isAuto = false) => {
     if (operation.value === 'escape') {
       resultData = JSON.stringify(inputText.value);
     } else if (operation.value === 'unescape') {
-      // Try standard unescape first
+      // 先尝试标准反转义（输入是一个被 JSON 序列化过的字符串）
       try {
         const unescaped = JSON.parse(inputText.value);
         if (typeof unescaped === 'string') {
-          // If it was a stringified JSON, try to parse it again to format it
+          // 反转义结果本身还是 JSON 的话继续格式化
           try {
-             const nested = JSON5.parse(unescaped);
-             resultData = JSON.stringify(nested, null, indentSize.value);
+            const nested = parseJsonLossless(unescaped);
+            resultData = stringifyJson(nested.data, indentSize.value, nested.lossless);
           } catch {
-             resultData = unescaped;
+            resultData = unescaped;
           }
         } else {
           resultData = JSON.stringify(unescaped, null, indentSize.value);
         }
       } catch {
-        // Fallback to regex replacement if JSON.parse fails (e.g. partial string)
-        resultData = inputText.value
-          .replace(/\\n/g, '\n')
-          .replace(/\\r/g, '\r')
-          .replace(/\\t/g, '\t')
-          .replace(/\\"/g, '"')
-          .replace(/\\'/g, "'")
-          .replace(/\\\\/g, '\\');
+        // JSON.parse 失败（例如只是片段）时回退：单次扫描替换，避免 \\n 被误还原成换行
+        resultData = unescapeCommon(inputText.value);
       }
     } else {
-      // Format or Minify
-      // Use JSON5 for parsing to be more robust
-      let inputData = JSON5.parse(inputText.value);
+      // Format / Minify：严格 JSON 走 lossless-json（保留大整数精度），否则回退 JSON5
+      const parsed = parseJsonLossless(inputText.value);
+      let inputData = parsed.data;
       if (decodeUnicode.value) {
         // 选中时：把字符串值里的字面 \uXXXX 解码成中文
-        inputData = decodeUnicodeInStrings(inputData);
+        inputData = decodeUnicodeDeep(inputData);
       }
       if (expandNested.value) {
         // 选中时：递归把字符串值里的嵌套 JSON 解析成对象/数组
         inputData = parseNestedJsonStrings(inputData);
       }
+      if (parsed.unsafeNumbers) {
+        // JSON5 回退路径无法保留大整数精度，明确告知用户而不是静默改数
+        showToast(t('tools.json.bigIntWarning'), 'error', 5000);
+      }
 
       if (operation.value === 'minify') {
-        resultData = JSON.stringify(inputData);
+        resultData = stringifyJson(inputData, undefined, parsed.lossless);
       } else if (operation.value === 'format') {
-        resultData = JSON.stringify(inputData, null, indentSize.value);
+        resultData = stringifyJson(inputData, indentSize.value, parsed.lossless);
       }
     }
 
@@ -695,23 +745,15 @@ editor.onDidPaste(() => {
 const clearAll = () => replaceTextInEditor('');
 
 const pasteInput = async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    replaceTextInEditor(text);
-    addHistory(text);
-    trackTimer(() => handleOperation('format'), 100);
-  } catch (error) {
-    console.error('Paste failed:', error);
-  }
+  const text = await readClipboardText();
+  if (text === null) return;
+  replaceTextInEditor(text);
+  addHistory(text);
+  trackTimer(() => handleOperation('format'), 100);
 };
 
 const copyInput = async () => {
-  try {
-    const text = editor?.getValue() || '';
-    await navigator.clipboard.writeText(text);
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
+  await copyText(editor?.getValue() || '');
 };
 
 const goToDiff = (side: 'left' | 'right' = 'left') => {
@@ -752,7 +794,7 @@ const toggleTreeExpansion = () => {
 };
 
 watch(inputText, (newValue) => {
-  saveToStorage(STORAGE_KEYS.inputText, newValue);
+  saveToStorageDebounced(STORAGE_KEYS.inputText, newValue);
 });
 
 watch(operation, (newValue) => {

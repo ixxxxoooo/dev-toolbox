@@ -1,7 +1,7 @@
 import { watch, type WatchStopHandle } from 'vue'
 import { useThemeStore } from '../stores/theme'
 import { defineCustomThemes } from './monaco-themes'
-import * as monaco from 'monaco-editor'
+import * as monaco from '@/utils/monaco'
 import { useCommandPaletteStore } from '../stores/commandPalette'
 
 // Ensure custom themes are defined once

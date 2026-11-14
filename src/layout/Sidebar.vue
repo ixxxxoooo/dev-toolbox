@@ -12,8 +12,14 @@
       <div 
         id="tour-sidebar-toggle"
         class="flex items-center space-x-3 cursor-pointer group/sidebar-toggle"
+        role="button"
+        tabindex="0"
+        :aria-expanded="!isCollapsed"
+        :aria-label="isCollapsed ? $t('common.messages.expandSidebar') : $t('common.messages.collapseSidebar')"
         @click="toggleCollapse"
-        :title="isCollapsed ? 'Expand' : 'Collapse'"
+        @keydown.enter.prevent="toggleCollapse"
+        @keydown.space.prevent="toggleCollapse"
+        :title="isCollapsed ? $t('common.messages.expandSidebar') : $t('common.messages.collapseSidebar')"
       >
         <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 group-hover/sidebar-toggle:bg-primary/90">
           <svg 
@@ -83,29 +89,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  Braces,
-  FileDiff,
-  Clock,
-  Link,
-  Binary,
-  Fingerprint,
-  FileText,
-  Hash,
-  Database,
-  Key,
-  Calculator,
-  Globe,
-  Monitor,
-  Regex,
-  QrCode,
-  NotebookText,
-  Image,
-  Eraser,
-  Languages,
-  Share2,
-  PenTool
-} from 'lucide-vue-next'
+import { getToolIcon } from '../utils/toolIcons'
 import SettingsPanel from '../components/SettingsPanel.vue'
 
 const router = useRouter()
@@ -124,34 +108,7 @@ const routes = computed(() => {
   return router.options.routes[0].children?.filter(r => r.meta?.title) || []
 })
 
-// Icons
-const icons: Record<string, any> = {
-  Braces,
-  FileDiff,
-  Clock,
-  Link,
-  Binary,
-  Fingerprint,
-  FileText,
-  Hash,
-  Database,
-  Key,
-  Calculator,
-  Globe,
-  Monitor,
-  Regex,
-  QrCode,
-  NotebookText,
-  Image,
-  Eraser,
-  Languages,
-  Share2,
-  PenTool
-}
-
-const getIcon = (name: string) => {
-  return icons[name] || FileText
-}
+const getIcon = (name: string) => getToolIcon(name)
 
 // Actions
 const toggleCollapse = () => {
@@ -189,6 +146,8 @@ const handleResize = (e: MouseEvent) => {
   // If we resized manually, ensure we are not collapsed
   if (isCollapsed.value && newWidth > COLLAPSED_WIDTH) {
     isCollapsed.value = false
+    // 同步持久化折叠状态，否则刷新后会读到过期的 sidebarCollapsed=true，宽度被强制还原成折叠
+    localStorage.setItem('sidebarCollapsed', 'false')
   }
 }
 

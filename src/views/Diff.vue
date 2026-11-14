@@ -208,17 +208,17 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages, Wand2, AlertCircle } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useHistory } from '../composables/useHistory';
 import { useThemeStore } from '../stores/theme';
 import HistoryModal from '../components/HistoryModal.vue';
-import JSON5 from 'json5';
-import { format as formatSQL } from 'sql-formatter';
-import { xml2js, js2xml } from 'xml-js';
+import { formatText } from '../utils/textFormat';
+import { decodeUnicodeEscapes } from '../utils/unicode';
+import { copyText, readClipboardText } from '../utils/clipboard';
 
 const diffEditorRef = ref<HTMLElement | null>(null);
 let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
@@ -274,34 +274,38 @@ const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
 const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null));
 const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null));
 
-/**
- * 把文本里的字面量 \uXXXX 解码成对应字符（如 \u4e2d → 中）。
- */
-const decodeUnicodeText = (text: string): string => {
-  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-};
+const decodeUnicodeText = decodeUnicodeEscapes;
 
 /**
- * 检查并应用来自路由状态（history.state）中的单侧内容传递
+ * 检查并应用来自路由状态（history.state）中的单侧内容传递。
+ * 该 state 在刷新、前进/后退时依然存在，因此必须“一次性消费”：
+ * 应用后立即清除相关字段（保留 vue-router 自己写入的字段），避免之后覆盖用户已编辑的内容。
+ * @returns 被消费的 { side, content }；没有可用 state 时返回 null
  */
-const applyRouteStateIfPresent = () => {
+const applyRouteStateIfPresent = (): { side: 'left' | 'right'; content: string } | null => {
   const state = window.history.state;
-  if (state && (state.targetSide === 'left' || state.targetSide === 'right') && typeof state.content === 'string') {
-    const isLeft = state.targetSide === 'left';
-    const targetContent = state.content;
-    if (isLeft) {
-      leftContent.value = targetContent;
-      saveToStorage(STORAGE_KEYS.leftContent, targetContent);
-      // 清除旧快照，并在开启 Unicode 解码时重新基于新内容建立快照
-      leftDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
-      saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
-    } else {
-      rightContent.value = targetContent;
-      saveToStorage(STORAGE_KEYS.rightContent, targetContent);
-      rightDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
-      saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
-    }
+  if (!state || (state.targetSide !== 'left' && state.targetSide !== 'right') || typeof state.content !== 'string') {
+    return null;
   }
+  const side = state.targetSide as 'left' | 'right';
+  const targetContent: string = state.content;
+  if (side === 'left') {
+    leftContent.value = targetContent;
+    saveToStorage(STORAGE_KEYS.leftContent, targetContent);
+    // 清除旧快照，并在开启 Unicode 解码时重新基于新内容建立快照
+    leftDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
+  } else {
+    rightContent.value = targetContent;
+    saveToStorage(STORAGE_KEYS.rightContent, targetContent);
+    rightDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
+  }
+  window.history.replaceState(
+    { ...state, targetSide: undefined, content: undefined, timestamp: undefined },
+    ''
+  );
+  return { side, content: targetContent };
 };
 
 const cleanupEditorResources = () => {
@@ -328,6 +332,25 @@ const cleanupEditorResources = () => {
   }
 };
 
+/**
+ * 解码模式下协调“当前内容”与“解码前快照”：
+ * - 快照存在且当前内容仍等于 decode(快照)：说明用户没有编辑过，沿用快照；
+ * - 否则（无快照，或用户在解码状态下编辑过）：以当前内容为准重新建立快照，避免用旧快照覆盖用户编辑。
+ */
+const syncSnapshot = (content: string, snapshot: string | null) => {
+  if (snapshot !== null && content === decodeUnicodeText(snapshot)) {
+    return { snapshot, display: content };
+  }
+  return { snapshot: content, display: decodeUnicodeText(content) };
+};
+
+/**
+ * 关闭解码模式时决定编辑器应还原成什么：
+ * 内容未被编辑则还原为快照；已被编辑则保留当前内容。
+ */
+const restoreFromSnapshot = (current: string, snapshot: string | null) =>
+  snapshot !== null && current === decodeUnicodeText(snapshot) ? snapshot : current;
+
 const initMonacoDiffEditor = async () => {
   await nextTick();
   if (!diffEditorRef.value) return;
@@ -345,16 +368,14 @@ const initMonacoDiffEditor = async () => {
   let initialLeft = leftContent.value;
   let initialRight = rightContent.value;
   if (decodeUnicode.value) {
-    if (leftDecodeSnapshot.value === null) {
-      leftDecodeSnapshot.value = leftContent.value;
-      saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
-    }
-    if (rightDecodeSnapshot.value === null) {
-      rightDecodeSnapshot.value = rightContent.value;
-      saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
-    }
-    initialLeft = decodeUnicodeText(leftDecodeSnapshot.value);
-    initialRight = decodeUnicodeText(rightDecodeSnapshot.value);
+    const left = syncSnapshot(leftContent.value, leftDecodeSnapshot.value);
+    const right = syncSnapshot(rightContent.value, rightDecodeSnapshot.value);
+    leftDecodeSnapshot.value = left.snapshot;
+    rightDecodeSnapshot.value = right.snapshot;
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, left.snapshot);
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, right.snapshot);
+    initialLeft = left.display;
+    initialRight = right.display;
   }
 
   originalModel = monaco.editor.createModel(initialLeft, 'text/plain');
@@ -397,13 +418,13 @@ const initMonacoDiffEditor = async () => {
   originalContentListener = originalEditor.onDidChangeModelContent(() => {
     if (originalEditor) {
       leftContent.value = originalEditor.getValue() || '';
-      saveToStorage(STORAGE_KEYS.leftContent, leftContent.value);
+      saveToStorageDebounced(STORAGE_KEYS.leftContent, leftContent.value);
     }
   });
   modifiedContentListener = modifiedEditor.onDidChangeModelContent(() => {
     if (modifiedEditor) {
       rightContent.value = modifiedEditor.getValue() || '';
-      saveToStorage(STORAGE_KEYS.rightContent, rightContent.value);
+      saveToStorageDebounced(STORAGE_KEYS.rightContent, rightContent.value);
     }
   });
 
@@ -476,8 +497,13 @@ const goToNextDiff = () => {
   const modifiedEditor = diffEditor.getModifiedEditor();
   const nextDiff = findNextDiff(originalEditor) || findNextDiff(modifiedEditor);
   if (nextDiff) {
-    originalEditor.revealLineInCenter(nextDiff.originalStartLineNumber);
-    modifiedEditor.revealLineInCenter(nextDiff.modifiedStartLineNumber);
+    // 同时移动光标，否则连续点击“下一处”会因光标位置不变而停在同一处差异
+    const origLine = Math.max(1, nextDiff.originalStartLineNumber);
+    const modLine = Math.max(1, nextDiff.modifiedStartLineNumber);
+    originalEditor.setPosition({ lineNumber: origLine, column: 1 });
+    modifiedEditor.setPosition({ lineNumber: modLine, column: 1 });
+    originalEditor.revealLineInCenter(origLine);
+    modifiedEditor.revealLineInCenter(modLine);
   }
 };
 
@@ -487,23 +513,24 @@ const goToPrevDiff = () => {
   const modifiedEditor = diffEditor.getModifiedEditor();
   const prevDiff = findPrevDiff(originalEditor) || findPrevDiff(modifiedEditor);
   if (prevDiff) {
-    originalEditor.revealLineInCenter(prevDiff.originalEndLineNumber);
-    modifiedEditor.revealLineInCenter(prevDiff.modifiedEndLineNumber);
+    const origLine = Math.max(1, prevDiff.originalEndLineNumber || prevDiff.originalStartLineNumber);
+    const modLine = Math.max(1, prevDiff.modifiedEndLineNumber || prevDiff.modifiedStartLineNumber);
+    originalEditor.setPosition({ lineNumber: origLine, column: 1 });
+    modifiedEditor.setPosition({ lineNumber: modLine, column: 1 });
+    originalEditor.revealLineInCenter(origLine);
+    modifiedEditor.revealLineInCenter(modLine);
   }
 };
 
 const pasteTo = async (side: 'original' | 'modified') => {
-  try {
-    const text = await navigator.clipboard.readText();
-    if (side === 'original') {
-      diffEditor?.getOriginalEditor().setValue(text);
-    } else {
-      diffEditor?.getModifiedEditor().setValue(text);
-    }
-    addHistory(text);
-  } catch (err) {
-    console.error('Cannot read clipboard:', err);
+  const text = await readClipboardText();
+  if (text === null) return;
+  if (side === 'original') {
+    diffEditor?.getOriginalEditor().setValue(text);
+  } else {
+    diffEditor?.getModifiedEditor().setValue(text);
   }
+  addHistory(text);
 };
 
 const handleHistorySelect = ({ content, side }: { content: string, side: 'original' | 'modified' }) => {
@@ -522,70 +549,6 @@ const showError = (message: string) => {
   errorTimer = setTimeout(() => {
     errorMessage.value = '';
   }, 5000);
-};
-
-/**
- * 自动检测文本格式类型：JSON / XML / SQL，无法识别时返回 null。
- * @param text 待检测的文本
- * @returns 检测到的格式类型
- */
-const detectFormat = (text: string): 'json' | 'xml' | 'sql' | null => {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-
-  // JSON：以 { 或 [ 开头并尝试解析
-  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-    try {
-      JSON5.parse(trimmed);
-      return 'json';
-    } catch {
-      // 形似 JSON 但解析失败，可能是格式错误的 JSON，不返回 json
-    }
-  }
-
-  // XML：以 < 开头，标签结构闭合
-  if (trimmed.startsWith('<') && trimmed.includes('>')) {
-    try {
-      xml2js(trimmed);
-      return 'xml';
-    } catch {
-      // 解析失败则不是合法 XML
-    }
-  }
-
-  // SQL：以常见 SQL 关键字开头
-  const upper = trimmed.toUpperCase();
-  const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'WITH', 'GRANT', 'REVOKE', 'SET', 'USE', 'SHOW', 'TRUNCATE', 'MERGE', 'REPLACE'];
-  if (sqlKeywords.some(kw => upper.startsWith(kw))) {
-    return 'sql';
-  }
-
-  return null;
-};
-
-/**
- * 按检测到的类型格式化文本。
- * @param text 原始文本
- * @returns 格式化后的文本
- */
-const formatText = (text: string): string => {
-  const type = detectFormat(text);
-  if (!type) {
-    throw new Error('无法识别内容格式，仅支持 JSON / XML / SQL 格式化');
-  }
-
-  if (type === 'json') {
-    const parsed = JSON5.parse(text);
-    return JSON.stringify(parsed, null, 2);
-  }
-
-  if (type === 'xml') {
-    const compact = xml2js(text, { compact: true });
-    return js2xml(compact, { compact: true, spaces: 2, attributesKey: '_attributes' });
-  }
-
-  // SQL
-  return formatSQL(text, { language: 'sql', tabWidth: 2, keywordCase: 'upper' });
 };
 
 /**
@@ -628,13 +591,9 @@ const toggleDecodeUnicode = () => {
     originalEditor.setValue(decodeUnicodeText(leftDecodeSnapshot.value));
     modifiedEditor.setValue(decodeUnicodeText(rightDecodeSnapshot.value));
   } else {
-    // 关闭：还原为开启前保存的两侧原始内容
-    if (leftDecodeSnapshot.value !== null) {
-      originalEditor.setValue(leftDecodeSnapshot.value);
-    }
-    if (rightDecodeSnapshot.value !== null) {
-      modifiedEditor.setValue(rightDecodeSnapshot.value);
-    }
+    // 关闭：未编辑的一侧还原为开启前的原始内容；已编辑的一侧保留用户当前内容
+    originalEditor.setValue(restoreFromSnapshot(originalEditor.getValue() || '', leftDecodeSnapshot.value));
+    modifiedEditor.setValue(restoreFromSnapshot(modifiedEditor.getValue() || '', rightDecodeSnapshot.value));
     leftDecodeSnapshot.value = null;
     rightDecodeSnapshot.value = null;
     saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, null);
@@ -644,12 +603,8 @@ const toggleDecodeUnicode = () => {
 };
 
 const copyFrom = async (side: 'original' | 'modified') => {
-  try {
-    const text = side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue();
-    if (text) await navigator.clipboard.writeText(text);
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
+  const text = side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue();
+  if (text) await copyText(text);
 };
 
 const applyMinimapOption = () => {
@@ -700,19 +655,14 @@ watch(decodeUnicode, (newValue) => {
 });
 
 watch(() => route.fullPath, () => {
-  if (diffEditor) {
-    applyRouteStateIfPresent();
-    const state = window.history.state;
-    if (state && (state.targetSide === 'left' || state.targetSide === 'right') && typeof state.content === 'string') {
-      const isLeft = state.targetSide === 'left';
-      const targetContent = state.content;
-      const displayVal = decodeUnicode.value ? decodeUnicodeText(targetContent) : targetContent;
-      if (isLeft) {
-        diffEditor.getOriginalEditor().setValue(displayVal);
-      } else {
-        diffEditor.getModifiedEditor().setValue(displayVal);
-      }
-    }
+  if (!diffEditor) return;
+  const consumed = applyRouteStateIfPresent();
+  if (!consumed) return;
+  const displayVal = decodeUnicode.value ? decodeUnicodeText(consumed.content) : consumed.content;
+  if (consumed.side === 'left') {
+    diffEditor.getOriginalEditor().setValue(displayVal);
+  } else {
+    diffEditor.getModifiedEditor().setValue(displayVal);
   }
 });
 </script>

@@ -89,10 +89,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import { HelpCircle, FileText, ClipboardPaste, Trash2, X } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { useDebounceFn } from '../composables/useDebounceFn';
+import { readClipboardText } from '../utils/clipboard';
 
 const editorRef = ref<HTMLElement | null>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
@@ -150,16 +151,13 @@ const initEditor = async () => {
 };
 
 const pasteInput = async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    // 取消可能挂起的防抖分析，避免和下面的立即分析重复计算
-    analyzeTextDebounced.cancel();
-    editor?.setValue(text);
-    // 粘贴后立即分析，给用户即时反馈（不防抖）
-    analyzeText();
-  } catch (err) {
-    console.error('无法读取剪贴板:', err);
-  }
+  const text = await readClipboardText();
+  if (text === null) return;
+  // 取消可能挂起的防抖分析，避免和下面的立即分析重复计算
+  analyzeTextDebounced.cancel();
+  editor?.setValue(text);
+  // 粘贴后立即分析，给用户即时反馈（不防抖）
+  analyzeText();
 };
 
 const clearInput = () => {

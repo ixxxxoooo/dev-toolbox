@@ -92,6 +92,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { HelpCircle, Fingerprint, RefreshCw, Trash2, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 import CustomInput from '../components/CustomInput.vue';
+import { copyText } from '../utils/clipboard';
 
 const uuid = ref('');
 const showHelp = ref(false);
@@ -123,13 +124,7 @@ const generateUuid = () => {
 };
 
 const copyUuid = () => {
-  if (uuid.value) {
-    try {
-      navigator.clipboard.writeText(uuid.value);
-    } catch (err) {
-      console.error('Cannot copy to clipboard:', err);
-    }
-  }
+  if (uuid.value) void copyText(uuid.value);
 };
 
 const clearUuid = () => {

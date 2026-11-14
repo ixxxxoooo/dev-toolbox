@@ -109,6 +109,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { HelpCircle, Clock, ClipboardPaste, RefreshCw, CheckCircle2, AlertCircle, Copy, X } from 'lucide-vue-next';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 import CustomInput from '../components/CustomInput.vue';
+import { copyText, readClipboardText } from '../utils/clipboard';
 
 const { t: $t } = useI18n();
 
@@ -187,21 +188,15 @@ const setCurrentTime = () => {
 };
 
 const pasteAndParse = async () => {
-  try {
-    userInput.value = await navigator.clipboard.readText();
-    parseInput();
-  } catch (err) {
-    // 模板未渲染 errorMessage，这里仅记录；剪贴板读取失败不阻塞用户手动输入
-    console.error('Cannot read clipboard:', err);
-  }
+  // 读取失败时 readClipboardText 会弹出提示，不阻塞用户手动输入
+  const text = await readClipboardText();
+  if (text === null) return;
+  userInput.value = text;
+  parseInput();
 };
 
 const copyToClipboard = (text: string | number) => {
-  try {
-    navigator.clipboard.writeText(String(text));
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
+  void copyText(String(text));
 };
 
 onMounted(() => {

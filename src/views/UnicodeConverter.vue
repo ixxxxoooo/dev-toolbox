@@ -44,6 +44,7 @@
           <ArrowUp class="w-4 h-4" />
           <span>{{ $t('tools.unicodeConverter.unicodeToText') }}</span>
         </button>
+        <CustomCheckbox v-model="onlyNonAscii" :label="$t('tools.unicodeConverter.onlyNonAscii')" />
         <button @click="swapContent" class="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground" :title="$t('tools.unicodeConverter.swap')">
           <ArrowUpDown class="w-4 h-4" />
         </button>
@@ -95,41 +96,30 @@
 import { ref } from 'vue'
 import { Languages, HelpCircle, ClipboardPaste, Copy, Trash2, ArrowDown, ArrowUp, ArrowUpDown, X } from 'lucide-vue-next'
 import CustomTextarea from '../components/CustomTextarea.vue'
+import CustomCheckbox from '../components/CustomCheckbox.vue'
+import { encodeUnicodeEscapes, decodeUnicodeEscapes } from '../utils/unicode'
+import { copyText, readClipboardText } from '../utils/clipboard'
 
 const inputText = ref('')
 const outputText = ref('')
 const showHelp = ref(false)
 
+// 仅转换非 ASCII 字符（保留英文、数字、符号原样）
+const onlyNonAscii = ref(false)
+
 const handleInput = () => {
-  // Auto-process could be added here if needed
+  // 预留：如需实时转换可在此处理
 }
 
 const textToUnicode = () => {
   if (!inputText.value) return
-
-  const result = Array.from(inputText.value)
-    .map(char => {
-      const code = char.charCodeAt(0)
-      // Convert all characters to \uXXXX format
-      return '\\u' + code.toString(16).toUpperCase().padStart(4, '0')
-    })
-    .join('')
-
-  outputText.value = result
+  // 按 UTF-16 代码单元输出，emoji 等非 BMP 字符会得到完整代理对（如 \uD83D\uDE00）
+  outputText.value = encodeUnicodeEscapes(inputText.value, onlyNonAscii.value)
 }
 
 const unicodeToText = () => {
   if (!inputText.value) return
-
-  try {
-    // Replace \uXXXX with actual characters
-    const result = inputText.value.replace(/\\u([\dA-Fa-f]{4})/g, (_match, hex) => {
-      return String.fromCharCode(parseInt(hex, 16))
-    })
-    outputText.value = result
-  } catch (error) {
-    outputText.value = 'Error: Invalid Unicode format'
-  }
+  outputText.value = decodeUnicodeEscapes(inputText.value)
 }
 
 const swapContent = () => {
@@ -139,17 +129,13 @@ const swapContent = () => {
 }
 
 const pasteInput = async () => {
-  try {
-    const text = await navigator.clipboard.readText()
-    inputText.value = text
-  } catch (error) {
-    console.error('Paste failed:', error)
-  }
+  const text = await readClipboardText()
+  if (text !== null) inputText.value = text
 }
 
 const copyOutput = () => {
   if (!outputText.value) return
-  navigator.clipboard.writeText(outputText.value)
+  void copyText(outputText.value)
 }
 
 const clearInput = () => {

@@ -104,6 +104,15 @@ export default {
 
     // 消息
     messages: {
+      expandSidebar: '展开侧边栏',
+      collapseSidebar: '折叠侧边栏',
+      historyItemTooLarge: '内容过大，未加入历史记录',
+      storageFull: '浏览器存储空间已满，最近的修改刷新后可能丢失',
+      storageTooLarge: '内容过大，无法保存到本地，刷新后将丢失',
+      updateAvailable: '发现新版本',
+      updateNow: '立即刷新',
+      offlineReady: '已可离线使用',
+      copyFailed: '复制失败，请检查剪贴板权限',
       invalidJson: '无效的JSON，无法生成树状视图',
       cannotReadClipboard: '无法读取剪贴板',
       formatFailed: '格式化失败',
@@ -194,6 +203,10 @@ export default {
 
     // Base64 编解码
     base64: {
+      binaryInput: '二进制文件：{name}（{size}）— 将按原始字节编码',
+      binaryOutput: '二进制数据（{size}），不是合法的 UTF-8 文本，请点击下载按钮保存为文件',
+      fileTooLarge: '文件过大（上限 {size}）',
+      readFileFailed: '读取文件失败',
       name: 'Base64 编解码',
       description: 'Base64 编码和解码工具',
       help: {
@@ -222,7 +235,10 @@ export default {
       expandNested: '展开嵌套',
       expandNestedDesc: '点击开启：递归把字符串值里的嵌套 JSON 解析成对象/数组；再次点击关闭并还原',
       expandAll: '展开全部',
-      collapseAll: '折叠全部'
+      collapseAll: '折叠全部',
+      viewTooLarge: '内容过大，此视图已停用，请使用左侧编辑器查看',
+      bigIntWarning: '输入中含有超出安全范围（2^53）的整数且不是严格 JSON，格式化可能丢失精度。请使用严格 JSON 以保留完整精度。',
+      keepEdited: '开启开关后内容已被修改，已保留当前内容，未还原为原文'
     },
 
     // URL 编解码
@@ -384,7 +400,10 @@ export default {
       decimal: '十进制',
       hex: '十六进制',
       binary: '二进制',
-      octal: '八进制'
+      octal: '八进制',
+      twosComplement: '补码',
+      invalidInput: '输入无效：包含当前进制不允许的字符（仅支持整数）',
+      overflow: '数值超出所选位宽，已按位宽截断'
     },
 
     // HTTP 状态码
@@ -440,6 +459,8 @@ export default {
       description: '正则表达式测试工具',
       regex: '正则表达式',
       testString: '测试文本',
+      timeout: '正则执行超过 {ms}ms 已被中止（可能存在灾难性回溯），请简化表达式',
+      truncated: '匹配数量过多，仅显示前 5000 条',
       matches: '匹配结果'
     },
 
@@ -469,6 +490,7 @@ export default {
       inputPlaceholder: '输入文本或 Unicode 编码...',
       outputPlaceholder: '转换结果将显示在这里...',
       swap: '交换输入输出',
+      onlyNonAscii: '仅转换非 ASCII',
       features: '功能特性'
     },
 
@@ -486,6 +508,7 @@ export default {
       name: 'Mermaid 图表',
       description: 'Mermaid 代码编辑与实时预览',
       downloadPng: '下载 PNG',
+      pngFailed: 'PNG 导出失败，可尝试下载 SVG',
       downloadSvg: '下载 SVG',
       helpDrag: '拖动鼠标可平移图表',
       helpZoom: '滚轮可缩放图表',

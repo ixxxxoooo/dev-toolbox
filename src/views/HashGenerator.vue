@@ -100,11 +100,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import { HelpCircle, Hash, ClipboardPaste, Trash2, Copy, X } from 'lucide-vue-next';
 import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
 import { useDebounceFn } from '../composables/useDebounceFn';
+import { copyText, readClipboardText } from '../utils/clipboard';
 
 type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512';
 
@@ -179,16 +180,13 @@ const initEditor = async () => {
 };
 
 const pasteInput = async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    // 取消可能挂起的防抖计算，避免和下面的立即计算重复
-    generateHashesDebounced.cancel();
-    replaceTextInEditor(text);
-    // 粘贴后立即计算哈希，给用户即时反馈（不防抖）
-    generateHashes();
-  } catch (err) {
-    console.error('Failed to read clipboard:', err);
-  }
+  const text = await readClipboardText();
+  if (text === null) return;
+  // 取消可能挂起的防抖计算，避免和下面的立即计算重复
+  generateHashesDebounced.cancel();
+  replaceTextInEditor(text);
+  // 粘贴后立即计算哈希，给用户即时反馈（不防抖）
+  generateHashes();
 };
 
 const clearInput = () => {
@@ -199,11 +197,7 @@ const clearInput = () => {
 };
 
 const copyHash = (key: HashKey) => {
-  try {
-    navigator.clipboard.writeText(hashes.value[key]);
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
+  void copyText(hashes.value[key]);
 };
 
 onMounted(initEditor);

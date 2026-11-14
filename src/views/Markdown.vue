@@ -137,8 +137,9 @@ import { NotebookText, HelpCircle, X, History as HistoryIcon, PanelLeftClose, Pa
 import { marked } from 'marked';
 import mermaid from 'mermaid';
 import DOMPurify from 'dompurify';
-import { loadFromStorage, saveToStorage } from '@/utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage';
 import { useHistory } from '@/composables/useHistory';
+import { copyText } from '@/utils/clipboard';
 import { useThemeStore } from '@/stores/theme';
 
 // 配置 DOMPurify：默认会剥离 <script>/事件属性等 XSS 向量。
@@ -203,16 +204,14 @@ const slugify = (text: string, counts: Record<string, number>) => {
   }
 };
 
-// Configure marked renderer for headings
-// Using 'any' type to bypass marked version discrepancies
+// 自定义标题渲染：生成唯一 id（供目录跳转），标题内容通过 parser.parseInline 渲染行内格式
+// （marked 新版 token.text 是未渲染的原文，直接拼接会让 **加粗**、`代码`、链接 原样显示）
 const renderer = {
-  heading(token: any) {
-    // Check if token has text and depth (object format) or arguments
-    const text = token.text || arguments[0];
-    const depth = token.depth || arguments[1];
-
-    const slug = slugify(text, htmlSlugCounts);
-    return `<h${depth} id="${slug}">${text}</h${depth}>`;
+  heading(this: any, token: any) {
+    const depth = token.depth;
+    const inner = this.parser.parseInline(token.tokens);
+    const slug = slugify(token.text, htmlSlugCounts);
+    return `<h${depth} id="${slug}">${inner}</h${depth}>\n`;
   }
 };
 
@@ -269,7 +268,7 @@ const renderMermaid = async () => {
 };
 
 const copyHtml = () => {
-  navigator.clipboard.writeText(html.value);
+  void copyText(html.value);
 };
 
 const scrollToHeading = (slug: string) => {
@@ -287,7 +286,9 @@ const onEditorScroll = (e: Event) => {
 
   isScrolling.value = 'editor';
   const el = e.target as HTMLElement;
-  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+  const range = el.scrollHeight - el.clientHeight;
+  // 内容不足一屏时 range 为 0，避免除零产生 NaN
+  const percentage = range > 0 ? el.scrollTop / range : 0;
 
   if (previewContainer.value) {
     previewContainer.value.scrollTop = percentage * (previewContainer.value.scrollHeight - previewContainer.value.clientHeight);
@@ -307,7 +308,8 @@ const onPreviewScroll = (e: Event) => {
 
   isScrolling.value = 'preview';
   const el = e.target as HTMLElement;
-  const percentage = el.scrollTop / (el.scrollHeight - el.clientHeight);
+  const range = el.scrollHeight - el.clientHeight;
+  const percentage = range > 0 ? el.scrollTop / range : 0;
 
   if (editorRef.value) {
     editorRef.value.scrollTop = percentage * (editorRef.value.scrollHeight - editorRef.value.clientHeight);
@@ -374,7 +376,7 @@ watch(activeSlug, (newSlug) => {
 // Auto-save and History
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 watch(markdown, (newVal: string) => {
-  saveToStorage(STORAGE_KEY, newVal);
+  saveToStorageDebounced(STORAGE_KEY, newVal);
 
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {

@@ -74,29 +74,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  Search, 
-  ChevronRight,
-  Braces,
-  FileDiff,
-  Database,
-  Clock,
-  Link,
-  Binary,
-  Fingerprint,
-  FileText,
-  Hash,
-  Key,
-  Calculator,
-  Globe,
-  Monitor,
-  Regex,
-  QrCode,
-  FileCode,
-  Image,
-  Eraser,
-  Languages
-} from 'lucide-vue-next'
+import { Search, ChevronRight } from 'lucide-vue-next'
+import { getToolIcon } from '../utils/toolIcons'
 import { useI18n } from 'vue-i18n'
 import { useCommandPaletteStore } from '../stores/commandPalette'
 
@@ -108,30 +87,7 @@ const searchQuery = ref('')
 const activeIndex = ref(0)
 const inputRef = ref<HTMLInputElement | null>(null)
 
-// Icon mapping
-const icons: Record<string, any> = {
-  Braces,
-  FileDiff,
-  Database,
-  Clock,
-  Link,
-  Binary,
-  Fingerprint,
-  FileText,
-  Hash,
-  Key,
-  Calculator,
-  Globe,
-  Monitor,
-  Regex,
-  QrCode,
-  FileCode,
-  Image,
-  Eraser,
-  Languages
-}
-
-const getIcon = (name: string) => icons[name] || FileText
+const getIcon = (name: string) => getToolIcon(name)
 
 const allTools = computed(() => {
   const mainRoute = router.options.routes.find(r => r.path === '/')

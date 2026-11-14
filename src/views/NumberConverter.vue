@@ -79,6 +79,33 @@
             </button>
           </template>
         </CustomInput>
+
+        <p v-if="invalid" class="text-xs text-destructive">{{ $t('tools.numberConverter.invalidInput') }}</p>
+
+        <!-- Two's complement -->
+        <div class="pt-2 border-t border-border space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{{ $t('tools.numberConverter.twosComplement') }}</span>
+            <CustomSelect v-model="bitWidth" :options="bitWidthOptions" />
+          </div>
+          <template v-if="twos">
+            <p v-if="twos.overflow" class="text-xs text-destructive">{{ $t('tools.numberConverter.overflow') }}</p>
+            <CustomInput :model-value="twos.hex" label="HEX" readonly>
+              <template #suffix>
+                <button @click="copy(twos.hex)" class="p-1 hover:bg-muted rounded-md transition-colors">
+                  <Copy class="w-3.5 h-3.5" />
+                </button>
+              </template>
+            </CustomInput>
+            <CustomInput :model-value="twos.binary" label="BIN" readonly>
+              <template #suffix>
+                <button @click="copy(twos.binary)" class="p-1 hover:bg-muted rounded-md transition-colors">
+                  <Copy class="w-3.5 h-3.5" />
+                </button>
+              </template>
+            </CustomInput>
+          </template>
+        </div>
       </div>
     </main>
 
@@ -100,76 +127,87 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Binary, Copy, HelpCircle, X } from 'lucide-vue-next';
 import CustomInput from '../components/CustomInput.vue';
+import CustomSelect from '../components/CustomSelect.vue';
+import { parseRadix, formatRadix, toTwosComplement, fitsInBits, type Radix, type BitWidth } from '../utils/radix';
+import { copyText } from '../utils/clipboard';
 
 const decimal = ref('');
 const hex = ref('');
 const binary = ref('');
 const octal = ref('');
 const showHelp = ref(false);
+// 非法输入提示（如 "12abc"、小数）
+const invalid = ref<Radix | null>(null);
+// 补码位宽
+const bitWidth = ref<BitWidth>(32);
+const bitWidthOptions = [
+  { label: '8-bit', value: 8 },
+  { label: '16-bit', value: 16 },
+  { label: '32-bit', value: 32 },
+  { label: '64-bit', value: 64 }
+];
+// 当前解析出的数值（用于补码展示）
+const current = ref<bigint | null>(null);
 
 const reset = () => {
   decimal.value = '';
   hex.value = '';
   binary.value = '';
   octal.value = '';
+  invalid.value = null;
+  current.value = null;
 };
 
-const updateFromDecimal = () => {
-  const val = parseInt(decimal.value, 10);
-  if (isNaN(val)) {
-    hex.value = '';
-    binary.value = '';
-    octal.value = '';
+/**
+ * 以某个进制的输入为准，刷新其余三个输入框。
+ * 使用 BigInt，超过 2^53 的数（如 64 位全 1）也不会丢精度。
+ */
+const update = (source: Radix, text: string) => {
+  const value = parseRadix(text, source);
+  const targets: Record<Radix, (v: string) => void> = {
+    10: (v) => { decimal.value = v; },
+    16: (v) => { hex.value = v; },
+    2: (v) => { binary.value = v; },
+    8: (v) => { octal.value = v; }
+  };
+  if (value === undefined) {
+    // 输入含非法字符：保留用户输入，清空其他框并提示
+    invalid.value = source;
+    current.value = null;
+    (Object.keys(targets).map(Number) as Radix[]).filter(r => r !== source).forEach(r => targets[r](''));
     return;
   }
-  hex.value = val.toString(16).toUpperCase();
-  binary.value = val.toString(2);
-  octal.value = val.toString(8);
+  invalid.value = null;
+  current.value = value;
+  if (value === null) {
+    (Object.keys(targets).map(Number) as Radix[]).filter(r => r !== source).forEach(r => targets[r](''));
+    return;
+  }
+  (Object.keys(targets).map(Number) as Radix[]).filter(r => r !== source).forEach(r => targets[r](formatRadix(value, r)));
 };
 
-const updateFromHex = () => {
-  const val = parseInt(hex.value, 16);
-  if (isNaN(val)) {
-    decimal.value = '';
-    binary.value = '';
-    octal.value = '';
-    return;
-  }
-  decimal.value = val.toString(10);
-  binary.value = val.toString(2);
-  octal.value = val.toString(8);
-};
+const updateFromDecimal = () => update(10, decimal.value);
+const updateFromHex = () => update(16, hex.value);
+const updateFromBinary = () => update(2, binary.value);
+const updateFromOctal = () => update(8, octal.value);
 
-const updateFromBinary = () => {
-  const val = parseInt(binary.value, 2);
-  if (isNaN(val)) {
-    decimal.value = '';
-    hex.value = '';
-    octal.value = '';
-    return;
-  }
-  decimal.value = val.toString(10);
-  hex.value = val.toString(16).toUpperCase();
-  octal.value = val.toString(8);
-};
-
-const updateFromOctal = () => {
-  const val = parseInt(octal.value, 8);
-  if (isNaN(val)) {
-    decimal.value = '';
-    hex.value = '';
-    binary.value = '';
-    return;
-  }
-  decimal.value = val.toString(10);
-  hex.value = val.toString(16).toUpperCase();
-  binary.value = val.toString(2);
-};
+// n 位补码展示：负数显示补码；超出位宽时提示溢出
+const twos = computed(() => {
+  if (current.value === null) return null;
+  const bits = bitWidth.value;
+  const overflow = !fitsInBits(current.value, bits);
+  const u = toTwosComplement(current.value, bits);
+  return {
+    overflow,
+    hex: u.toString(16).toUpperCase().padStart(bits / 4, '0'),
+    binary: u.toString(2).padStart(bits, '0')
+  };
+});
 
 const copy = (text: string) => {
-  if (text) navigator.clipboard.writeText(text);
+  if (text) void copyText(text);
 };
 </script>

@@ -88,6 +88,7 @@ import '@vue-flow/core/dist/theme-default.css'
 import dagre from 'dagre'
 import JsonGraphNode from './JsonGraphNode.vue'
 import { Maximize, LocateFixed, X, Copy, Plus, Minus } from 'lucide-vue-next'
+import { copyText } from '../utils/clipboard';
 
 const props = defineProps<{
   data: any
@@ -279,9 +280,7 @@ const getPrimitiveObject = (node: any) => {
 }
 
 const copyContent = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch(e) {}
+  await copyText(text);
 }
 
 const syntaxHighlight = (json: string) => {

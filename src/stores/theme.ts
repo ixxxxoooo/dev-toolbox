@@ -1,3 +1,4 @@
+import { getBrowserLocale } from '@/locales'
 import { ref, type Ref } from 'vue'
 
 interface ThemeStore {
@@ -61,7 +62,7 @@ class ThemeStoreImpl implements ThemeStore {
       // lang-mode 只记录"是否跟随系统"这个 UI 选中态；实际语言偏好由
       // locales 模块的 dev-toolbox-locale 键管理，避免两套持久化键竞争。
       localStorage.setItem('lang-mode', 'system')
-      const systemLang = navigator.language.startsWith('zh') ? 'zh' : 'en'
+      const systemLang = getBrowserLocale()
       // 通过事件通知 App.vue 调用 localeStore.setLocale 应用语言
       window.dispatchEvent(new CustomEvent('app-lang-change', { detail: systemLang }))
     } else {
@@ -79,7 +80,13 @@ class ThemeStoreImpl implements ThemeStore {
 
   initializeTheme() {
     const savedMode = localStorage.getItem('theme-mode') || 'system'
-    const savedLangMode = localStorage.getItem('lang-mode') || 'system'
+    // 旧版本用户只有 dev-toolbox-locale（通过语言切换器手动选择）而没有 lang-mode，
+    // 此时视为"手动选择了该语言"，避免升级后被突然改回跟随系统
+    const legacyLocale = localStorage.getItem('dev-toolbox-locale')
+    const savedLangMode = localStorage.getItem('lang-mode') || legacyLocale || 'system'
+    if (!localStorage.getItem('lang-mode')) {
+      localStorage.setItem('lang-mode', savedLangMode)
+    }
     const savedEditorTheme = localStorage.getItem('editor-theme') || 'auto'
     const savedHistoryLimit = localStorage.getItem('history-limit')
 
@@ -94,13 +101,8 @@ class ThemeStoreImpl implements ThemeStore {
       this.isDark.value = savedMode === 'dark'
     }
 
-    // 跟随系统语言时，把 UI 的语言也同步成系统语言，避免"跟随系统"按钮选中态
-    // 与实际显示语言不一致（之前读了 savedLangMode 却从不应用，是潜在不一致 bug）。
-    // 注意：用户手动选过 zh/en 时，locales 模块已自行持久化，这里无需重复设置。
-    if (this.followSystemLang.value) {
-      const systemLang = navigator.language.startsWith('zh') ? 'zh' : 'en'
-      window.dispatchEvent(new CustomEvent('app-lang-change', { detail: systemLang }))
-    }
+    // 语言的初始值由 locales/index.ts 的 getInitialLocale 依据 lang-mode 决定，
+    // 这里无需再派发事件（构造阶段 App 尚未挂载监听器，事件会丢失）
 
     // Listen for system theme changes（保存引用以便清理，避免泄漏）
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')

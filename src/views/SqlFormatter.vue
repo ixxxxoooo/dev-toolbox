@@ -171,16 +171,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import * as monaco from 'monaco-editor'
+import * as monaco from '@/utils/monaco'
 import { format } from 'sql-formatter'
 import { HelpCircle, Database, Upload, Download, Trash2, ClipboardPaste, Copy, AlertCircle, X, Undo2, Redo2, History, Map, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-vue-next'
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
-import { loadFromStorage, saveToStorage } from '../utils/localStorage'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
 import { useThemeStore } from '../stores/theme'
 import HistoryModal from '../components/HistoryModal.vue'
+import { splitSqlStatements, minifySql as minifySqlText } from '../utils/sqlLex'
+import { unescapeCommon, decodeUnicodeEscapes } from '../utils/unicode'
+import { copyText, readClipboardText } from '../utils/clipboard'
 import CustomSelect from '../components/CustomSelect.vue';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
 import { useI18n } from 'vue-i18n';
@@ -195,11 +198,12 @@ const dialectOptions = [
   { label: 'PostgreSQL', value: 'postgresql' }
 ]
 
-const indentOptions = [
+// 用 computed，语言切换后下拉文案才会跟着更新
+const indentOptions = computed(() => [
   { label: t('tools.sql.indent2'), value: 2 },
   { label: t('tools.sql.indent3'), value: 3 },
   { label: t('tools.sql.indent4'), value: 4 }
-]
+])
 
 const sqlEditorRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -314,12 +318,15 @@ const formatSQL = (isAuto = false) => {
   }
 }
 
-const splitSQLStatements = (text: string) => {
-  const statements = text.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0)
-  // 边界保护：过滤后无有效语句（如输入仅为 ";;;"）时直接返回空数组，
-  // 否则 statements[statements.length - 1] 为 undefined，会输出字面量 "undefined;"
-  if (statements.length === 0) return []
-  return statements.map(stmt => stmt + ';').slice(0, -1).concat(statements[statements.length - 1] + (text.trim().endsWith(';') ? ';' : ''))
+/** 先尝试用 sql-formatter 规范化大小写，再做词法感知的压缩；格式化失败时直接压缩原文 */
+const minifyOne = (stmt: string, dialect: string) => {
+  let source = stmt
+  try {
+    source = format(stmt, { language: dialect as any, tabWidth: 0, keywordCase: 'upper' })
+  } catch {
+    // 不是 sql-formatter 能识别的语法，按原文压缩
+  }
+  return minifySqlText(source)
 }
 
 const minifySQL = () => {
@@ -328,21 +335,12 @@ const minifySQL = () => {
   if (!text.trim()) return
   try {
     const actualDialect = DIALECT_MAP[sqlDialect.value] || 'mysql'
-    const hasSemicolon = text.includes(';')
-    if (hasSemicolon && !isSelection) {
-      const statements = splitSQLStatements(text)
-      const minifiedStatements = statements.map(stmt => {
-        if (!stmt.trim()) return stmt
-        try {
-          const formatted = format(stmt, { language: actualDialect as any, tabWidth: 0, keywordCase: 'upper' })
-          return formatted.replace(/\s+/g, ' ').replace(/\s*([(),;])\s*/g, '$1').trim()
-        } catch (error) { return stmt.replace(/\s+/g, ' ').trim() }
-      })
-      replaceTextInEditor(minifiedStatements.join('\n'), isSelection, selection)
+    if (!isSelection && text.includes(';')) {
+      // 词法感知地按分号切分（字符串/注释里的分号不会被切断），每条语句单独压缩
+      const minified = splitSqlStatements(text).map(stmt => minifyOne(stmt, actualDialect))
+      replaceTextInEditor(minified.join('\n'), isSelection, selection)
     } else {
-      const formatted = format(text, { language: actualDialect as any, tabWidth: 0, keywordCase: 'upper' })
-      const minified = formatted.replace(/\s+/g, ' ').replace(/\s*([(),;])\s*/g, '$1').trim()
-      replaceTextInEditor(minified, isSelection, selection)
+      replaceTextInEditor(minifyOne(text, actualDialect), isSelection, selection)
     }
   } catch (error: any) {
     showError(`SQL Minify Failed: ${error.message || 'Unknown error'}`)
@@ -353,7 +351,10 @@ const escapeSQL = () => {
   activeAction.value = 'escape'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
-  const escaped = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+  // PostgreSQL 标准字符串用 '' 转义单引号；MySQL 系（MySQL/TiDB/StarRocks）使用反斜杠转义
+  const escaped = sqlDialect.value === 'postgresql'
+    ? text.replace(/'/g, "''")
+    : text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
   replaceTextInEditor(escaped, isSelection, selection)
 }
 
@@ -361,7 +362,8 @@ const unescapeSQL = () => {
   activeAction.value = 'unescape'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
-  const unescaped = text.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\')
+  // PostgreSQL：'' -> '；MySQL 系：单次扫描反转义，避免 \\n 被误还原成换行
+  const unescaped = sqlDialect.value === 'postgresql' ? text.replace(/''/g, "'") : unescapeCommon(text)
   replaceTextInEditor(unescaped, isSelection, selection)
 }
 
@@ -369,14 +371,7 @@ const decodeUnicode = () => {
   activeAction.value = 'unicode'
   const { text, isSelection, selection } = getSelectedTextOrAll()
   if (!text.trim()) return
-  try {
-    const decoded = text.replace(/\\u[\dA-F]{4}/gi, (match: string) => {
-      return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
-    })
-    replaceTextInEditor(decoded, isSelection, selection)
-  } catch (error: any) {
-    showError(`Unicode Decode Failed: ${error.message || 'Unknown error'}`)
-  }
+  replaceTextInEditor(decodeUnicodeEscapes(text), isSelection, selection)
 }
 
 let contentChangeListener: monaco.IDisposable | null = null
@@ -408,7 +403,7 @@ const initEditor = async () => {
       if (sqlEditor) {
         const val = sqlEditor.getValue()
         sqlText.value = val
-        saveToStorage(STORAGE_KEYS.sqlText, val)
+        saveToStorageDebounced(STORAGE_KEYS.sqlText, val)
       }
     })
 
@@ -458,20 +453,15 @@ const downloadFile = () => {
 }
 const clearAll = () => replaceTextInEditor('', false, null)
 const pasteInput = async () => {
-  try {
-    const text = await navigator.clipboard.readText()
-    replaceTextInEditor(text, false, null)
-    await nextTick()
-    addHistory(text)
-    formatSQL(true)
-  } catch (error) { console.error('Paste failed:', error) }
+  const text = await readClipboardText()
+  if (text === null) return
+  replaceTextInEditor(text, false, null)
+  await nextTick()
+  addHistory(text)
+  formatSQL(true)
 }
 const copyInput = async () => {
-  try {
-    await navigator.clipboard.writeText(sqlEditor?.getValue() || '')
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err)
-  }
+  await copyText(sqlEditor?.getValue() || '')
 }
 
 const goToDiff = (side: 'left' | 'right' = 'left') => {

@@ -135,13 +135,13 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
 import CustomSelect from '../components/CustomSelect.vue';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
-import { useI18n } from 'vue-i18n';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
+import { copyText, readClipboardText } from '../utils/clipboard';
 
 const inputEditorRef = ref<HTMLElement | null>(null);
 const outputEditorRef = ref<HTMLElement | null>(null);
@@ -149,7 +149,6 @@ let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let inputThemeWatcher: (() => void) | null = null;
 let outputThemeWatcher: (() => void) | null = null;
-const { t } = useI18n();
 const showHelp = ref(false);
 
 const STORAGE_KEYS = {
@@ -170,12 +169,12 @@ const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
 const modeOptions = computed(() => {
   if (operation.value === 'encode') {
     return [
-      { label: t('tools.url.encodeModeDescription').split('(')[0].trim() || 'Component', value: 'encodeURIComponent' },
+      { label: 'Component', value: 'encodeURIComponent' },
       { label: 'URI', value: 'encodeURI' }
     ];
   } else {
     return [
-      { label: t('tools.url.decodeModeDescription').split('(')[0].trim() || 'Component', value: 'decodeURIComponent' },
+      { label: 'Component', value: 'decodeURIComponent' },
       { label: 'URI', value: 'decodeURI' }
     ];
   }
@@ -236,7 +235,7 @@ const initEditors = async () => {
     });
     inputEditor.onDidChangeModelContent(() => {
       inputText.value = inputEditor?.getValue() || '';
-      saveToStorage(STORAGE_KEYS.inputText, inputText.value);
+      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
@@ -263,9 +262,12 @@ const clearAll = () => {
   replaceTextInEditor('');
   outputEditor?.setValue('');
 };
-const pasteInput = async () => replaceTextInEditor(await navigator.clipboard.readText());
-const copyInput = () => navigator.clipboard.writeText(inputEditor?.getValue() || '');
-const copyOutput = () => navigator.clipboard.writeText(outputEditor?.getValue() || '');
+const pasteInput = async () => {
+  const text = await readClipboardText();
+  if (text !== null) replaceTextInEditor(text);
+};
+const copyInput = () => copyText(inputEditor?.getValue() || '');
+const copyOutput = () => copyText(outputEditor?.getValue() || '');
 const useAsInput = () => {
   const outputValue = outputEditor?.getValue() || '';
   replaceTextInEditor(outputValue);

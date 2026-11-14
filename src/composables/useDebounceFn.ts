@@ -11,10 +11,13 @@ import { onBeforeUnmount } from 'vue'
  *
  * @param fn 要防抖的函数
  * @param delay 防抖延迟（毫秒），默认 200ms
+ * @param options.flushOnUnmount 卸载时是否立即执行挂起的调用（默认 false 即丢弃）。
+ *   用于持久化类场景：避免用户在防抖窗口内离开页面导致最后一次编辑丢失。
  */
 export function useDebounceFn<T extends (...args: any[]) => void>(
   fn: T,
-  delay = 200
+  delay = 200,
+  options: { flushOnUnmount?: boolean } = {}
 ): { run: (...args: Parameters<T>) => void; cancel: () => void; flush: () => void } {
   let timer: ReturnType<typeof setTimeout> | null = null
   let pendingArgs: Parameters<T> | null = null
@@ -52,6 +55,7 @@ export function useDebounceFn<T extends (...args: any[]) => void>(
 
   // 组件卸载时自动清理，避免泄漏（与项目里 pendingTimers 的清理模式一致）
   onBeforeUnmount(() => {
+    if (options.flushOnUnmount) flush()
     cancel()
   })
 

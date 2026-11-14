@@ -43,6 +43,7 @@
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-mono">/{{ activeFlags }}</span>
         </div>
         <p v-if="error" class="text-xs text-destructive">{{ error }}</p>
+        <p v-else-if="truncated" class="text-xs text-muted-foreground">{{ $t('tools.regexTester.truncated') }}</p>
       </div>
 
       <!-- Test String -->
@@ -50,12 +51,14 @@
         <label class="text-sm font-medium text-muted-foreground">{{ $t('tools.regexTester.testString') }}</label>
         <div class="flex-1 relative border border-border rounded-lg bg-card overflow-hidden">
           <!-- Backdrop for highlighting -->
-          <div class="absolute inset-0 p-4 font-mono text-sm whitespace-pre-wrap break-all pointer-events-none text-transparent z-0" v-html="highlightedText"></div>
+          <div ref="backdropRef" class="absolute inset-0 p-4 font-mono text-sm whitespace-pre-wrap break-all pointer-events-none text-transparent z-0 overflow-hidden" style="scrollbar-gutter: stable" v-html="highlightedText"></div>
           <!-- Actual textarea -->
           <textarea
             v-model="testString"
-            class="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent border-none outline-none resize-none z-10 text-foreground/80 break-all"
+            class="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent border-none outline-none resize-none z-10 text-foreground/80 break-all overflow-auto"
+            style="scrollbar-gutter: stable"
             spellcheck="false"
+            @scroll="onTextareaScroll"
           ></textarea>
         </div>
       </div>
@@ -71,10 +74,15 @@
               <span>Match {{ index + 1 }}</span>
               <span>Index: {{ match.index }}</span>
             </div>
-            <div class="font-medium break-all">{{ match[0] }}</div>
-            <div v-if="match.length > 1" class="mt-2 pl-2 border-l-2 border-primary/20 space-y-1">
-              <div v-for="(group, gIndex) in match.slice(1)" :key="gIndex" class="text-xs">
+            <div class="font-medium break-all">{{ match.text }}</div>
+            <div v-if="match.groups.length > 0" class="mt-2 pl-2 border-l-2 border-primary/20 space-y-1">
+              <div v-for="(group, gIndex) in match.groups" :key="gIndex" class="text-xs">
                 <span class="text-muted-foreground">Group {{ gIndex + 1 }}:</span> <span class="text-foreground">{{ group }}</span>
+              </div>
+            </div>
+            <div v-if="Object.keys(match.named).length > 0" class="mt-2 pl-2 border-l-2 border-primary/40 space-y-1">
+              <div v-for="(val, name) in match.named" :key="name" class="text-xs">
+                <span class="text-muted-foreground">{{ name }}:</span> <span class="text-foreground">{{ val }}</span>
               </div>
             </div>
           </div>
@@ -103,126 +111,114 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed, reactive, watch, onBeforeUnmount } from 'vue';
 import { Regex, HelpCircle, X } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
+import RegexWorker from '../workers/regex.worker?worker';
+import { buildHighlightHtml, type MatchInfo } from '../utils/regexMatch';
+
+const { t } = useI18n();
 
 const regexPattern = ref('');
 const testString = ref('Hello World! 123');
 const showHelp = ref(false);
 const error = ref('');
+const truncated = ref(false);
 
 const flags = reactive([
   { value: 'g', label: 'Global (g)', enabled: true },
   { value: 'i', label: 'Insensitive (i)', enabled: true },
   { value: 'm', label: 'Multiline (m)', enabled: false },
+  { value: 's', label: 'DotAll (s)', enabled: false },
+  { value: 'u', label: 'Unicode (u)', enabled: false },
 ]);
 
 const activeFlags = computed(() => flags.filter(f => f.enabled).map(f => f.value).join(''));
 
-type RegExpMatch = RegExpMatchArray & { index?: number };
+const matches = ref<MatchInfo[]>([]);
 
-// 防御 ReDoS：用一个抛出即终止的执行时长上限包裹匹配过程。
-// 注意：浏览器 RegExp 是同步的，无法真正中断回溯，只能在上限触发后
-// 让出主线程并提示用户。上限设为 200ms，足够日常使用，对灾难性输入会快速失败。
-const REGEX_TIME_BUDGET_MS = 200;
-const isTimedOut = ref(false);
+// ---- Worker 执行：灾难性回溯时超时后直接 terminate，避免页面假死 ----
+const EXEC_TIMEOUT_MS = 1000;
+let worker: Worker | null = null;
+let requestId = 0;
+let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-const matches = ref<RegExpMatch[]>([]);
-
-/**
- * 通过 watch 计算 matches（而非 computed），因为这里会更新 error.value，属于副作用，
- * 不应放在 computed 中。同时做 ReDoS 超时保护。
- */
-const computeMatches = () => {
-  matches.value = [];
-  if (!regexPattern.value) {
-    error.value = '';
-    isTimedOut.value = false;
-    return;
-  }
-
-  let re: RegExp;
-  try {
-    re = new RegExp(regexPattern.value, activeFlags.value);
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : String(e);
-    isTimedOut.value = false;
-    return;
-  }
-
-  // 超时检测：在匹配前打时间戳，匹配后判断是否超时。
-  // 这无法中断已在执行的同步正则，但能在它返回后丢弃结果并提示用户。
-  const start = performance.now();
-  try {
-    let result: RegExpMatch[];
-    if (!re.global) {
-      const match = re.exec(testString.value);
-      result = match ? [match as RegExpMatch] : [];
-    } else {
-      result = [...testString.value.matchAll(re)] as RegExpMatch[];
-    }
-    const elapsed = performance.now() - start;
-    if (elapsed > REGEX_TIME_BUDGET_MS) {
-      // 即便这次完成了，也提示用户正则太重，避免下次放大
-      error.value = `正则执行耗时 ${Math.round(elapsed)}ms，可能存在灾难性回溯，请优化`;
-      isTimedOut.value = true;
-      matches.value = result;
-    } else {
+const ensureWorker = () => {
+  if (worker) return worker;
+  worker = new RegexWorker();
+  worker.onmessage = (e: MessageEvent<any>) => {
+    const msg = e.data;
+    if (msg.id !== requestId) return; // 过期结果
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+    if (msg.ok) {
+      matches.value = msg.result.matches;
+      truncated.value = msg.result.truncated;
       error.value = '';
-      isTimedOut.value = false;
-      matches.value = result;
+    } else {
+      matches.value = [];
+      truncated.value = false;
+      error.value = msg.error;
     }
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : String(e);
-    isTimedOut.value = false;
-  }
+  };
+  return worker;
 };
 
-watch([regexPattern, testString, activeFlags], computeMatches, { immediate: true });
+const killWorker = () => {
+  worker?.terminate();
+  worker = null;
+};
 
-const highlightedText = computed(() => {
-  if (!regexPattern.value || error.value) return escapeHtml(testString.value);
-  try {
-
-    // This is a simplified highlighting logic. For perfect highlighting, we'd need more complex parsing.
-    // Here we just replace matches with highlighted spans.
-    // Note: This simple replace approach has limitations with overlapping matches or complex groups,
-    // but suffices for basic visual feedback.
-
-    // A safer approach for visualization is to iterate matches and build the string.
-    let lastIndex = 0;
-    let html = '';
-    const currentMatches = matches.value; // Use computed matches
-
-    if (currentMatches.length === 0) return escapeHtml(testString.value);
-
-    // If global flag is not set, matchAll/matches logic differs slightly, but let's assume standard behavior
-    for (const match of currentMatches) {
-        if (match.index === undefined) continue;
-        // Append text before match
-        html += escapeHtml(testString.value.slice(lastIndex, match.index));
-        // Append highlighted match
-        html += `<span class="bg-yellow-500/30 text-yellow-200 rounded-sm">${escapeHtml(match[0])}</span>`;
-        lastIndex = match.index + match[0].length;
-
-        // Prevent infinite loop for zero-length matches
-        if (match[0].length === 0) lastIndex++;
-    }
-    // Append remaining text
-    html += escapeHtml(testString.value.slice(lastIndex));
-    return html;
-  } catch (e) {
-    return escapeHtml(testString.value);
+const computeMatches = () => {
+  if (timeoutTimer) clearTimeout(timeoutTimer);
+  if (!regexPattern.value) {
+    matches.value = [];
+    error.value = '';
+    truncated.value = false;
+    requestId++;
+    return;
   }
+  // 先在主线程校验语法（构造 RegExp 本身是安全的），非法时立即给出错误，无需起 Worker
+  try {
+    new RegExp(regexPattern.value, activeFlags.value);
+  } catch (e: unknown) {
+    matches.value = [];
+    error.value = e instanceof Error ? e.message : String(e);
+    requestId++;
+    return;
+  }
+  const id = ++requestId;
+  ensureWorker().postMessage({ id, pattern: regexPattern.value, flags: activeFlags.value, text: testString.value });
+  timeoutTimer = setTimeout(() => {
+    if (id !== requestId) return;
+    killWorker();
+    matches.value = [];
+    truncated.value = false;
+    error.value = t('tools.regexTester.timeout', { ms: EXEC_TIMEOUT_MS });
+  }, EXEC_TIMEOUT_MS);
+};
+
+watch([regexPattern, testString, activeFlags], () => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(computeMatches, 120);
+}, { immediate: true });
+
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  if (timeoutTimer) clearTimeout(timeoutTimer);
+  killWorker();
 });
 
-function escapeHtml(text: string) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+const highlightedText = computed(() => buildHighlightHtml(testString.value, error.value ? [] : matches.value));
+
+// textarea 滚动时同步背景高亮层，避免长文本滚动后高亮错位
+const backdropRef = ref<HTMLElement | null>(null);
+const onTextareaScroll = (e: Event) => {
+  const el = e.target as HTMLTextAreaElement;
+  if (backdropRef.value) {
+    backdropRef.value.scrollTop = el.scrollTop;
+    backdropRef.value.scrollLeft = el.scrollLeft;
+  }
+};
 </script>

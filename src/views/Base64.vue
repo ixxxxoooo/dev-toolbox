@@ -133,11 +133,25 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as monaco from 'monaco-editor';
+import * as monaco from '@/utils/monaco';
 import { HelpCircle, Binary, Upload, Download, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
 import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
 import CustomCheckbox from '../components/CustomCheckbox.vue';
+import { useI18n } from 'vue-i18n';
+import { copyText, readClipboardText } from '../utils/clipboard';
+import { showToast } from '../composables/useToast';
+import { bytesToBase64, base64ToBytes, decodeUtf8Strict, formatBytes } from '../utils/base64';
+
+const { t } = useI18n();
+// 二进制文件上限：Monaco 展示几十 MB 的 Base64 会卡死
+const MAX_BINARY_SIZE = 10 * 1024 * 1024;
+// 导入的二进制文件字节（编码模式下优先于输入框文本）；输入框只显示占位说明
+let binaryInput: Uint8Array | null = null;
+// 解码结果不是合法 UTF-8 文本时保存原始字节，供下载为二进制文件
+let binaryOutput: Uint8Array | null = null;
+// 程序性写入输入框（占位文案）时不应被当作用户编辑
+let suppressInputChange = false;
 
 const inputEditorRef = ref<HTMLElement | null>(null);
 const outputEditorRef = ref<HTMLElement | null>(null);
@@ -163,46 +177,42 @@ const urlSafe = ref(loadFromStorage(STORAGE_KEYS.urlSafe, false));
 const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
 const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
 
+const setOutput = (text: string) => {
+  outputText.value = text;
+  outputEditor?.setValue(text);
+};
+
 const processText = () => {
+  binaryOutput = null;
+
+  // 编码模式下若导入了二进制文件，直接对字节编码
+  if (binaryInput && operation.value === 'encode') {
+    setOutput(bytesToBase64(binaryInput, urlSafe.value));
+    return;
+  }
+
   const input = inputEditor?.getValue() || '';
   if (!input.trim()) {
-    outputEditor?.setValue('');
+    setOutput('');
     return;
   }
 
   try {
-    let result = '';
     if (operation.value === 'encode') {
-      const utf8Bytes = new TextEncoder().encode(input);
-      // 分块拼接，避免 String.fromCharCode.apply 在大输入时栈溢出
-      // （apply 的参数数量上限约为 ~64KB，超过会抛 RangeError）
-      let binary = '';
-      const CHUNK_SIZE = 0x8000; // 32KB，安全裕度
-      for (let i = 0; i < utf8Bytes.length; i += CHUNK_SIZE) {
-        binary += String.fromCharCode.apply(
-          null,
-          utf8Bytes.subarray(i, i + CHUNK_SIZE) as unknown as number[]
-        );
-      }
-      result = btoa(binary);
-      if (urlSafe.value) {
-        result = result.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-      }
+      setOutput(bytesToBase64(new TextEncoder().encode(input), urlSafe.value));
     } else {
-      let base64 = input.trim();
-      if (urlSafe.value) {
-        base64 = base64.replace(/-/g, '+').replace(/_/g, '/');
-        while (base64.length % 4) {
-          base64 += '=';
-        }
+      const bytes = base64ToBytes(input);
+      const text = decodeUtf8Strict(bytes);
+      if (text === null) {
+        // 不是文本（图片、压缩包等）：不要硬解成乱码，提示并保留字节用于下载
+        binaryOutput = bytes;
+        setOutput(t('tools.base64.binaryOutput', { size: formatBytes(bytes.length) }));
+      } else {
+        setOutput(text);
       }
-      const binaryString = atob(base64);
-      const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
-      result = new TextDecoder().decode(bytes);
     }
-    outputEditor?.setValue(result);
   } catch (e: unknown) {
-    outputEditor?.setValue(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    setOutput(`Error: ${e instanceof Error ? e.message : String(e)}`);
   }
 };
 
@@ -239,8 +249,11 @@ const initEditors = async () => {
       ...editorOptions,
     });
     inputEditor.onDidChangeModelContent(() => {
+      if (suppressInputChange) return;
+      // 用户手动编辑后，之前导入的二进制文件不再有效
+      binaryInput = null;
       inputText.value = inputEditor?.getValue() || '';
-      saveToStorage(STORAGE_KEYS.inputText, inputText.value);
+      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value);
       if (autoProcess.value) processText();
     });
     inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
@@ -264,55 +277,79 @@ const initEditors = async () => {
 };
 
 const loadFile = () => fileInput.value?.click();
-const handleFileSelect = (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (res) => {
-      const content = res.target?.result as string;
-      replaceTextInEditor(content);
-    };
-    reader.readAsText(file);
+
+const handleFileSelect = async (e: Event) => {
+  const el = e.target as HTMLInputElement;
+  const file = el.files?.[0];
+  // 清空 value，允许连续选择同一个文件
+  el.value = '';
+  if (!file) return;
+
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const text = decodeUtf8Strict(bytes);
+    // 解码模式或文本文件：按文本载入输入框（与旧行为一致）
+    if (operation.value === 'decode' || text !== null) {
+      binaryInput = null;
+      replaceTextInEditor(text ?? new TextDecoder().decode(bytes));
+      return;
+    }
+    // 编码模式 + 二进制文件：直接对字节编码
+    if (bytes.length > MAX_BINARY_SIZE) {
+      showToast(t('tools.base64.fileTooLarge', { size: formatBytes(MAX_BINARY_SIZE) }), 'error', 4000);
+      return;
+    }
+    binaryInput = bytes;
+    suppressInputChange = true;
+    try {
+      replaceTextInEditor(t('tools.base64.binaryInput', { name: file.name, size: formatBytes(bytes.length) }));
+    } finally {
+      suppressInputChange = false;
+    }
+    processText();
+  } catch (err) {
+    console.error('Read file failed:', err);
+    showToast(t('tools.base64.readFileFailed'), 'error', 4000);
   }
-  };
+};
+
 const downloadFile = () => {
-  const content = outputEditor?.getValue();
-  if (!content) return;
-  const blob = new Blob([content], { type: 'text/plain' });
+  let blob: Blob;
+  let filename: string;
+  if (binaryOutput) {
+    blob = new Blob([binaryOutput as BlobPart], { type: 'application/octet-stream' });
+    filename = 'decoded.bin';
+  } else {
+    const content = outputEditor?.getValue();
+    if (!content) return;
+    blob = new Blob([content], { type: 'text/plain' });
+    filename = operation.value === 'encode' ? 'encoded.txt' : 'decoded.txt';
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = operation.value === 'encode' ? 'encoded.txt' : 'decoded.txt';
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 };
+
 const clearAll = () => {
+  binaryInput = null;
   replaceTextInEditor('');
-  outputEditor?.setValue('');
+  setOutput('');
 };
+
 const pasteInput = async () => {
-  try {
-    replaceTextInEditor(await navigator.clipboard.readText());
-  } catch (err) {
-    console.error('Cannot read clipboard:', err);
-  }
+  const text = await readClipboardText();
+  if (text !== null) replaceTextInEditor(text);
 };
-const copyInput = async () => {
-  try {
-    await navigator.clipboard.writeText(inputEditor?.getValue() || '');
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
-};
-const copyOutput = async () => {
-  try {
-    await navigator.clipboard.writeText(outputEditor?.getValue() || '');
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
-};
+const copyInput = () => copyText(inputEditor?.getValue() || '');
+const copyOutput = () => copyText(outputEditor?.getValue() || '');
 const useAsInput = () => {
+  // 输出是二进制占位说明时不应回填
+  if (binaryOutput) return;
   const outputValue = outputEditor?.getValue() || '';
+  binaryInput = null;
   replaceTextInEditor(outputValue);
   operation.value = operation.value === 'encode' ? 'decode' : 'encode';
 };

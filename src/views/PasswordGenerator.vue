@@ -222,6 +222,8 @@ import CustomRadio from '../components/CustomRadio.vue';
 import CustomRange from '../components/CustomRange.vue';
 import { addDisableSaveShortcut, removeDisableSaveShortcut } from '../utils/keyboardUtils';
 import { useI18n } from 'vue-i18n';
+import { secureRandomInt } from '../utils/random';
+import { copyText } from '../utils/clipboard';
 
 const { t: $t } = useI18n();
 
@@ -338,31 +340,6 @@ const getCharacterSet = () => {
   return chars;
 };
 
-/**
- * 生成 [0, max) 范围内均匀分布的随机整数，用 crypto.getRandomValues 实现，
- * 并用拒绝采样消除模偏差（直接 % max 会让小余数出现概率更高）。
- * 仅在 crypto API 不可用时降级到 Math.random（带控制台警告）。
- */
-const secureRandomInt = (max: number): number => {
-  if (max <= 0) return 0;
-  const cryptoObj = globalThis.crypto;
-  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
-    // 拒绝采样：max 能整除 2^8 的最大倍数，超过该阈值的随机字节直接丢弃重抽
-    const maxUint8 = 256;
-    const limit = maxUint8 - (maxUint8 % max);
-    const buf = new Uint8Array(1);
-    let x: number;
-    do {
-      cryptoObj.getRandomValues(buf);
-      x = buf[0];
-    } while (x >= limit);
-    return x % max;
-  }
-  // 降级：仅在非浏览器/测试环境等 crypto 缺失场景，提示用户
-  console.warn('crypto.getRandomValues unavailable, falling back to Math.random (NOT secure)');
-  return Math.floor(Math.random() * max);
-};
-
 const generateStrongPassword = (length: number) => {
   const chars = getCharacterSet();
   if (!chars) return '';
@@ -427,11 +404,7 @@ const generatePassword = () => {
 };
 
 const copyPassword = (password: string) => {
-  try {
-    navigator.clipboard.writeText(password);
-  } catch (err) {
-    console.error('Cannot copy to clipboard:', err);
-  }
+  void copyText(password);
 };
 
 const clearPasswords = () => {

@@ -59,13 +59,29 @@ export function saveLocale(locale: SupportedLocale): void {
 
 // 获取初始语言设置（优先级：保存的设置 > 浏览器语言 > 默认英文）
 function getInitialLocale(): SupportedLocale {
-  const savedLocale = getSavedLocale()
-  if (savedLocale) {
-    return savedLocale
+  let langMode: string | null = null
+  try {
+    langMode = localStorage.getItem('lang-mode')
+  } catch {
+    /* 忽略存储不可用 */
   }
 
-  return getBrowserLocale()
+  // 用户在设置里明确选择了跟随系统：始终以当前浏览器语言为准，
+  // 不能被上一次保存的 dev-toolbox-locale 覆盖（否则系统语言变化后不会跟随）
+  if (langMode === 'system') {
+    return getBrowserLocale()
+  }
+  // 用户明确选择了 zh / en
+  if (langMode && SUPPORTED_LOCALES.includes(langMode as SupportedLocale)) {
+    return langMode as SupportedLocale
+  }
+
+  // 没有 lang-mode（旧版本用户或首次访问）：沿用已保存的语言，否则使用浏览器语言
+  return getSavedLocale() ?? getBrowserLocale()
 }
+
+/** 供其他模块获取系统语言（zh / en） */
+export { getBrowserLocale }
 
 // 创建 i18n 实例
 export const i18n = createI18n({
