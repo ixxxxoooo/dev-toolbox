@@ -1,285 +1,198 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Braces class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.json.name') }}</span>
-        </div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- Primary Actions -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            v-for="op in ['format', 'minify']"
-            :key="op"
-            @click="handleOperation(op)"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="operation === op ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t(op === 'format' || op === 'minify' ? 'common.labels.' + op : 'tools.json.' + op) }}
+  <ToolShell :icon="Braces" :title="$t('tools.json.name')" flush>
+    <template #actions>
+      <Segmented v-model="operation" :options="opOptions" />
+      <ToggleChip v-model="sortKeys" class="max-lg:hidden" :title="$t('tools.json.sortKeysDesc')">
+        <ListOrdered class="w-3 h-3" />
+        {{ $t('tools.json.sortKeys') }}
+      </ToggleChip>
+      <ToggleChip v-model="lenientFix" class="max-lg:hidden" :title="$t('tools.json.lenientFixDesc')">
+        {{ $t('tools.json.lenientFix') }}
+      </ToggleChip>
+      <ToggleChip
+        :model-value="decodeUnicode"
+        :title="$t('tools.json.unicodeDecodeDesc')"
+        @update:model-value="onDecodeUnicodeToggle"
+      >
+        <Languages class="w-3 h-3" />
+        <span class="max-sm:hidden">{{ $t('tools.json.unicodeDecode') }}</span>
+      </ToggleChip>
+      <ToggleChip
+        :model-value="expandNested"
+        class="max-md:hidden"
+        :title="$t('tools.json.expandNestedDesc')"
+        @update:model-value="onExpandNestedToggle"
+      >
+        <UnfoldVertical class="w-3 h-3" />
+        <span class="max-lg:hidden">{{ $t('tools.json.expandNested') }}</span>
+      </ToggleChip>
+      <DropdownMenu :items="indentMenuItems" align="right" @select="onIndentPick">
+        <template #trigger>
+          <button type="button" class="chip">
+            {{ indentLabel }}
+            <ChevronDown class="w-3 h-3" />
           </button>
-        </div>
+        </template>
+      </DropdownMenu>
+    </template>
 
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+    <template #right>
+      <IconButton :title="$t('common.undo') + ' (⌘Z)'" @click="undoInput"><Undo2 class="w-4 h-4" /></IconButton>
+      <IconButton :title="$t('common.buttons.history')" @click="showHistory = true"><History class="w-4 h-4" /></IconButton>
+      <IconButton :title="$t('tools.json.copyResult')" @click="copyResult"><Copy class="w-4 h-4" /></IconButton>
+      <DropdownMenu :items="moreMenuItems" align="right" @select="onMoreSelect">
+        <template #trigger="{ open }">
+          <IconButton :title="$t('common.ui.more')" :active="!!open"><MoreHorizontal class="w-4 h-4" /></IconButton>
+        </template>
+      </DropdownMenu>
+    </template>
 
-        <!-- Secondary Actions -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            v-for="op in ['escape', 'unescape']"
-            :key="op"
-            @click="handleOperation(op)"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="operation === op ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t('tools.json.' + op) }}
-          </button>
+    <template #help>
+      <p>{{ $t('tools.json.description') }}</p>
+      <p class="font-semibold mt-3 mb-1">{{ $t('tools.json.coreFeatures') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li>{{ $t('tools.json.formatDescription') }}</li>
+        <li>{{ $t('tools.json.minifyDescription') }}</li>
+        <li>{{ $t('tools.json.escapeDescription') }}</li>
+        <li>{{ $t('tools.json.unescapeDescription') }}</li>
+        <li>{{ $t('tools.json.unicodeDecodeDesc') }}</li>
+        <li>{{ $t('tools.json.expandNestedDesc') }}</li>
+        <li>{{ $t('tools.json.treeViewDescription') }}</li>
+        <li>{{ $t('tools.json.jsonPathDesc') }}</li>
+      </ul>
+    </template>
 
-          <!-- Unicode 解码开关：选中=\u转中文，去掉=不转换 -->
-          <button
-            @click="toggleDecodeUnicode"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
-            :class="decodeUnicode ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
-            :title="$t('tools.json.unicodeDecodeDesc')"
-          >
-            <Languages class="w-3.5 h-3.5" />
-            <span>{{ $t('tools.json.unicodeDecode') }}</span>
-          </button>
-
-          <!-- 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组 -->
-          <button
-            @click="toggleExpandNested"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
-            :class="expandNested ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
-            :title="$t('tools.json.expandNestedDesc')"
-          >
-            <UnfoldVertical class="w-3.5 h-3.5" />
-            <span>{{ $t('tools.json.expandNested') }}</span>
-          </button>
-        </div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- History & Compare Action -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            @click="showHistory = true"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.history')"
-          >
-            <History class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
-          </button>
-          <div class="h-4 w-px bg-border flex-shrink-0"></div>
-<div class="flex items-center space-x-0.5">
-            <button
-              @click="goToDiff('left')"
-              class="px-3 py-1.5 text-xs font-medium rounded-l-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1 border-r border-border/50"
-              :title="$t('tools.diff.putLeft')"
-            >
-              <ArrowLeftFromLine class="w-3.5 h-3.5" />
-              <span>{{ $t('tools.diff.putLeft') }}</span>
-            </button>
-            <button
-              @click="goToDiff('right')"
-              class="px-3 py-1.5 text-xs font-medium rounded-r-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-              :title="$t('tools.diff.putRight')"
-            >
-              <span>{{ $t('tools.diff.putRight') }}</span>
-              <ArrowRightFromLine class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Side Controls -->
-      <div class="flex items-center space-x-3 flex-shrink-0 ml-4">
-        <div class="flex items-center space-x-2 hidden md:flex">
-          <CustomSelect v-model="indentSize" :options="indentOptions" />
-
-          <button
-            @click="wordWrapEnabled = !wordWrapEnabled"
-            class="p-1.5 rounded-md transition-colors h-8 w-8 flex items-center justify-center"
-            :class="wordWrapEnabled ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
-            :title="$t('common.labels.autoWrap')"
-          >
-            <WrapText class="w-4 h-4" />
-          </button>
-
-          <button
-            @click="showMinimap = !showMinimap"
-            class="p-1.5 rounded-md transition-colors h-8 w-8 flex items-center justify-center"
-            :class="showMinimap ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
-            title="Toggle Minimap"
-          >
-            <Map class="w-4 h-4" />
-          </button>
-        </div>
-
-        <div class="h-4 w-px bg-border hidden md:block"></div>
-
-        <button
-          @click="rightPanelView = rightPanelView === 'tree' ? 'none' : 'tree'"
-          class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
-          :class="rightPanelView === 'tree' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-        >
-          <ListTree class="w-4 h-4" />
-          <span class="hidden sm:inline">{{ rightPanelView === 'tree' ? $t('common.buttons.hideTreeView') : $t('common.buttons.showTreeView') }}</span>
-        </button>
-
-        <button
-          @click="rightPanelView = rightPanelView === 'graph' ? 'none' : 'graph'"
-          class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors border border-transparent h-8"
-          :class="rightPanelView === 'graph' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-        >
-          <Network class="w-4 h-4" />
-          <span class="hidden sm:inline">{{ rightPanelView === 'graph' ? $t('common.buttons.hideGraphView') : $t('common.buttons.showGraphView') }}</span>
-        </button>
-
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground h-8 w-8 flex items-center justify-center">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <main ref="mainContainer" class="flex-1 flex min-h-0 p-3 gap-2 relative">
-      <!-- Editor Section -->
-      <div v-show="rightPanelView === 'none' || !editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
-        <!-- Editor Toolbar -->
-        <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</span>
-            <span v-if="jsonStats" class="text-xs text-muted-foreground/70 px-2 py-0.5 bg-muted rounded-full">
-              {{ jsonStats }}
-            </span>
-          </div>
-          <div class="flex items-center space-x-1">
-            <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Undo2 class="w-3.5 h-3.5" />
-            </button>
-            <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Redo2 class="w-3.5 h-3.5" />
-            </button>
-            <div class="h-3 w-px bg-border mx-1"></div>
-            <button @click="pasteInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.paste')">
+    <SplitPane storage-key="json" class="h-full min-h-0">
+      <template #a>
+        <Pane :title="$t('common.labels.input')" :badge="inputSizeBadge">
+          <template #actions>
+            <IconButton class="max-lg:hidden" :title="$t('common.paste')" @click="pasteInput">
               <ClipboardPaste class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div ref="inputEditorRef" class="absolute inset-0"></div>
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :badge="outputBadge">
+          <template #title>
+            <Segmented v-model="resultView" :options="viewOptions" small class="mr-1" />
+          </template>
+          <template #actions>
+            <button
+              v-if="resultView === 'tree'"
+              type="button"
+              class="text-xs text-primary hover:underline px-1"
+              @click="toggleTreeExpansion"
+            >
+              {{ isTreeExpanded ? $t('tools.json.collapseAll') : $t('tools.json.expandAll') }}
             </button>
-            <button @click="copyInput" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" :title="$t('common.copy')">
-              <Copy class="w-3.5 h-3.5" />
-            </button>
-            <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground transition-colors" :title="$t('common.buttons.clearAll')">
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-            <div v-if="rightPanelView !== 'none'" class="h-3 w-px bg-border mx-1"></div>
-            <button v-if="rightPanelView !== 'none'" @click="editorCollapsed = true" class="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors" title="Collapse Editor">
-              <PanelLeftClose class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-        <div class="flex-1 relative group">
-          <div ref="editorRef" class="absolute inset-0"></div>
-        </div>
-      </div>
-
-      <!-- Collapsed Toggle -->
-      <div v-if="editorCollapsed && rightPanelView !== 'none'" class="flex flex-col border border-border rounded-lg bg-muted/30 p-1 shadow-sm h-full">
-        <button @click="editorCollapsed = false" class="p-2 hover:bg-muted rounded hover:text-foreground text-muted-foreground transition-colors" title="Expand Editor">
-          <PanelLeftOpen class="w-4 h-4" />
-        </button>
-      </div>
-
-      <!-- Resizer -->
-      <div
-        v-show="!editorCollapsed && rightPanelView !== 'none'"
-        class="w-1.5 hover:w-2 bg-transparent hover:bg-border/50 active:bg-primary/50 cursor-col-resize flex-shrink-0 transition-all rounded-full z-10 mx-[-4px]"
-        @mousedown="startResize"
-      ></div>
-
-      <!-- Tree / Graph View Section -->
-      <div v-if="rightPanelView !== 'none'" class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full relative">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border z-10">
-            <h3 class="text-xs font-medium text-muted-foreground">
-              <template v-if="rightPanelView === 'tree'">{{ $t('common.labels.treeView') }}</template>
-              <template v-else-if="rightPanelView === 'graph'">{{ $t('common.labels.graphView') }}</template>
-            </h3>
-            <div class="flex items-center space-x-2">
-               <button v-if="rightPanelView === 'tree'" @click="toggleTreeExpansion" class="text-xs text-primary hover:underline px-2">
-                 {{ isTreeExpanded ? $t('tools.json.collapseAll') : $t('tools.json.expandAll') }}
-               </button>
+          </template>
+          <div
+            class="flex flex-col h-full min-h-0"
+            :class="{ 'is-stale is-stale-anim': hasParseError && lastGoodOutput }"
+          >
+            <div class="flex items-center gap-2 h-[30px] shrink-0 px-2 border-b border-border bg-muted/30">
+              <Search class="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <input
+                v-model="jsonPathQuery"
+                type="text"
+                class="flex-1 min-w-0 h-6 bg-transparent text-xs outline-none placeholder:text-muted-foreground/70"
+                spellcheck="false"
+                :placeholder="$t('tools.json.jsonPathPlaceholder')"
+              />
+              <span
+                v-if="jsonPathQuery.trim()"
+                class="text-[11px] shrink-0"
+                :class="jsonPathCount === 0 ? 'text-destructive' : 'text-muted-foreground'"
+              >
+                {{
+                  jsonPathCount === 0
+                    ? $t('tools.json.jsonPathNoMatch')
+                    : $t('tools.json.jsonPathMatches', { n: jsonPathCount })
+                }}
+              </span>
+            </div>
+            <div class="relative flex-1 min-h-0 overflow-hidden">
+              <Transition name="page" mode="out-in">
+                <div v-if="resultView === 'text'" key="text" class="absolute inset-0">
+                  <div ref="outputEditorRef" class="absolute inset-0"></div>
+                </div>
+                <div v-else-if="resultView === 'tree'" key="tree" class="absolute inset-0 overflow-auto">
+                  <div v-if="treeTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                    <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
+                  </div>
+                  <JsonTreeView
+                    v-else-if="plainViewData !== undefined"
+                    ref="treeViewRef"
+                    :data="plainViewData"
+                  />
+                  <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                    <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+                  </div>
+                </div>
+                <div v-else-if="resultView === 'table'" key="table" class="absolute inset-0 overflow-auto p-2">
+                  <table v-if="tableRows" class="w-full text-xs border-collapse">
+                    <thead>
+                      <tr class="border-b border-border text-left text-muted-foreground">
+                        <th class="py-1 pr-2 font-medium">#</th>
+                        <th v-for="c in tableCols" :key="c" class="py-1 pr-2 font-medium">{{ c }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, i) in tableRows" :key="i" class="border-b border-border/60">
+                        <td class="py-1 pr-2 text-muted-foreground">{{ i }}</td>
+                        <td v-for="c in tableCols" :key="c" class="py-1 pr-2 font-mono">
+                          {{ cellText(row[c]) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-else class="h-full flex flex-col items-center justify-center text-center text-muted-foreground gap-1">
+                    <p class="text-sm">{{ $t('tools.json.tableEmpty') }}</p>
+                    <p class="text-[11px] opacity-70">{{ $t('tools.json.tableEmptyHint') }}</p>
+                  </div>
+                </div>
+                <div v-else key="graph" class="absolute inset-0">
+                  <div v-if="graphTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                    <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
+                  </div>
+                  <JsonGraphView v-else-if="plainViewData !== undefined && isPlainObjectOrArray(plainViewData)" :data="plainViewData" />
+                  <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
+                    <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </div>
-          <div class="flex-1 relative overflow-hidden bg-background">
-            <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-3">
-              <div v-if="treeTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
-                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-                <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
-              </div>
-              <JsonTreeView ref="treeViewRef" v-else-if="isValidJson && parsedJson" :data="parsedJson" />
-              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
-                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
-              </div>
-            </div>
-            <div v-else-if="rightPanelView === 'graph'" class="h-full w-full absolute inset-0">
-              <div v-if="graphTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
-                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-                <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
-              </div>
-              <JsonGraphView v-else-if="isValidJson && parsedJson" :data="parsedJson" />
-              <div v-else class="h-full flex flex-col items-center justify-center text-muted-foreground">
-                <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
-                <p class="text-sm">{{ $t('common.messages.invalidJson') }}</p>
-              </div>
-            </div>
-        </div>
-      </div>
-    </main>
+        </Pane>
+      </template>
+    </SplitPane>
 
-    <!-- Error Toast -->
-    <Transition name="slide-up">
-      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-3 py-2 rounded-lg shadow-lg flex items-start space-x-3 z-50">
-        <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <div class="flex-1">
-          <p class="font-medium text-sm">{{ errorMessage }}</p>
-        </div>
-        <button @click="errorMessage = ''" class="flex-shrink-0 hover:opacity-70">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
-    </Transition>
-
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.json.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
+    <template #status>
+      <StatusBar :state="hasParseError ? 'error' : 'ok'">
+        <template v-if="hasParseError && parseError">
+          <button type="button" class="sb-err" @click="jumpToError">
+            <AlertCircle class="w-3.5 h-3.5" />
+            {{ $t('tools.json.invalidAt', { line: parseError.line, col: parseError.column, msg: parseError.message }) }}
           </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.json.description') }}</p>
-          <div>
-            <p class="font-semibold mb-2">{{ $t('tools.json.coreFeatures') }}:</p>
-            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>{{ $t('common.labels.format') }}:</strong> {{ $t('tools.json.formatDescription') }}</li>
-              <li><strong>{{ $t('common.labels.minify') }}:</strong> {{ $t('tools.json.minifyDescription') }}</li>
-              <li><strong>{{ $t('tools.json.escape') }}:</strong> {{ $t('tools.json.escapeDescription') }}</li>
-              <li><strong>{{ $t('tools.json.unescape') }}:</strong> {{ $t('tools.json.unescapeDescription') }}</li>
-              <li><strong>{{ $t('tools.json.unicodeDecode') }}:</strong> {{ $t('tools.json.unicodeDecodeDesc') }}</li>
-              <li><strong>{{ $t('tools.json.expandNested') }}:</strong> {{ $t('tools.json.expandNestedDesc') }}</li>
-              <li><strong>{{ $t('common.labels.treeView') }}:</strong> {{ $t('tools.json.treeViewDescription') }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+        </template>
+        <span v-else class="sb-ok"><Check class="w-3.5 h-3.5" />{{ $t('tools.json.validJson') }}</span>
+        <span v-if="!hasParseError && structureLabel">{{ structureLabel }}</span>
+        <span v-if="!hasParseError && parsedData">{{ $t('tools.json.depth', { n: jsonDepthVal }) }}</span>
+        <template #right>
+          <span>{{ $t('tools.json.cursor', { line: cursorLine, col: cursorCol }) }}</span>
+          <span>{{ indentLabel }}</span>
+          <span>{{ $t('tools.json.encoding') }}</span>
+        </template>
+      </StatusBar>
+    </template>
 
-    <!-- History Modal -->
+    <input ref="fileInput" type="file" class="hidden" accept=".json,.txt,application/json" @change="onFileSelected" />
     <HistoryModal
       :show="showHistory"
       :history="history"
@@ -288,597 +201,747 @@
       @delete="deleteHistory"
       @clear="clearHistory"
     />
-  </div>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import * as monaco from '@/utils/monaco';
-import JSON5 from 'json5';
-import { parseJsonLossless, stringifyJson } from '../utils/jsonParse';
-import { decodeUnicodeDeep, unescapeCommon } from '../utils/unicode';
-import { hashText } from '../utils/textHash';
-import { showToast } from '../composables/useToast';
-import { copyText, readClipboardText } from '../utils/clipboard';
-import JsonTreeView from '../components/JsonTreeView.vue';
-import JsonGraphView from '../components/JsonGraphView.vue';
-import { HelpCircle, Braces, ListTree, Undo2, Redo2, ClipboardPaste, Copy, Trash2, AlertCircle, X, WrapText, History, Map, ArrowLeftFromLine, ArrowRightFromLine, Network, PanelLeftClose, PanelLeftOpen, Languages, UnfoldVertical } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
-import { useHistory } from '../composables/useHistory';
-import { useDebounceFn } from '../composables/useDebounceFn';
-import { useThemeStore } from '../stores/theme';
-import HistoryModal from '../components/HistoryModal.vue';
-import CustomSelect from '../components/CustomSelect.vue';
-import { useI18n } from 'vue-i18n';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import Segmented, { type SegmentedOption } from '@/components/ui/Segmented.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
+import JsonTreeView from '@/components/JsonTreeView.vue'
+import JsonGraphView from '@/components/JsonGraphView.vue'
+import HistoryModal from '@/components/HistoryModal.vue'
+import {
+  Braces,
+  Undo2,
+  Copy,
+  History,
+  MoreHorizontal,
+  ClipboardPaste,
+  AlertCircle,
+  Check,
+  Search,
+  ChevronDown,
+  Languages,
+  UnfoldVertical,
+  ListOrdered,
+  FileUp,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
+  Trash2,
+  WrapText,
+  Map,
+  FileCode2,
+  Table2,
+  ListTree,
+  Network,
+  AlignLeft,
+} from 'lucide-vue-next'
+import { parseJsonInput } from '@/utils/jsonToolParse'
+import { stringifyJson, toPlainJson } from '@/utils/jsonParse'
+import { sortJsonKeys } from '@/utils/jsonSortKeys'
+import { jsonDepth } from '@/utils/jsonDepth'
+import { getJsonErrorPosition, simplifyJsonErrorMessage } from '@/utils/jsonErrorPosition'
+import { evaluateJsonPath, jsonPathDisplayRoot } from '@/utils/jsonPath'
+import { findFirstObjectArray } from '@/utils/jsonTable'
+import { jsonToTs } from '@/utils/jsonToTs'
+import { decodeUnicodeDeep, unescapeCommon } from '@/utils/unicode'
+import { hashText } from '@/utils/textHash'
+import { showToast } from '@/composables/useToast'
+import { copyText, readClipboardText } from '@/utils/clipboard'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
+import { useHistory } from '@/composables/useHistory'
+import { useDebounceFn } from '@/composables/useDebounceFn'
+import { useThemeStore } from '@/stores/theme'
+import { parseJsonLossless } from '@/utils/jsonParse'
 
-const router = useRouter();
-const { t } = useI18n();
+const router = useRouter()
+const { t } = useI18n()
 
-// 用 computed，语言切换后下拉文案才会跟着更新
-const indentOptions = computed(() => [
-  { label: t('common.labels.spaces2'), value: 2 },
-  { label: t('common.labels.spaces4'), value: 4 }
-]);
-const editorRef = ref<HTMLElement | null>(null);
-const treeViewRef = ref<any>(null);
-let editor: monaco.editor.IStandaloneCodeEditor | null = null;
-let themeWatcher: (() => void) | null = null;
-let isProcessing = false;
-const errorMessage = ref('');
-const showHelp = ref(false);
-const showHistory = ref(false);
-
-const themeStore = useThemeStore();
-const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('json', themeStore.historyLimit.value);
-// diff 历史在顶层创建一次，避免在 goToDiff 中反复调用 composable（违反 Vue 组合式 API 约定）
-const { addHistory: addDiffHistory, updateMaxItems: updateDiffMaxItems } = useHistory('diff', themeStore.historyLimit.value);
-
-watch(() => themeStore.historyLimit.value, (newLimit) => {
-  updateMaxItems(newLimit);
-  updateDiffMaxItems(newLimit);
-});
-
-let errorTimer: NodeJS.Timeout | null = null;
-// 追踪其余 setTimeout（isProcessing 复位、onDidPaste、pasteInput、indentSize watch 等），
-// 组件卸载时统一清理，避免在已卸载的 ref / 已 dispose 的 editor 上触发回调。
-const pendingTimers: ReturnType<typeof setTimeout>[] = [];
-const trackTimer = (handler: () => void, delay: number): ReturnType<typeof setTimeout> => {
-  const id = setTimeout(handler, delay);
-  pendingTimers.push(id);
-  return id;
-};
-
-const showError = (error: any, prefix = 'Error') => {
-  console.error(prefix, error);
-  let message = error instanceof Error ? error.message : String(error);
-  if (prefix) {
-    message = `${prefix}: ${message}`;
-  }
-
-  // Truncate error message if it's too long
-  errorMessage.value = message.length > 150
-    ? message.substring(0, 150) + '...'
-    : message;
-
-  if (errorTimer) clearTimeout(errorTimer);
-  errorTimer = setTimeout(() => {
-    errorMessage.value = '';
-  }, 5000);
-};
+type Operation = 'format' | 'minify' | 'escape' | 'unescape'
+type ResultView = 'text' | 'tree' | 'table' | 'graph'
+type IndentMode = 2 | 4 | 'tab'
 
 const STORAGE_KEYS = {
   inputText: 'json-input-text',
+  outputText: 'json-output-text',
   operation: 'json-operation',
   indentSize: 'json-indent-size',
-  rightPanelView: 'json-right-panel-view',
+  resultView: 'json-result-view',
   wordWrapEnabled: 'json-word-wrap-enabled',
   showMinimap: 'json-show-minimap',
-  leftWidth: 'json-left-width',
-  editorCollapsed: 'json-editor-collapsed',
+  sortKeys: 'json-sort-keys',
+  lenientFix: 'json-lenient-fix',
   decodeUnicode: 'json-decode-unicode',
   expandNested: 'json-expand-nested',
+  jsonPathQuery: 'json-jsonpath-query',
   decodeUnicodeSnapshot: 'json-decode-unicode-snapshot',
   expandNestedSnapshot: 'json-expand-nested-snapshot',
   decodeUnicodeApplied: 'json-decode-unicode-applied',
-  expandNestedApplied: 'json-expand-nested-applied'
-};
-
-const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'));
-const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'format'));
-const indentSize = ref(loadFromStorage(STORAGE_KEYS.indentSize, 2));
-const rightPanelView = ref<'none' | 'tree' | 'graph'>(loadFromStorage(STORAGE_KEYS.rightPanelView, 'none'));
-const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
-const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
-const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
-const expandNested = ref(loadFromStorage(STORAGE_KEYS.expandNested, false));
-const leftWidth = ref(loadFromStorage(STORAGE_KEYS.leftWidth, window.innerWidth / 2));
-const editorCollapsed = ref(loadFromStorage(STORAGE_KEYS.editorCollapsed, false));
-const mainContainer = ref<HTMLElement | null>(null);
-const isResizing = ref(false);
-
-const startResize = (e: MouseEvent) => {
-  isResizing.value = true;
-  document.addEventListener('mousemove', onResize);
-  document.addEventListener('mouseup', stopResize);
-  e.preventDefault();
-};
-
-const onResize = (e: MouseEvent) => {
-  if (!isResizing.value || !mainContainer.value) return;
-  const rect = mainContainer.value.getBoundingClientRect();
-  const newWidth = e.clientX - rect.left;
-  // Let it resize between 200px and the container width - 200px
-  leftWidth.value = Math.max(200, Math.min(newWidth, rect.width - 200));
-};
-
-const stopResize = () => {
-  isResizing.value = false;
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', stopResize);
-  if (editor) editor.layout();
-};
-
-// 大数据保护阈值（字符数）
-const LARGE_INPUT_CHARS = 1_000_000;      // 超过后：解析防抖、不再自动解析（除非打开树/图视图）、统计只显示体积
-const GRAPH_MAX_CHARS = 300_000;          // 图视图每个节点都是 DOM + dagre 布局，超过后不再渲染
-const TREE_MAX_CHARS = 3_000_000;         // 树视图超过后不再渲染
-
-const isLargeInput = computed(() => inputText.value.length > LARGE_INPUT_CHARS);
-const graphTooLarge = computed(() => inputText.value.length > GRAPH_MAX_CHARS);
-const treeTooLarge = computed(() => inputText.value.length > TREE_MAX_CHARS);
-
-// 解析用的文本源：小输入即时同步；大输入防抖 300ms，避免每次按键都对几 MB 文本做同步解析
-const parseSource = ref(inputText.value);
-const updateParseSourceDebounced = useDebounceFn((v: string) => { parseSource.value = v; }, 300);
-watch(inputText, (v) => {
-  if (v.length > LARGE_INPUT_CHARS) updateParseSourceDebounced.run(v);
-  else {
-    updateParseSourceDebounced.cancel();
-    parseSource.value = v;
-  }
-});
-
-// 小输入始终解析（用于统计）；大输入只有在树/图视图打开时才解析
-const needParsed = computed(() => !isLargeInput.value || rightPanelView.value !== 'none');
-
-const parsedJson = computed(() => {
-  if (!needParsed.value) return null;
-  try {
-    return JSON5.parse(parseSource.value);
-  } catch (e) {
-    return null;
-  }
-});
-
-const isValidJson = computed(() => parsedJson.value !== null);
-
-const jsonStats = computed(() => {
-  // 体积直接取输入文本的 UTF-8 字节数：避免再 JSON.stringify 一次整份数据
-  const size = new TextEncoder().encode(parseSource.value).length;
-  if (!needParsed.value) return size > 0 ? formatBytes(size) : null;
-  if (!isValidJson.value || !parsedJson.value) return null;
-  const keys = countKeys(parsedJson.value);
-  return `${formatBytes(size)} • ${keys} keys`;
-});
-
-/**
- * 递归把"值为字符串的嵌套 JSON"解析成对象/数组。
- * 规则：只替换解析结果为 object/array 的字符串（纯标量字符串如 "3306"/"hello" 保持原样，避免误伤）。
- * 多层嵌套通过递归处理：解析出的对象会继续被遍历，其内部字符串型 JSON 也会被展开。
- * 解析失败的字符串原样返回（可能是普通文本，也可能是格式错误的 JSON，都不应改动）。
- */
-function parseNestedJsonStrings(value: any): any {
-  if (typeof value === 'string') {
-    // 快速过滤：必须看起来像 JSON（首尾是 {} 或 [] 的 trim 后内容），避免对普通文本做无谓 parse
-    const trimmed = value.trim();
-    const looksLikeJson =
-      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-      (trimmed.startsWith('[') && trimmed.endsWith(']'));
-    if (!looksLikeJson) return value;
-    try {
-      const parsed = parseJsonLossless(trimmed).data;
-      // 只展开对象/数组，标量（数字/布尔/null）不替换，避免把电话号码、ID 等字符串误转
-      if (parsed !== null && typeof parsed === 'object') {
-        // 对解析结果继续递归，处理多层嵌套
-        return parseNestedJsonStrings(parsed);
-      }
-      return value;
-    } catch {
-      return value;
-    }
-  }
-  if (Array.isArray(value)) return value.map(parseNestedJsonStrings);
-  // 仅递归普通对象；LosslessNumber 等类实例原样返回
-  if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
-    const out: any = {};
-    for (const k of Object.keys(value)) {
-      Object.defineProperty(out, k, { value: parseNestedJsonStrings(value[k]), enumerable: true, writable: true, configurable: true });
-    }
-    return out;
-  }
-  return value;
+  expandNestedApplied: 'json-expand-nested-applied',
 }
 
-function countKeys(obj: any): number {
-  if (typeof obj !== 'object' || obj === null) return 0;
-  let count = 0;
+const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, '{ "hello": "world" }'))
+const outputText = ref(loadFromStorage(STORAGE_KEYS.outputText, ''))
+const lastGoodOutput = ref(outputText.value)
+const operation = ref<Operation>(loadFromStorage(STORAGE_KEYS.operation, 'format'))
+const indentSize = ref<IndentMode>(loadFromStorage(STORAGE_KEYS.indentSize, 2))
+const loadResultView = (): ResultView => {
+  const saved = loadFromStorage<string | null>(STORAGE_KEYS.resultView, null)
+  if (saved === 'text' || saved === 'table' || saved === 'tree' || saved === 'graph') return saved
+  const legacy = loadFromStorage<string | null>('json-right-panel-view', null)
+  if (legacy === 'tree' || legacy === 'graph') return legacy
+  return 'text'
+}
+const resultView = ref<ResultView>(loadResultView())
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
+const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false))
+const sortKeysOn = ref(loadFromStorage(STORAGE_KEYS.sortKeys, false))
+const lenientFix = ref(loadFromStorage(STORAGE_KEYS.lenientFix, false))
+const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false))
+const expandNested = ref(loadFromStorage(STORAGE_KEYS.expandNested, false))
+const jsonPathQuery = ref(loadFromStorage(STORAGE_KEYS.jsonPathQuery, ''))
+const showHistory = ref(false)
+
+const sortKeys = sortKeysOn
+
+const inputEditorRef = ref<HTMLElement | null>(null)
+const outputEditorRef = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+const treeViewRef = ref<InstanceType<typeof JsonTreeView> | null>(null)
+
+let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let inputThemeWatcher: (() => void) | null = null
+let outputThemeWatcher: (() => void) | null = null
+let inputContentListener: monaco.IDisposable | null = null
+let errorDecorations: monaco.editor.IEditorDecorationsCollection | null = null
+
+const cursorLine = ref(1)
+const cursorCol = ref(1)
+const isProcessing = ref(false)
+
+interface ParseErrorInfo {
+  line: number
+  column: number
+  offset: number
+  message: string
+}
+
+const parseError = ref<ParseErrorInfo | null>(null)
+const hasParseError = computed(() => parseError.value !== null)
+
+const parsedData = ref<unknown | null>(null)
+const parsedLossless = ref(true)
+const lastParsedData = ref<unknown | null>(null)
+
+const themeStore = useThemeStore()
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory(
+  'json',
+  themeStore.historyLimit.value,
+)
+const { addHistory: addDiffHistory, updateMaxItems: updateDiffMaxItems } = useHistory(
+  'diff',
+  themeStore.historyLimit.value,
+)
+
+watch(() => themeStore.historyLimit.value, n => {
+  updateMaxItems(n)
+  updateDiffMaxItems(n)
+})
+
+const pendingTimers: ReturnType<typeof setTimeout>[] = []
+const trackTimer = (fn: () => void, ms: number) => {
+  const id = setTimeout(fn, ms)
+  pendingTimers.push(id)
+  return id
+}
+
+const opOptions = computed<SegmentedOption<Operation>[]>(() => [
+  { value: 'format', label: t('common.labels.format') },
+  { value: 'minify', label: t('common.labels.minify') },
+  { value: 'escape', label: t('tools.json.escape') },
+  { value: 'unescape', label: t('tools.json.unescape') },
+])
+
+const viewOptions = computed<SegmentedOption<ResultView>[]>(() => [
+  { value: 'text', label: t('tools.json.viewText'), icon: AlignLeft },
+  { value: 'tree', label: t('common.labels.treeView'), icon: ListTree },
+  { value: 'table', label: t('tools.json.viewTable'), icon: Table2 },
+  { value: 'graph', label: t('common.labels.graphView'), icon: Network },
+])
+
+const indentMenuItems = computed<MenuItem[]>(() => [
+  { value: '2', label: t('common.labels.spaces2'), checked: indentSize.value === 2 },
+  { value: '4', label: t('common.labels.spaces4'), checked: indentSize.value === 4 },
+  { value: 'tab', label: t('tools.json.indentTab'), checked: indentSize.value === 'tab' },
+])
+
+const indentLabel = computed(() => {
+  if (indentSize.value === 'tab') return t('tools.json.indentTab')
+  return `${t('common.labels.indent')} ${indentSize.value}`
+})
+
+const moreMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.json.menuImport') },
+  { value: 'import', label: t('common.buttons.importFile'), icon: FileUp },
+  { value: 'copyTs', label: t('tools.json.copyTypescript'), icon: FileCode2 },
+  { type: 'sep' },
+  { type: 'header', label: t('tools.json.menuDiff') },
+  { value: 'diffLeft', label: t('tools.diff.putLeft'), icon: ArrowLeftFromLine },
+  { value: 'diffRight', label: t('tools.diff.putRight'), icon: ArrowRightFromLine },
+  { type: 'sep' },
+  { value: 'wrap', label: t('common.labels.autoWrap'), icon: WrapText, checked: wordWrapEnabled.value },
+  { value: 'minimap', label: t('tools.json.minimap'), icon: Map, checked: showMinimap.value },
+  { value: 'sort', label: t('tools.json.sortKeys'), icon: ListOrdered, checked: sortKeysOn.value },
+  { value: 'lenient', label: t('tools.json.lenientFix'), checked: lenientFix.value },
+  { type: 'sep' },
+  { value: 'clear', label: t('common.buttons.clearAll'), icon: Trash2, danger: true },
+])
+
+const LARGE_INPUT_CHARS = 1_000_000
+const GRAPH_MAX_CHARS = 300_000
+const TREE_MAX_CHARS = 3_000_000
+
+const isLargeInput = computed(() => inputText.value.length > LARGE_INPUT_CHARS)
+const graphTooLarge = computed(() => inputText.value.length > GRAPH_MAX_CHARS)
+const treeTooLarge = computed(() => inputText.value.length > TREE_MAX_CHARS)
+
+const jsonPathEval = computed(() => {
+  const data = hasParseError.value ? lastParsedData.value : parsedData.value
+  if (!data || !jsonPathQuery.value.trim()) return { matches: data ? [data] : [], error: undefined }
+  return evaluateJsonPath(data, jsonPathQuery.value.trim())
+})
+
+const jsonPathCount = computed(() => jsonPathEval.value.matches.length)
+
+const viewData = computed(() => {
+  if (jsonPathQuery.value.trim()) {
+    const shown = jsonPathDisplayRoot(jsonPathEval.value.matches)
+    return shown
+  }
+  return hasParseError.value ? lastParsedData.value ?? undefined : parsedData.value ?? undefined
+})
+
+// 树 / 表格 / 关系图 / 统计都使用展开后的普通值（LosslessNumber 不能当对象遍历）
+const plainViewData = computed(() =>
+  viewData.value === undefined ? undefined : toPlainJson(viewData.value),
+)
+const plainParsedData = computed(() => (parsedData.value ? toPlainJson(parsedData.value) : null))
+
+const jsonDepthVal = computed(() => (plainParsedData.value ? jsonDepth(plainParsedData.value) : 0))
+
+const structureLabel = computed(() => {
+  const d = parsedData.value
+  if (d === null || typeof d !== 'object') return t('tools.json.scalarType')
+  if (Array.isArray(d)) return t('tools.json.topLevelArray', { n: d.length })
+  return t('tools.json.topLevelObject', { n: Object.keys(d as Record<string, unknown>).length })
+})
+
+const inputSizeBadge = computed(() => formatBytes(new TextEncoder().encode(inputText.value).length))
+
+const outputBadge = computed(() => {
+  if (hasParseError.value) return '—'
+  if (!parsedData.value) return ''
+  const keys = countKeys(plainParsedData.value)
+  const size = new TextEncoder().encode(displayText.value).length
+  return `${keys} keys · ${formatBytes(size)}`
+})
+
+const displayText = computed(() => {
+  const q = jsonPathQuery.value.trim()
+  if (q && viewData.value !== undefined) {
+    return stringifyWithIndent(viewData.value, indentSize.value, parsedLossless.value)
+  }
+  return hasParseError.value ? lastGoodOutput.value : outputText.value
+})
+
+const tableRows = computed(() =>
+  plainViewData.value !== undefined ? findFirstObjectArray(plainViewData.value) : null,
+)
+const tableCols = computed(() =>
+  tableRows.value ? [...new Set(tableRows.value.flatMap(r => Object.keys(r)))] : [],
+)
+
+const isPlainObjectOrArray = (v: unknown) => v !== null && typeof v === 'object'
+
+function cellText(v: unknown): string {
+  if (v === undefined) return ''
+  if (v !== null && typeof v === 'object') {
+    return JSON.stringify(v, (_k, val) => (typeof val === 'bigint' ? val.toString() : val))
+  }
+  return String(v)
+}
+
+function formatBytes(bytes: number, decimals = 1): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  return `${parseFloat((bytes / k ** i).toFixed(decimals))} ${sizes[i]}`
+}
+
+function countKeys(obj: unknown): number {
+  if (typeof obj !== 'object' || obj === null) return 0
   if (Array.isArray(obj)) {
-    count += obj.length;
-    for (const item of obj) count += countKeys(item);
-  } else {
-    const keys = Object.keys(obj);
-    count += keys.length;
-    for (const key of keys) count += countKeys(obj[key]);
+    let c = obj.length
+    for (const item of obj) c += countKeys(item)
+    return c
   }
-  return count;
+  let c = Object.keys(obj as Record<string, unknown>).length
+  for (const k of Object.keys(obj as Record<string, unknown>)) c += countKeys((obj as Record<string, unknown>)[k])
+  return c
 }
 
-function formatBytes(bytes: number, decimals = 1) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+function stringifyWithIndent(data: unknown, indent: IndentMode, lossless: boolean): string {
+  if (indent === 'tab') {
+    if (lossless) {
+      const out = stringifyJson(data, undefined, true)
+      try {
+        return JSON.stringify(JSON.parse(out), null, '\t')
+      } catch {
+        return JSON.stringify(data, null, '\t')
+      }
+    }
+    return JSON.stringify(data, null, '\t')
+  }
+  return stringifyJson(data, indent, lossless)
 }
 
-const undo = () => editor?.trigger('keyboard', 'undo', null);
-const redo = () => editor?.trigger('keyboard', 'redo', null);
-
-const handleOperation = (op: string) => {
-  operation.value = op;
-  processData(false);
-};
-
-// Unicode 解码开关：选中=把 \uXXXX 转中文，去掉=还原。点击立即应用。
-// 开启时先保存当前内容，关闭时还原回去（支持来回切换不丢原始数据）。
-// 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
-const decodeUnicodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null));
-// 开关开启并应用后的内容哈希：关闭时用来判断用户是否又改过内容，改过则不再用旧快照覆盖
-const decodeUnicodeAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeApplied, null));
-const toggleDecodeUnicode = () => {
-  const turningOn = !decodeUnicode.value;
-  if (turningOn) {
-    // 开启：保存解码前的原始内容，然后走 format 应用解码
-    decodeUnicodeSnapshot.value = inputText.value;
-    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, inputText.value);
-    decodeUnicode.value = true;
-    operation.value = 'format';
-    isProcessing = false;
-    processData(false);
-    decodeUnicodeAppliedHash.value = hashText(inputText.value);
-    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, decodeUnicodeAppliedHash.value);
-  } else {
-    restoreSnapshotIfUntouched(decodeUnicodeSnapshot.value, decodeUnicodeAppliedHash.value);
-    decodeUnicodeSnapshot.value = null;
-    decodeUnicodeAppliedHash.value = null;
-    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null);
-    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, null);
-    decodeUnicode.value = false;
+function parseNestedJsonStrings(value: unknown): unknown {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    const looksLikeJson =
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    if (!looksLikeJson) return value
+    try {
+      const parsed = parseJsonLossless(trimmed).data
+      if (parsed !== null && typeof parsed === 'object') return parseNestedJsonStrings(parsed)
+      return value
+    } catch {
+      return value
+    }
   }
-};
-
-/**
- * 关闭开关时：只有内容仍是“开关应用后的结果”才还原为原文；
- * 用户在此期间改过内容就保留当前内容（并提示），避免静默丢失编辑。
- */
-const restoreSnapshotIfUntouched = (snapshot: string | null, appliedHash: string | null) => {
-  if (snapshot === null) return;
-  if (appliedHash === null || hashText(inputText.value) === appliedHash) {
-    replaceTextInEditor(snapshot);
-  } else {
-    showToast(t('tools.json.keepEdited'), 'info', 4000);
+  if (Array.isArray(value)) return value.map(parseNestedJsonStrings)
+  if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(value as Record<string, unknown>)) {
+      out[k] = parseNestedJsonStrings((value as Record<string, unknown>)[k])
+    }
+    return out
   }
-};
+  return value
+}
 
-// 嵌套 JSON 展开开关：选中=递归把字符串里的 JSON 解析成对象/数组，去掉=还原。
-// 与 decodeUnicode 同样的快照还原模式：开启时存原文，关闭时一键还原（内容被改动过则保留）。
-const expandNestedSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedSnapshot, null));
-const expandNestedAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedApplied, null));
-const toggleExpandNested = () => {
-  const turningOn = !expandNested.value;
-  if (turningOn) {
-    expandNestedSnapshot.value = inputText.value;
-    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, inputText.value);
-    expandNested.value = true;
-    operation.value = 'format';
-    isProcessing = false;
-    processData(false);
-    expandNestedAppliedHash.value = hashText(inputText.value);
-    saveToStorage(STORAGE_KEYS.expandNestedApplied, expandNestedAppliedHash.value);
-  } else {
-    restoreSnapshotIfUntouched(expandNestedSnapshot.value, expandNestedAppliedHash.value);
-    expandNestedSnapshot.value = null;
-    expandNestedAppliedHash.value = null;
-    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, null);
-    saveToStorage(STORAGE_KEYS.expandNestedApplied, null);
-    expandNested.value = false;
+const runPipeline = () => {
+  if (!inputText.value.trim()) {
+    parseError.value = null
+    parsedData.value = null
+    outputText.value = ''
+    clearErrorLine()
+    syncOutputEditor()
+    return
   }
-};
-
-const replaceTextInEditor = (newText: string) => {
-  if (!editor) return;
-  const model = editor.getModel();
-  if (model) {
-    const fullRange = model.getFullModelRange();
-    editor.executeEdits('json-processor', [{ range: fullRange, text: newText }]);
-  } else {
-    editor?.setValue(newText);
-  }
-  inputText.value = newText;
-};
-
-const useHistoryItem = (content: string) => {
-  replaceTextInEditor(content);
-  showHistory.value = false;
-  handleOperation('format');
-};
-
-const processData = (isAuto = false) => {
-  if (!inputText.value.trim() || isProcessing) return;
 
   try {
-    isProcessing = true;
-    let resultData = '';
-    const currentInput = inputText.value;
+    parseError.value = null
+    clearErrorLine()
 
     if (operation.value === 'escape') {
-      resultData = JSON.stringify(inputText.value);
-    } else if (operation.value === 'unescape') {
-      // 先尝试标准反转义（输入是一个被 JSON 序列化过的字符串）
+      outputText.value = JSON.stringify(inputText.value)
+      parsedData.value = null
+      lastGoodOutput.value = outputText.value
+      syncOutputEditor()
+      return
+    }
+
+    if (operation.value === 'unescape') {
+      let resultData = ''
       try {
-        const unescaped = JSON.parse(inputText.value);
+        const unescaped = JSON.parse(inputText.value)
         if (typeof unescaped === 'string') {
-          // 反转义结果本身还是 JSON 的话继续格式化
           try {
-            const nested = parseJsonLossless(unescaped);
-            resultData = stringifyJson(nested.data, indentSize.value, nested.lossless);
+            const nested = parseJsonLossless(unescaped)
+            resultData = stringifyWithIndent(nested.data, indentSize.value, nested.lossless)
           } catch {
-            resultData = unescaped;
+            resultData = unescaped
           }
         } else {
-          resultData = JSON.stringify(unescaped, null, indentSize.value);
+          resultData = stringifyWithIndent(unescaped, indentSize.value, false)
         }
       } catch {
-        // JSON.parse 失败（例如只是片段）时回退：单次扫描替换，避免 \\n 被误还原成换行
-        resultData = unescapeCommon(inputText.value);
+        resultData = unescapeCommon(inputText.value)
       }
-    } else {
-      // Format / Minify：严格 JSON 走 lossless-json（保留大整数精度），否则回退 JSON5
-      const parsed = parseJsonLossless(inputText.value);
-      let inputData = parsed.data;
-      if (decodeUnicode.value) {
-        // 选中时：把字符串值里的字面 \uXXXX 解码成中文
-        inputData = decodeUnicodeDeep(inputData);
+      outputText.value = resultData
+      lastGoodOutput.value = resultData
+      try {
+        const p = parseJsonInput(resultData, lenientFix.value)
+        parsedData.value = p.data
+        parsedLossless.value = p.lossless
+        lastParsedData.value = p.data
+      } catch {
+        parsedData.value = null
       }
-      if (expandNested.value) {
-        // 选中时：递归把字符串值里的嵌套 JSON 解析成对象/数组
-        inputData = parseNestedJsonStrings(inputData);
-      }
-      if (parsed.unsafeNumbers) {
-        // JSON5 回退路径无法保留大整数精度，明确告知用户而不是静默改数
-        showToast(t('tools.json.bigIntWarning'), 'error', 5000);
-      }
-
-      if (operation.value === 'minify') {
-        resultData = stringifyJson(inputData, undefined, parsed.lossless);
-      } else if (operation.value === 'format') {
-        resultData = stringifyJson(inputData, indentSize.value, parsed.lossless);
-      }
+      syncOutputEditor()
+      return
     }
 
-    replaceTextInEditor(resultData);
+    const parsed = parseJsonInput(inputText.value, lenientFix.value)
+    let data = parsed.data
+    if (sortKeysOn.value) data = sortJsonKeys(data)
+    if (decodeUnicode.value) data = decodeUnicodeDeep(data)
+    if (expandNested.value) data = parseNestedJsonStrings(data)
+    if (parsed.unsafeNumbers) showToast(t('tools.json.bigIntWarning'), 'error', 5000)
 
-    // Add to history if it's not an automatic format or if it's a manual format
-    if (!isAuto && operation.value === 'format') {
-      addHistory(currentInput);
-    }
+    parsedData.value = data
+    parsedLossless.value = parsed.lossless
+    lastParsedData.value = data
+
+    const result =
+      operation.value === 'minify'
+        ? stringifyJson(data, undefined, parsed.lossless)
+        : stringifyWithIndent(data, indentSize.value, parsed.lossless)
+
+    outputText.value = result
+    lastGoodOutput.value = result
+    syncOutputEditor()
   } catch (e: unknown) {
-    let prefix = 'Process failed';
-    if (operation.value === 'escape') prefix = 'Escape failed';
-    else if (operation.value === 'unescape') prefix = 'Unescape failed';
-    else if (operation.value === 'format') prefix = 'Format failed';
-    else if (operation.value === 'minify') prefix = 'Minify failed';
-
-    showError(e, prefix);
-  } finally {
-    trackTimer(() => { isProcessing = false; }, 100);
+    const msg = e instanceof Error ? e.message : String(e)
+    const pos = getJsonErrorPosition(inputText.value, msg)
+    parseError.value = {
+      line: pos.line,
+      column: pos.column,
+      offset: pos.offset,
+      message: simplifyJsonErrorMessage(msg),
+    }
+    setErrorLine(pos.line)
+    parsedData.value = null
+    syncOutputEditor()
   }
-};
+}
 
-let contentChangeListener: monaco.IDisposable | null = null;
+const runPipelineDebounced = useDebounceFn(runPipeline, 120)
+
+watch(inputText, () => {
+  saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value)
+  if (isLargeInput.value) runPipelineDebounced.run()
+  else {
+    runPipelineDebounced.cancel()
+    runPipeline()
+  }
+})
+
+watch([operation, indentSize, sortKeysOn, lenientFix, decodeUnicode, expandNested], () => {
+  runPipeline()
+})
+
+watch(jsonPathQuery, v => saveToStorage(STORAGE_KEYS.jsonPathQuery, v))
+watch(displayText, () => syncOutputEditor())
+
+watch(operation, (v, prev) => {
+  saveToStorage(STORAGE_KEYS.operation, v)
+  if (prev !== undefined && v === 'format' && inputText.value.trim()) addHistory(inputText.value)
+})
+watch(resultView, v => saveToStorage(STORAGE_KEYS.resultView, v))
+watch(indentSize, v => saveToStorage(STORAGE_KEYS.indentSize, v))
+watch(wordWrapEnabled, v => {
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, v)
+  inputEditor?.updateOptions({ wordWrap: v ? 'on' : 'off' })
+  outputEditor?.updateOptions({ wordWrap: v ? 'on' : 'off' })
+})
+watch(showMinimap, v => {
+  saveToStorage(STORAGE_KEYS.showMinimap, v)
+  inputEditor?.updateOptions({ minimap: { enabled: v } })
+  outputEditor?.updateOptions({ minimap: { enabled: v } })
+})
+watch(sortKeysOn, v => saveToStorage(STORAGE_KEYS.sortKeys, v))
+watch(lenientFix, v => saveToStorage(STORAGE_KEYS.lenientFix, v))
+watch(decodeUnicode, v => saveToStorage(STORAGE_KEYS.decodeUnicode, v))
+watch(expandNested, v => saveToStorage(STORAGE_KEYS.expandNested, v))
+watch(outputText, v => saveToStorageDebounced(STORAGE_KEYS.outputText, v))
+
+function syncOutputEditor() {
+  if (!outputEditor) return
+  const val = displayText.value
+  if (outputEditor.getValue() !== val) {
+    outputEditor.setValue(val)
+  }
+}
+
+function setErrorLine(line: number | null) {
+  errorDecorations?.clear()
+  if (!inputEditor || line === null) return
+  errorDecorations = inputEditor.createDecorationsCollection([
+    {
+      range: new monaco.Range(line, 1, line, 1),
+      options: { isWholeLine: true, className: 'json-editor-err-line' },
+    },
+  ])
+}
+
+function clearErrorLine() {
+  errorDecorations?.clear()
+  errorDecorations = null
+}
+
+function jumpToError() {
+  if (!parseError.value || !inputEditor) return
+  const { line, column, offset } = parseError.value
+  inputEditor.setPosition({ lineNumber: line, column: Math.max(1, column) })
+  inputEditor.revealLineInCenter(line)
+  if (offset > 0) inputEditor.setSelection(new monaco.Range(line, column, line, column + 1))
+  inputEditor.focus()
+}
+
+const undoInput = () => inputEditor?.trigger('keyboard', 'undo', null)
+
+const replaceInputText = (text: string) => {
+  if (!inputEditor) {
+    inputText.value = text
+    return
+  }
+  const model = inputEditor.getModel()
+  if (model) {
+    inputEditor.executeEdits('json', [{ range: model.getFullModelRange(), text }])
+  } else {
+    inputEditor.setValue(text)
+  }
+  inputText.value = text
+}
+
+const decodeUnicodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null))
+const decodeUnicodeAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.decodeUnicodeApplied, null))
+const expandNestedSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedSnapshot, null))
+const expandNestedAppliedHash = ref<string | null>(loadFromStorage(STORAGE_KEYS.expandNestedApplied, null))
+
+const restoreSnapshotIfUntouched = (snapshot: string | null, appliedHash: string | null) => {
+  if (snapshot === null) return
+  if (appliedHash === null || hashText(inputText.value) === appliedHash) replaceInputText(snapshot)
+  else showToast(t('tools.json.keepEdited'), 'info', 4000)
+}
+
+const onDecodeUnicodeToggle = (turningOn: boolean) => {
+  if (turningOn) {
+    decodeUnicodeSnapshot.value = inputText.value
+    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, inputText.value)
+    decodeUnicode.value = true
+    runPipeline()
+    decodeUnicodeAppliedHash.value = hashText(inputText.value)
+    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, decodeUnicodeAppliedHash.value)
+  } else {
+    restoreSnapshotIfUntouched(decodeUnicodeSnapshot.value, decodeUnicodeAppliedHash.value)
+    decodeUnicodeSnapshot.value = null
+    decodeUnicodeAppliedHash.value = null
+    saveToStorage(STORAGE_KEYS.decodeUnicodeSnapshot, null)
+    saveToStorage(STORAGE_KEYS.decodeUnicodeApplied, null)
+    decodeUnicode.value = false
+  }
+}
+
+const onExpandNestedToggle = (turningOn: boolean) => {
+  if (turningOn) {
+    expandNestedSnapshot.value = inputText.value
+    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, inputText.value)
+    expandNested.value = true
+    runPipeline()
+    expandNestedAppliedHash.value = hashText(inputText.value)
+    saveToStorage(STORAGE_KEYS.expandNestedApplied, expandNestedAppliedHash.value)
+  } else {
+    restoreSnapshotIfUntouched(expandNestedSnapshot.value, expandNestedAppliedHash.value)
+    expandNestedSnapshot.value = null
+    expandNestedAppliedHash.value = null
+    saveToStorage(STORAGE_KEYS.expandNestedSnapshot, null)
+    saveToStorage(STORAGE_KEYS.expandNestedApplied, null)
+    expandNested.value = false
+  }
+}
+
+const onIndentPick = (value: string) => {
+  indentSize.value = value === 'tab' ? 'tab' : (Number(value) as 2 | 4)
+}
+
+const onMoreSelect = (value: string) => {
+  switch (value) {
+    case 'import':
+      fileInput.value?.click()
+      break
+    case 'copyTs': {
+      const data = viewData.value ?? parsedData.value
+      if (!data) {
+        showToast(t('common.messages.invalidJson'), 'error')
+        return
+      }
+      void copyText(jsonToTs(data), true).then(ok => {
+        if (ok) showToast(t('tools.json.copyTypescriptDone'), 'success')
+      })
+      break
+    }
+    case 'diffLeft':
+      goToDiff('left')
+      break
+    case 'diffRight':
+      goToDiff('right')
+      break
+    case 'wrap':
+      wordWrapEnabled.value = !wordWrapEnabled.value
+      break
+    case 'minimap':
+      showMinimap.value = !showMinimap.value
+      break
+    case 'sort':
+      sortKeysOn.value = !sortKeysOn.value
+      break
+    case 'lenient':
+      lenientFix.value = !lenientFix.value
+      break
+    case 'clear':
+      clearAll()
+      break
+  }
+}
+
+const onFileSelected = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const text = await file.text()
+  replaceInputText(text)
+  addHistory(text)
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+const pasteInput = async () => {
+  const text = await readClipboardText()
+  if (text === null) return
+  replaceInputText(text)
+  addHistory(text)
+  trackTimer(() => runPipeline(), 50)
+}
+
+const copyResult = async () => {
+  await copyText(displayText.value)
+}
+
+const clearAll = () => {
+  replaceInputText('')
+  outputText.value = ''
+  lastGoodOutput.value = ''
+}
+
+const useHistoryItem = (content: string) => {
+  replaceInputText(content)
+  showHistory.value = false
+  runPipeline()
+  addHistory(content)
+}
+
+const goToDiff = (side: 'left' | 'right') => {
+  const text = inputEditor?.getValue() ?? inputText.value
+  const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content'
+  const currentContent = loadFromStorage(storageKey, '')
+  if (currentContent && currentContent !== text) addDiffHistory(currentContent)
+  if (text.trim()) addDiffHistory(text)
+  saveToStorage(storageKey, text)
+  const snapshotKey = side === 'left' ? 'diff-left-decode-snapshot' : 'diff-right-decode-snapshot'
+  saveToStorage(snapshotKey, null)
+  router.push({ path: '/diff', state: { targetSide: side, content: text, timestamp: Date.now() } })
+}
+
+const isTreeExpanded = ref(true)
+const toggleTreeExpansion = () => {
+  if (isTreeExpanded.value) treeViewRef.value?.collapseAll()
+  else treeViewRef.value?.expandAll()
+  isTreeExpanded.value = !isTreeExpanded.value
+}
 
 const initEditors = async () => {
-  await nextTick();
-  if (editorRef.value) {
-    editor = monaco.editor.create(editorRef.value, {
+  await nextTick()
+  if (inputEditorRef.value) {
+    inputEditor = monaco.editor.create(inputEditorRef.value, {
       value: inputText.value,
       language: 'json',
       theme: getMonacoTheme(),
       automaticLayout: true,
       minimap: { enabled: showMinimap.value },
-      wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
-      padding: { top: 16, bottom: 16 },
+      wordWrap: wordWrapEnabled.value ? 'on' : 'off',
+      padding: { top: 12, bottom: 12 },
       fontSize: 14,
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       formatOnPaste: true,
       formatOnType: true,
-    });
-
-    contentChangeListener = editor.onDidChangeModelContent(() => {
-      if (!isProcessing && editor) {
-        const newValue = editor.getValue();
-        inputText.value = newValue;
-      }
-    });
-
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
-
-editor.onDidPaste(() => {
+    })
+    inputContentListener = inputEditor.onDidChangeModelContent(() => {
+      if (!isProcessing.value && inputEditor) inputText.value = inputEditor.getValue()
+    })
+    inputEditor.onDidChangeCursorPosition(e => {
+      cursorLine.value = e.position.lineNumber
+      cursorCol.value = e.position.column
+    })
+    inputEditor.onDidPaste(() => {
       trackTimer(() => {
-        const currentText = editor?.getValue() || '';
-        // Always record paste to history
-        if (currentText.trim()) {
-          addHistory(currentText);
-        }
-
-        // Auto-detect if we should format
+        const current = inputEditor?.getValue() || ''
+        if (current.trim()) addHistory(current)
         try {
-           JSON5.parse(currentText);
-           // If valid JSON and looks minified or messy, format it
-           if (!currentText.includes('\n') || currentText.length < 200) {
-             handleOperation('format');
-           }
-        } catch {}
-      }, 50);
-    });
-
-    themeWatcher = watchThemeChange(editor);
-    registerGlobalShortcuts(editor);
+          parseJsonInput(current, lenientFix.value)
+          if (!current.includes('\n') || current.length < 200) operation.value = 'format'
+        } catch {
+          /* 粘贴非 JSON 时保持当前模式 */
+        }
+        runPipeline()
+      }, 50)
+    })
+    const redoInput = () => inputEditor?.trigger('keyboard', 'redo', null)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redoInput)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redoInput)
+    inputThemeWatcher = watchThemeChange(inputEditor)
+    registerGlobalShortcuts(inputEditor)
   }
-};
 
-const clearAll = () => replaceTextInEditor('');
-
-const pasteInput = async () => {
-  const text = await readClipboardText();
-  if (text === null) return;
-  replaceTextInEditor(text);
-  addHistory(text);
-  trackTimer(() => handleOperation('format'), 100);
-};
-
-const copyInput = async () => {
-  await copyText(editor?.getValue() || '');
-};
-
-const goToDiff = (side: 'left' | 'right' = 'left') => {
-  const text = editor?.getValue() ?? inputText.value;
-  const storageKey = side === 'left' ? 'diff-left-content' : 'diff-right-content';
-  // Ensure we don't lose previous diff content by backing it up to diff history
-  const currentContent = loadFromStorage(storageKey, '');
-  if (currentContent && currentContent !== text) {
-    addDiffHistory(currentContent);
+  if (outputEditorRef.value) {
+    outputEditor = monaco.editor.create(outputEditorRef.value, {
+      value: displayText.value,
+      language: 'json',
+      theme: getMonacoTheme(),
+      automaticLayout: true,
+      readOnly: true,
+      minimap: { enabled: showMinimap.value },
+      wordWrap: wordWrapEnabled.value ? 'on' : 'off',
+      padding: { top: 12, bottom: 12 },
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+    })
+    outputThemeWatcher = watchThemeChange(outputEditor)
   }
-  if (text.trim()) {
-    addDiffHistory(text);
-  }
-  saveToStorage(storageKey, text);
-  // 清理对应一侧的 Unicode 解码快照，防止在 Diff 页面被旧快照覆盖
-  const snapshotKey = side === 'left' ? 'diff-left-decode-snapshot' : 'diff-right-decode-snapshot';
-  saveToStorage(snapshotKey, null);
 
-  router.push({
-    path: '/diff',
-    state: {
-      targetSide: side,
-      content: text,
-      timestamp: Date.now()
-    }
-  });
-};
+  runPipeline()
+}
 
-const isTreeExpanded = ref(true);
-
-const toggleTreeExpansion = () => {
-  if (isTreeExpanded.value) {
-    treeViewRef.value?.collapseAll();
-  } else {
-    treeViewRef.value?.expandAll();
-  }
-  isTreeExpanded.value = !isTreeExpanded.value;
-};
-
-watch(inputText, (newValue) => {
-  saveToStorageDebounced(STORAGE_KEYS.inputText, newValue);
-});
-
-watch(operation, (newValue) => {
-  saveToStorage(STORAGE_KEYS.operation, newValue);
-});
-
-watch(indentSize, (newValue) => {
-  saveToStorage(STORAGE_KEYS.indentSize, newValue);
-  if (operation.value === 'format' && inputText.value.trim()) trackTimer(processData, 100);
-});
-
-watch(rightPanelView, (newValue) => {
-  saveToStorage(STORAGE_KEYS.rightPanelView, newValue);
-  nextTick(() => { if (editor) editor.layout(); });
-});
-
-watch(wordWrapEnabled, (newValue) => {
-  editor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
-  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
-});
-
-watch(showMinimap, (newValue) => {
-  editor?.updateOptions({ minimap: { enabled: newValue } });
-  saveToStorage(STORAGE_KEYS.showMinimap, newValue);
-});
-
-watch(decodeUnicode, (newValue) => {
-  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
-});
-
-watch(expandNested, (newValue) => {
-  saveToStorage(STORAGE_KEYS.expandNested, newValue);
-});
-
-watch(leftWidth, (newValue) => {
-  saveToStorage(STORAGE_KEYS.leftWidth, newValue);
-  nextTick(() => { if (editor) editor.layout(); });
-});
-
-watch(editorCollapsed, (newValue) => {
-  saveToStorage(STORAGE_KEYS.editorCollapsed, newValue);
-  nextTick(() => { if (editor) editor.layout(); });
-});
-
-onMounted(initEditors);
+onMounted(initEditors)
 
 onBeforeUnmount(() => {
-  if (errorTimer) clearTimeout(errorTimer);
-  while (pendingTimers.length) {
-    clearTimeout(pendingTimers.pop());
-  }
-  contentChangeListener?.dispose();
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', stopResize);
-  themeWatcher?.();
-  themeWatcher = null;
-  if (editor) {
-    const finalVal = editor.getValue();
-    if (finalVal !== undefined && finalVal !== '') {
-      saveToStorage(STORAGE_KEYS.inputText, finalVal);
-    }
-  }
-  editor?.dispose();
-  editor = null;
-});
+  while (pendingTimers.length) clearTimeout(pendingTimers.pop())
+  inputContentListener?.dispose()
+  errorDecorations?.clear()
+  inputThemeWatcher?.()
+  outputThemeWatcher?.()
+  inputEditor?.dispose()
+  outputEditor?.dispose()
+  inputEditor = null
+  outputEditor = null
+})
 </script>
 
 <style scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  transform: translateY(20px);
-  opacity: 0;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+:deep(.json-editor-err-line) {
+  background: hsl(var(--destructive) / 0.12);
 }
 </style>

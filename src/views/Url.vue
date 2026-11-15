@@ -1,222 +1,282 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Link class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.url.name') }}</span>
-        </div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- Operation Selection -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            v-for="op in ['encode', 'decode']"
-            :key="op"
-            @click="operation = op"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="operation === op ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t('common.labels.' + op) }}
+  <ToolShell :icon="Link" :title="t('tools.url.name')" flush>
+    <template #actions>
+      <Segmented v-model="operation" :options="operationOptions" small class="shrink-0" />
+      <DropdownMenu
+        class="shrink-0"
+        :items="modeMenuItems"
+        align="left"
+        @select="onModeSelect"
+      >
+        <template #trigger>
+          <button type="button" class="chip max-w-[11rem] truncate">
+            {{ modeShortLabel }}
+            <ChevronDown class="w-3 h-3 opacity-60 shrink-0" />
           </button>
-        </div>
+        </template>
+      </DropdownMenu>
+      <ToggleChip v-model="autoProcess" class="shrink-0 max-md:hidden">
+        {{ t('common.labels.autoProcess') }}
+      </ToggleChip>
+      <ToggleChip v-model="wordWrapEnabled" class="shrink-0 max-lg:hidden">
+        {{ t('common.labels.autoWrap') }}
+      </ToggleChip>
+    </template>
 
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+    <template #right>
+      <IconButton :title="t('common.undo') + ' (Ctrl+Z)'" small class="max-sm:hidden" @click="undo">
+        <Undo2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.redo') + ' (Ctrl+Y)'" small class="max-sm:hidden" @click="redo">
+        <Redo2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.clear')" danger @click="clearAll">
+        <Trash2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton
+        :title="t('tools.url.wordWrap')"
+        :active="wordWrapEnabled"
+        class="max-lg:hidden"
+        @click="wordWrapEnabled = !wordWrapEnabled"
+      >
+        <WrapText class="w-3.5 h-3.5" />
+      </IconButton>
+      <DropdownMenu :items="overflowItems" align="right" @select="onOverflowSelect">
+        <template #trigger>
+          <IconButton :title="t('tools.url.overflowMenu')" small>
+            <MoreHorizontal class="w-3.5 h-3.5" />
+          </IconButton>
+        </template>
+      </DropdownMenu>
+    </template>
 
-        <!-- Options -->
-        <div class="flex items-center space-x-3 flex-shrink-0">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.mode') }}:</span>
-            <CustomSelect
-              v-model="mode"
-              :options="modeOptions"
-              class="w-32"
-            />
-          </div>
+    <template #help>
+      <p>{{ t('tools.url.description') }}</p>
+      <p class="font-semibold mt-3 mb-2">{{ t('tools.url.coreFeatures') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li>{{ t('tools.url.helpEncodeComponent') }}</li>
+        <li>{{ t('tools.url.helpEncodeUri') }}</li>
+        <li>{{ t('tools.url.helpDecode') }}</li>
+      </ul>
+    </template>
 
-          <CustomCheckbox
-            v-model="autoProcess"
-            :label="$t('common.labels.autoProcess')"
-          />
-
-          <CustomCheckbox
-            v-model="wordWrapEnabled"
-            :label="$t('common.labels.autoWrap')"
-          />
-        </div>
-      </div>
-
-      <!-- Right Side Actions -->
-      <div class="flex items-center space-x-1 flex-shrink-0 ml-4">
-        <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-muted-foreground" :title="$t('common.clear')">
-          <Trash2 class="w-4 h-4" />
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-2">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
-        <!-- Input Editor -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
-            <div class="flex items-center space-x-1">
-              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Undo2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Redo2 class="w-3.5 h-3.5" />
-              </button>
-              <div class="w-px h-3 bg-border mx-1"></div>
-              <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyInput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 relative">
+    <SplitPane storage-key="url">
+      <template #a>
+        <Pane :title="t('tools.url.inputPanel')">
+          <template #actions>
+            <IconButton :title="t('common.paste')" small @click="pasteInput">
+              <ClipboardPaste class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.copy')" small @click="copyInput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div class="absolute inset-0">
             <div ref="inputEditorRef" class="absolute inset-0"></div>
           </div>
-        </div>
-
-        <!-- Output Editor -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.result') }}</h3>
-            <div class="flex items-center space-x-1">
-              <button @click="useAsInput" :title="$t('common.buttons.useAsInput')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowUpLeft class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 relative">
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :title="t('tools.url.resultPanel')">
+          <template #actions>
+            <IconButton :title="t('common.buttons.useAsInput')" small @click="useAsInput">
+              <ArrowUpLeft class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.copy')" small @click="copyOutput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div class="absolute inset-0" :class="{ 'is-stale is-stale-anim': outputStale }">
             <div ref="outputEditorRef" class="absolute inset-0"></div>
           </div>
-        </div>
-      </div>
-    </main>
+        </Pane>
+      </template>
+    </SplitPane>
 
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.url.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.url.description') }}</p>
-          <div>
-            <p class="font-bold mb-2">{{ $t('tools.url.encodeMode') }}:</p>
-            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>Component:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
-              <li><strong>URI:</strong> {{ $t('tools.url.encodeModeDescription') }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    <template #status>
+      <StatusBar :state="processError ? 'error' : 'ok'">
+        <span v-if="processError" class="sb-err">
+          <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+          {{ processError }}
+        </span>
+        <span v-else class="sb-ok">
+          <Check class="w-3.5 h-3.5 shrink-0" />
+          {{ t('tools.url.statusReady') }}
+        </span>
+        <span v-if="inputLen">{{ t('tools.url.inputSize', { n: inputLen }) }}</span>
+        <span v-if="outputLen">{{ t('tools.url.outputSize', { n: outputLen }) }}</span>
+        <template #right>
+          <span class="max-md:hidden">{{ modeShortLabel }}</span>
+          <span class="max-lg:hidden">{{ operation === 'encode' ? t('common.labels.encode') : t('common.labels.decode') }}</span>
+        </template>
+      </StatusBar>
+    </template>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
-import * as monaco from '@/utils/monaco';
-import { HelpCircle, Link, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
-import CustomSelect from '../components/CustomSelect.vue';
-import CustomCheckbox from '../components/CustomCheckbox.vue';
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
-import { copyText, readClipboardText } from '../utils/clipboard';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import {
+  Link,
+  Trash2,
+  ClipboardPaste,
+  Copy,
+  ArrowUpLeft,
+  Undo2,
+  Redo2,
+  ChevronDown,
+  MoreHorizontal,
+  WrapText,
+  AlertCircle,
+  Check,
+} from 'lucide-vue-next'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import Segmented, { type SegmentedOption } from '@/components/ui/Segmented.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
+import { copyText, readClipboardText } from '../utils/clipboard'
 
-const inputEditorRef = ref<HTMLElement | null>(null);
-const outputEditorRef = ref<HTMLElement | null>(null);
-let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
-let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
-let inputThemeWatcher: (() => void) | null = null;
-let outputThemeWatcher: (() => void) | null = null;
-const showHelp = ref(false);
+type UrlOp = 'encode' | 'decode'
+type UrlMode = 'encodeURIComponent' | 'encodeURI' | 'decodeURIComponent' | 'decodeURI'
+
+const { t } = useI18n()
+
+const inputEditorRef = ref<HTMLElement | null>(null)
+const outputEditorRef = ref<HTMLElement | null>(null)
+let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let inputThemeWatcher: (() => void) | null = null
+let outputThemeWatcher: (() => void) | null = null
 
 const STORAGE_KEYS = {
   inputText: 'url-input-text',
   operation: 'url-operation',
   mode: 'url-mode',
   autoProcess: 'url-auto-process',
-  wordWrapEnabled: 'url-word-wrap-enabled'
-};
+  wordWrapEnabled: 'url-word-wrap-enabled',
+}
 
-const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'https://example.com/?query=你好 世界'));
-const outputText = ref('');
-const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
-const mode = ref(loadFromStorage(STORAGE_KEYS.mode, 'encodeURIComponent'));
-const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
-const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
+const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'https://example.com/?query=你好 世界'))
+const lastGoodOutput = ref('')
+const processError = ref('')
+const operation = ref<UrlOp>(loadFromStorage(STORAGE_KEYS.operation, 'encode') as UrlOp)
+const mode = ref<UrlMode>(loadFromStorage(STORAGE_KEYS.mode, 'encodeURIComponent') as UrlMode)
+const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true))
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
 
-const modeOptions = computed(() => {
+const operationOptions = computed<SegmentedOption<UrlOp>[]>(() => [
+  { value: 'encode', label: t('common.labels.encode') },
+  { value: 'decode', label: t('common.labels.decode') },
+])
+
+const modeShortLabel = computed(() => {
+  if (mode.value === 'encodeURIComponent' || mode.value === 'decodeURIComponent') {
+    return t('tools.url.modeComponentShort')
+  }
+  return t('tools.url.modeUriShort')
+})
+
+const modeMenuItems = computed<MenuItem[]>(() => {
+  const header = t('tools.url.modeLabel')
   if (operation.value === 'encode') {
     return [
-      { label: 'Component', value: 'encodeURIComponent' },
-      { label: 'URI', value: 'encodeURI' }
-    ];
-  } else {
-    return [
-      { label: 'Component', value: 'decodeURIComponent' },
-      { label: 'URI', value: 'decodeURI' }
-    ];
+      { type: 'header', label: header },
+      { value: 'encodeURIComponent', label: t('tools.url.modeComponent'), checked: mode.value === 'encodeURIComponent' },
+      { value: 'encodeURI', label: t('tools.url.modeUri'), checked: mode.value === 'encodeURI' },
+    ]
   }
-});
+  return [
+    { type: 'header', label: header },
+    { value: 'decodeURIComponent', label: t('tools.url.modeComponent'), checked: mode.value === 'decodeURIComponent' },
+    { value: 'decodeURI', label: t('tools.url.modeUri'), checked: mode.value === 'decodeURI' },
+  ]
+})
 
-const undo = () => inputEditor?.trigger('keyboard', 'undo', null);
-const redo = () => inputEditor?.trigger('keyboard', 'redo', null);
+const overflowItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.url.overflowMenu') },
+  { value: 'autoProcess', label: t('common.labels.autoProcess'), checked: autoProcess.value },
+  { value: 'wordWrap', label: t('tools.url.wordWrap'), checked: wordWrapEnabled.value },
+])
+
+const outputStale = computed(() => !!processError.value && !!lastGoodOutput.value)
+const inputLen = computed(() => (inputEditor?.getValue() || '').length)
+const outputLen = computed(() => (outputEditor?.getValue() || '').length)
+
+const onModeSelect = (value: string) => {
+  mode.value = value as UrlMode
+}
+
+const onOverflowSelect = (value: string) => {
+  if (value === 'autoProcess') autoProcess.value = !autoProcess.value
+  if (value === 'wordWrap') wordWrapEnabled.value = !wordWrapEnabled.value
+}
+
+const undo = () => inputEditor?.trigger('keyboard', 'undo', null)
+const redo = () => inputEditor?.trigger('keyboard', 'redo', null)
+
+const setOutput = (text: string) => {
+  outputEditor?.setValue(text)
+}
 
 const processText = () => {
-  const input = inputEditor?.getValue() || '';
+  processError.value = ''
+  const input = inputEditor?.getValue() || ''
   if (!input.trim()) {
-    outputEditor?.setValue('');
-    return;
+    setOutput('')
+    lastGoodOutput.value = ''
+    return
   }
 
   try {
-    let result = '';
+    let result = ''
     switch (mode.value) {
-      case 'encodeURIComponent': result = encodeURIComponent(input); break;
-      case 'encodeURI': result = encodeURI(input); break;
-      case 'decodeURIComponent': result = decodeURIComponent(input); break;
-      case 'decodeURI': result = decodeURI(input); break;
+      case 'encodeURIComponent':
+        result = encodeURIComponent(input)
+        break
+      case 'encodeURI':
+        result = encodeURI(input)
+        break
+      case 'decodeURIComponent':
+        result = decodeURIComponent(input)
+        break
+      case 'decodeURI':
+        result = decodeURI(input)
+        break
     }
-    outputEditor?.setValue(result);
-  } catch (e: any) {
-    outputEditor?.setValue(`Error: ${e.message}`);
+    setOutput(result)
+    lastGoodOutput.value = result
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    processError.value = `${t('tools.url.processError')}: ${msg}`
+    if (lastGoodOutput.value) {
+      setOutput(lastGoodOutput.value)
+    } else {
+      setOutput('')
+    }
   }
-};
+}
 
 const replaceTextInEditor = (newText: string) => {
-  if (!inputEditor) return;
-  const model = inputEditor.getModel();
+  if (!inputEditor) return
+  const model = inputEditor.getModel()
   if (model) {
-    const fullRange = model.getFullModelRange();
-    inputEditor.executeEdits('url-processor', [{ range: fullRange, text: newText }]);
+    const fullRange = model.getFullModelRange()
+    inputEditor.executeEdits('url-processor', [{ range: fullRange, text: newText }])
   } else {
-    inputEditor.setValue(newText);
+    inputEditor.setValue(newText)
   }
-};
+}
 
 const initEditors = async () => {
-  await nextTick();
+  await nextTick()
   const editorOptions = {
     language: 'uri',
     theme: getMonacoTheme(),
@@ -226,94 +286,88 @@ const initEditors = async () => {
     padding: { top: 16, bottom: 16 },
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-  };
+  }
 
   if (inputEditorRef.value) {
     inputEditor = monaco.editor.create(inputEditorRef.value, {
       value: inputText.value,
       ...editorOptions,
-    });
+    })
     inputEditor.onDidChangeModelContent(() => {
-      inputText.value = inputEditor?.getValue() || '';
-      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value);
-      if (autoProcess.value) processText();
-    });
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-    inputThemeWatcher = watchThemeChange(inputEditor);
-    registerGlobalShortcuts(inputEditor);
+      inputText.value = inputEditor?.getValue() || ''
+      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value)
+      if (autoProcess.value) processText()
+    })
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+    inputThemeWatcher = watchThemeChange(inputEditor)
+    registerGlobalShortcuts(inputEditor)
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
-      value: outputText.value,
+      value: '',
       readOnly: true,
       ...editorOptions,
-    });
-    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-    outputThemeWatcher = watchThemeChange(outputEditor);
-    registerGlobalShortcuts(outputEditor);
+    })
+    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+    outputThemeWatcher = watchThemeChange(outputEditor)
+    registerGlobalShortcuts(outputEditor)
   }
-  processText();
-};
+  processText()
+}
 
 const clearAll = () => {
-  replaceTextInEditor('');
-  outputEditor?.setValue('');
-};
+  processError.value = ''
+  lastGoodOutput.value = ''
+  replaceTextInEditor('')
+  setOutput('')
+}
+
 const pasteInput = async () => {
-  const text = await readClipboardText();
-  if (text !== null) replaceTextInEditor(text);
-};
-const copyInput = () => copyText(inputEditor?.getValue() || '');
-const copyOutput = () => copyText(outputEditor?.getValue() || '');
+  const text = await readClipboardText()
+  if (text !== null) replaceTextInEditor(text)
+}
+const copyInput = () => copyText(inputEditor?.getValue() || '')
+const copyOutput = () => copyText(outputEditor?.getValue() || '')
 const useAsInput = () => {
-  const outputValue = outputEditor?.getValue() || '';
-  replaceTextInEditor(outputValue);
-  operation.value = operation.value === 'encode' ? 'decode' : 'encode';
-};
+  const outputValue = outputEditor?.getValue() || ''
+  replaceTextInEditor(outputValue)
+  operation.value = operation.value === 'encode' ? 'decode' : 'encode'
+}
 
 watch(operation, (newVal) => {
-  saveToStorage(STORAGE_KEYS.operation, newVal);
+  saveToStorage(STORAGE_KEYS.operation, newVal)
   if (newVal === 'encode') {
-    mode.value = 'encodeURIComponent';
+    mode.value = 'encodeURIComponent'
   } else {
-    mode.value = 'decodeURIComponent';
+    mode.value = 'decodeURIComponent'
   }
-});
+})
 
 watch(mode, (newValue) => {
-  saveToStorage(STORAGE_KEYS.mode, newValue);
-  if (autoProcess.value) processText();
-});
+  saveToStorage(STORAGE_KEYS.mode, newValue)
+  if (autoProcess.value) processText()
+})
 
 watch(autoProcess, (newValue) => {
-  saveToStorage(STORAGE_KEYS.autoProcess, newValue);
-});
+  saveToStorage(STORAGE_KEYS.autoProcess, newValue)
+  if (newValue) processText()
+})
 
 watch(wordWrapEnabled, (newValue) => {
-  const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off';
-  inputEditor?.updateOptions({ wordWrap: wrapOption });
-  outputEditor?.updateOptions({ wordWrap: wrapOption });
-  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
-});
+  const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off'
+  inputEditor?.updateOptions({ wordWrap: wrapOption })
+  outputEditor?.updateOptions({ wordWrap: wrapOption })
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue)
+})
 
-onMounted(initEditors);
+onMounted(initEditors)
 onBeforeUnmount(() => {
-  inputThemeWatcher?.();
-  outputThemeWatcher?.();
-  inputEditor?.dispose();
-  outputEditor?.dispose();
-});
+  inputThemeWatcher?.()
+  outputThemeWatcher?.()
+  inputEditor?.dispose()
+  outputEditor?.dispose()
+})
 </script>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

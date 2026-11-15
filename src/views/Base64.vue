@@ -1,237 +1,305 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Binary class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.base64.name') }}</span>
-        </div>
+  <ToolShell :icon="Binary" :title="t('tools.base64.name')" flush>
+    <template #actions>
+      <Segmented v-model="operation" :options="operationOptions" small class="shrink-0" />
+      <ToggleChip v-model="urlSafe" class="shrink-0" :title="t('tools.base64.urlSafeTip')">
+        {{ t('common.labels.urlSafe') }}
+      </ToggleChip>
+      <ToggleChip v-model="autoProcess" class="shrink-0 max-md:hidden">
+        {{ t('common.labels.autoProcess') }}
+      </ToggleChip>
+      <ToggleChip v-model="wordWrapEnabled" class="shrink-0 max-lg:hidden">
+        {{ t('common.labels.autoWrap') }}
+      </ToggleChip>
+    </template>
 
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
+    <template #right>
+      <IconButton :title="t('common.undo') + ' (Ctrl+Z)'" small class="max-sm:hidden" @click="undo">
+        <Undo2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.redo') + ' (Ctrl+Y)'" small class="max-sm:hidden" @click="redo">
+        <Redo2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.buttons.importFile')" @click="loadFile">
+        <Upload class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton
+        :title="t('common.buttons.downloadResult')"
+        :disabled="!canDownload"
+        @click="downloadFile"
+      >
+        <Download class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.clear')" danger @click="clearAll">
+        <Trash2 class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton
+        :title="t('tools.base64.wordWrap')"
+        :active="wordWrapEnabled"
+        class="max-lg:hidden"
+        @click="wordWrapEnabled = !wordWrapEnabled"
+      >
+        <WrapText class="w-3.5 h-3.5" />
+      </IconButton>
+      <DropdownMenu :items="overflowItems" align="right" @select="onOverflowSelect">
+        <template #trigger>
+          <IconButton :title="t('tools.base64.overflowMenu')" small>
+            <MoreHorizontal class="w-3.5 h-3.5" />
+          </IconButton>
+        </template>
+      </DropdownMenu>
+    </template>
 
-        <!-- Operation Selection -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            v-for="op in ['encode', 'decode']"
-            :key="op"
-            @click="operation = op"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="operation === op ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t('common.labels.' + op) }}
-          </button>
-        </div>
+    <template #help>
+      <p>{{ t('tools.base64.description') }}</p>
+      <p class="font-semibold mt-3 mb-2">{{ t('tools.base64.coreFeatures') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li>{{ t('tools.base64.featureEncode') }}</li>
+        <li>{{ t('tools.base64.featureDecode') }}</li>
+        <li>{{ t('tools.base64.featureUrlSafe') }}</li>
+        <li>{{ t('tools.base64.featureFile') }}</li>
+      </ul>
+    </template>
 
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- Options -->
-        <div class="flex items-center space-x-3 flex-shrink-0">
-          <CustomCheckbox
-            v-model="urlSafe"
-            :label="$t('common.labels.urlSafe')"
-            :title="$t('tools.base64.help.features.urlSafe')"
-          />
-
-          <CustomCheckbox
-            v-model="autoProcess"
-            :label="$t('common.labels.autoProcess')"
-          />
-
-          <CustomCheckbox
-            v-model="wordWrapEnabled"
-            :label="$t('common.labels.autoWrap')"
-          />
-        </div>
-      </div>
-
-      <!-- Right Side Actions -->
-      <div class="flex items-center space-x-1 flex-shrink-0 ml-4">
-        <button @click="loadFile" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground" :title="$t('common.buttons.importFile')">
-          <Upload class="w-4 h-4" />
-        </button>
-        <button @click="downloadFile" :disabled="!outputText" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50" :title="$t('common.buttons.downloadResult')">
-          <Download class="w-4 h-4" />
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="clearAll" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-muted-foreground" :title="$t('common.clear')">
-          <Trash2 class="w-4 h-4" />
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-2">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
-        <!-- Input Editor -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
-            <div class="flex items-center space-x-1">
-              <button @click="undo" :title="$t('common.undo') + ' (Ctrl+Z)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Undo2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="redo" :title="$t('common.redo') + ' (Ctrl+Y)'" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Redo2 class="w-3.5 h-3.5" />
-              </button>
-              <div class="w-px h-3 bg-border mx-1"></div>
-              <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyInput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 relative">
+    <SplitPane storage-key="base64">
+      <template #a>
+        <Pane :title="t('tools.base64.inputPanel')">
+          <template #actions>
+            <IconButton :title="t('common.paste')" small @click="pasteInput">
+              <ClipboardPaste class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.copy')" small @click="copyInput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div class="absolute inset-0">
             <div ref="inputEditorRef" class="absolute inset-0"></div>
           </div>
-        </div>
-
-        <!-- Output Editor -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.result') }}</h3>
-            <div class="flex items-center space-x-1">
-              <button @click="useAsInput" :title="$t('common.buttons.useAsInput')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowUpLeft class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 relative">
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :title="t('tools.base64.resultPanel')">
+          <template #actions>
+            <IconButton :title="t('common.buttons.useAsInput')" small :disabled="!!binaryOutput" @click="useAsInput">
+              <ArrowUpLeft class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.copy')" small @click="copyOutput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div class="absolute inset-0" :class="{ 'is-stale is-stale-anim': outputStale }">
             <div ref="outputEditorRef" class="absolute inset-0"></div>
           </div>
-        </div>
-      </div>
-      <input ref="fileInput" type="file" class="hidden" @change="handleFileSelect" />
-    </main>
+        </Pane>
+      </template>
+    </SplitPane>
 
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.base64.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.base64.description') }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    <input ref="fileInput" type="file" class="hidden" @change="handleFileSelect" />
+
+    <template #status>
+      <StatusBar :state="processError ? 'error' : 'ok'">
+        <span v-if="processError" class="sb-err">
+          <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+          {{ processError }}
+        </span>
+        <span v-else-if="binaryOutput" class="sb-warn">{{ t('tools.base64.statusBinary') }}</span>
+        <span v-else-if="binaryInput" class="text-muted-foreground">{{ t('tools.base64.statusReady') }}</span>
+        <span v-else class="sb-ok">
+          <Check class="w-3.5 h-3.5 shrink-0" />
+          {{ t('tools.base64.statusReady') }}
+        </span>
+        <span v-if="binaryInput">{{ formatBytes(binaryInput.length) }}</span>
+        <span v-else-if="inputCharCount">{{ t('tools.base64.inputSize', { n: inputCharCount }) }}</span>
+        <span v-if="outputCharCount">{{ t('tools.base64.outputSize', { n: outputCharCount }) }}</span>
+        <template #right>
+          <span class="max-md:hidden">{{ operation === 'encode' ? t('common.labels.encode') : t('common.labels.decode') }}</span>
+          <span v-if="urlSafe" class="max-lg:hidden">{{ t('common.labels.urlSafe') }}</span>
+        </template>
+      </StatusBar>
+    </template>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as monaco from '@/utils/monaco';
-import { HelpCircle, Binary, Upload, Download, Trash2, ClipboardPaste, Copy, ArrowUpLeft, X, Undo2, Redo2 } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
-import CustomCheckbox from '../components/CustomCheckbox.vue';
-import { useI18n } from 'vue-i18n';
-import { copyText, readClipboardText } from '../utils/clipboard';
-import { showToast } from '../composables/useToast';
-import { bytesToBase64, base64ToBytes, decodeUtf8Strict, formatBytes } from '../utils/base64';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import {
+  Binary,
+  Upload,
+  Download,
+  Trash2,
+  ClipboardPaste,
+  Copy,
+  ArrowUpLeft,
+  Undo2,
+  Redo2,
+  MoreHorizontal,
+  WrapText,
+  AlertCircle,
+  Check,
+} from 'lucide-vue-next'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import Segmented, { type SegmentedOption } from '@/components/ui/Segmented.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
+import { copyText, readClipboardText } from '../utils/clipboard'
+import { showToast } from '../composables/useToast'
+import { bytesToBase64, base64ToBytes, decodeUtf8Strict, formatBytes } from '../utils/base64'
 
-const { t } = useI18n();
+type Base64Op = 'encode' | 'decode'
+
+const { t } = useI18n()
 // 二进制文件上限：Monaco 展示几十 MB 的 Base64 会卡死
-const MAX_BINARY_SIZE = 10 * 1024 * 1024;
-// 导入的二进制文件字节（编码模式下优先于输入框文本）；输入框只显示占位说明
-let binaryInput: Uint8Array | null = null;
-// 解码结果不是合法 UTF-8 文本时保存原始字节，供下载为二进制文件
-let binaryOutput: Uint8Array | null = null;
-// 程序性写入输入框（占位文案）时不应被当作用户编辑
-let suppressInputChange = false;
+const MAX_BINARY_SIZE = 10 * 1024 * 1024
+// 导入的二进制文件字节（编码模式下优先于输入框文本）
+const binaryInput = ref<Uint8Array | null>(null)
+// 解码结果不是合法 UTF-8 文本时保存原始字节，供下载
+const binaryOutput = ref<Uint8Array | null>(null)
+// 程序性写入输入框时不触发用户编辑逻辑
+let suppressInputChange = false
 
-const inputEditorRef = ref<HTMLElement | null>(null);
-const outputEditorRef = ref<HTMLElement | null>(null);
-const fileInput = ref<HTMLInputElement | null>(null);
-let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
-let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null;
-let inputThemeWatcher: (() => void) | null = null;
-let outputThemeWatcher: (() => void) | null = null;
-const showHelp = ref(false);
+const inputEditorRef = ref<HTMLElement | null>(null)
+const outputEditorRef = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+let inputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let outputEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let inputThemeWatcher: (() => void) | null = null
+let outputThemeWatcher: (() => void) | null = null
 
 const STORAGE_KEYS = {
   inputText: 'base64-input-text',
   operation: 'base64-operation',
   urlSafe: 'base64-url-safe',
   autoProcess: 'base64-auto-process',
-  wordWrapEnabled: 'base64-word-wrap-enabled'
-};
+  wordWrapEnabled: 'base64-word-wrap-enabled',
+}
 
-const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'Hello World! 你好，世界！'));
-const outputText = ref('');
-const operation = ref(loadFromStorage(STORAGE_KEYS.operation, 'encode'));
-const urlSafe = ref(loadFromStorage(STORAGE_KEYS.urlSafe, false));
-const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true));
-const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
+const inputText = ref(loadFromStorage(STORAGE_KEYS.inputText, 'Hello World! 你好，世界！'))
+const outputText = ref('')
+const lastGoodOutput = ref('')
+const processError = ref('')
+const operation = ref<Base64Op>(loadFromStorage(STORAGE_KEYS.operation, 'encode') as Base64Op)
+const urlSafe = ref(loadFromStorage(STORAGE_KEYS.urlSafe, false))
+const autoProcess = ref(loadFromStorage(STORAGE_KEYS.autoProcess, true))
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
+
+const operationOptions = computed<SegmentedOption<Base64Op>[]>(() => [
+  { value: 'encode', label: t('common.labels.encode') },
+  { value: 'decode', label: t('common.labels.decode') },
+])
+
+const outputStale = computed(() => !!processError.value && !!lastGoodOutput.value)
+
+const inputCharCount = computed(() => String((inputEditor?.getValue() || '').length))
+
+const outputCharCount = computed(() => {
+  if (binaryOutput.value) return formatBytes(binaryOutput.value.length)
+  const v = outputEditor?.getValue() || ''
+  return v ? String(v.length) : ''
+})
+
+const canDownload = computed(() => !!binaryOutput.value || !!(outputEditor?.getValue()?.trim()))
+
+const overflowItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.base64.overflowMenu') },
+  {
+    value: 'autoProcess',
+    label: t('common.labels.autoProcess'),
+    checked: autoProcess.value,
+  },
+  {
+    value: 'wordWrap',
+    label: t('tools.base64.wordWrap'),
+    checked: wordWrapEnabled.value,
+  },
+  {
+    value: 'urlSafe',
+    label: t('common.labels.urlSafe'),
+    checked: urlSafe.value,
+  },
+])
+
+const onOverflowSelect = (value: string) => {
+  if (value === 'autoProcess') autoProcess.value = !autoProcess.value
+  if (value === 'wordWrap') wordWrapEnabled.value = !wordWrapEnabled.value
+  if (value === 'urlSafe') urlSafe.value = !urlSafe.value
+}
 
 const setOutput = (text: string) => {
-  outputText.value = text;
-  outputEditor?.setValue(text);
-};
+  outputText.value = text
+  outputEditor?.setValue(text)
+}
 
 const processText = () => {
-  binaryOutput = null;
+  binaryOutput.value = null
+  processError.value = ''
 
-  // 编码模式下若导入了二进制文件，直接对字节编码
-  if (binaryInput && operation.value === 'encode') {
-    setOutput(bytesToBase64(binaryInput, urlSafe.value));
-    return;
+  if (binaryInput.value && operation.value === 'encode') {
+    const out = bytesToBase64(binaryInput.value, urlSafe.value)
+    setOutput(out)
+    lastGoodOutput.value = out
+    return
   }
 
-  const input = inputEditor?.getValue() || '';
+  const input = inputEditor?.getValue() || ''
   if (!input.trim()) {
-    setOutput('');
-    return;
+    setOutput('')
+    lastGoodOutput.value = ''
+    return
   }
 
   try {
     if (operation.value === 'encode') {
-      setOutput(bytesToBase64(new TextEncoder().encode(input), urlSafe.value));
+      const out = bytesToBase64(new TextEncoder().encode(input), urlSafe.value)
+      setOutput(out)
+      lastGoodOutput.value = out
     } else {
-      const bytes = base64ToBytes(input);
-      const text = decodeUtf8Strict(bytes);
+      const bytes = base64ToBytes(input)
+      const text = decodeUtf8Strict(bytes)
       if (text === null) {
-        // 不是文本（图片、压缩包等）：不要硬解成乱码，提示并保留字节用于下载
-        binaryOutput = bytes;
-        setOutput(t('tools.base64.binaryOutput', { size: formatBytes(bytes.length) }));
+        binaryOutput.value = bytes
+        const out = t('tools.base64.binaryOutput', { size: formatBytes(bytes.length) })
+        setOutput(out)
+        lastGoodOutput.value = out
       } else {
-        setOutput(text);
+        setOutput(text)
+        lastGoodOutput.value = text
       }
     }
   } catch (e: unknown) {
-    setOutput(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    const msg = e instanceof Error ? e.message : String(e)
+    processError.value = `${t('tools.base64.processError')}: ${msg}`
+    if (lastGoodOutput.value) {
+      setOutput(lastGoodOutput.value)
+    } else {
+      setOutput('')
+    }
   }
-};
+}
 
-const undo = () => inputEditor?.trigger('keyboard', 'undo', null);
-const redo = () => inputEditor?.trigger('keyboard', 'redo', null);
+const undo = () => inputEditor?.trigger('keyboard', 'undo', null)
+const redo = () => inputEditor?.trigger('keyboard', 'redo', null)
 
 const replaceTextInEditor = (newText: string) => {
-  if (!inputEditor) return;
-  const model = inputEditor.getModel();
+  if (!inputEditor) return
+  const model = inputEditor.getModel()
   if (model) {
-    const fullRange = model.getFullModelRange();
-    inputEditor.executeEdits('base64-processor', [{ range: fullRange, text: newText }]);
+    const fullRange = model.getFullModelRange()
+    inputEditor.executeEdits('base64-processor', [{ range: fullRange, text: newText }])
   } else {
-    inputEditor.setValue(newText);
+    inputEditor.setValue(newText)
   }
-};
+}
 
 const initEditors = async () => {
-  await nextTick();
+  await nextTick()
   const editorOptions = {
     language: 'plaintext',
     theme: getMonacoTheme(),
@@ -241,155 +309,143 @@ const initEditors = async () => {
     padding: { top: 16, bottom: 16 },
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-  };
+  }
 
   if (inputEditorRef.value) {
     inputEditor = monaco.editor.create(inputEditorRef.value, {
       value: inputText.value,
       ...editorOptions,
-    });
+    })
     inputEditor.onDidChangeModelContent(() => {
-      if (suppressInputChange) return;
-      // 用户手动编辑后，之前导入的二进制文件不再有效
-      binaryInput = null;
-      inputText.value = inputEditor?.getValue() || '';
-      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value);
-      if (autoProcess.value) processText();
-    });
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo);
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-    inputThemeWatcher = watchThemeChange(inputEditor);
-    registerGlobalShortcuts(inputEditor);
+      if (suppressInputChange) return
+      binaryInput.value = null
+      inputText.value = inputEditor?.getValue() || ''
+      saveToStorageDebounced(STORAGE_KEYS.inputText, inputText.value)
+      if (autoProcess.value) processText()
+    })
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, undo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, redo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, redo)
+    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+    inputThemeWatcher = watchThemeChange(inputEditor)
+    registerGlobalShortcuts(inputEditor)
   }
   if (outputEditorRef.value) {
     outputEditor = monaco.editor.create(outputEditorRef.value, {
       value: outputText.value,
       readOnly: true,
       ...editorOptions,
-    });
-    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-    outputThemeWatcher = watchThemeChange(outputEditor);
-    registerGlobalShortcuts(outputEditor);
+    })
+    outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+    outputThemeWatcher = watchThemeChange(outputEditor)
+    registerGlobalShortcuts(outputEditor)
   }
-  processText();
-};
+  processText()
+}
 
-const loadFile = () => fileInput.value?.click();
+const loadFile = () => fileInput.value?.click()
 
 const handleFileSelect = async (e: Event) => {
-  const el = e.target as HTMLInputElement;
-  const file = el.files?.[0];
-  // 清空 value，允许连续选择同一个文件
-  el.value = '';
-  if (!file) return;
+  const el = e.target as HTMLInputElement
+  const file = el.files?.[0]
+  el.value = ''
+  if (!file) return
 
   try {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const text = decodeUtf8Strict(bytes);
-    // 解码模式或文本文件：按文本载入输入框（与旧行为一致）
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    const text = decodeUtf8Strict(bytes)
     if (operation.value === 'decode' || text !== null) {
-      binaryInput = null;
-      replaceTextInEditor(text ?? new TextDecoder().decode(bytes));
-      return;
+      binaryInput.value = null
+      replaceTextInEditor(text ?? new TextDecoder().decode(bytes))
+      return
     }
-    // 编码模式 + 二进制文件：直接对字节编码
     if (bytes.length > MAX_BINARY_SIZE) {
-      showToast(t('tools.base64.fileTooLarge', { size: formatBytes(MAX_BINARY_SIZE) }), 'error', 4000);
-      return;
+      showToast(t('tools.base64.fileTooLarge', { size: formatBytes(MAX_BINARY_SIZE) }), 'error', 4000)
+      return
     }
-    binaryInput = bytes;
-    suppressInputChange = true;
+    binaryInput.value = bytes
+    suppressInputChange = true
     try {
-      replaceTextInEditor(t('tools.base64.binaryInput', { name: file.name, size: formatBytes(bytes.length) }));
+      replaceTextInEditor(t('tools.base64.binaryInput', { name: file.name, size: formatBytes(bytes.length) }))
     } finally {
-      suppressInputChange = false;
+      suppressInputChange = false
     }
-    processText();
+    processText()
   } catch (err) {
-    console.error('Read file failed:', err);
-    showToast(t('tools.base64.readFileFailed'), 'error', 4000);
+    console.error('Read file failed:', err)
+    showToast(t('tools.base64.readFileFailed'), 'error', 4000)
   }
-};
+}
 
 const downloadFile = () => {
-  let blob: Blob;
-  let filename: string;
-  if (binaryOutput) {
-    blob = new Blob([binaryOutput as BlobPart], { type: 'application/octet-stream' });
-    filename = 'decoded.bin';
+  let blob: Blob
+  let filename: string
+  if (binaryOutput.value) {
+    blob = new Blob([binaryOutput.value as BlobPart], { type: 'application/octet-stream' })
+    filename = 'decoded.bin'
   } else {
-    const content = outputEditor?.getValue();
-    if (!content) return;
-    blob = new Blob([content], { type: 'text/plain' });
-    filename = operation.value === 'encode' ? 'encoded.txt' : 'decoded.txt';
+    const content = outputEditor?.getValue()
+    if (!content) return
+    blob = new Blob([content], { type: 'text/plain' })
+    filename = operation.value === 'encode' ? 'encoded.txt' : 'decoded.txt'
   }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const clearAll = () => {
-  binaryInput = null;
-  replaceTextInEditor('');
-  setOutput('');
-};
+  binaryInput.value = null
+  processError.value = ''
+  lastGoodOutput.value = ''
+  replaceTextInEditor('')
+  setOutput('')
+}
 
 const pasteInput = async () => {
-  const text = await readClipboardText();
-  if (text !== null) replaceTextInEditor(text);
-};
-const copyInput = () => copyText(inputEditor?.getValue() || '');
-const copyOutput = () => copyText(outputEditor?.getValue() || '');
+  const text = await readClipboardText()
+  if (text !== null) replaceTextInEditor(text)
+}
+const copyInput = () => copyText(inputEditor?.getValue() || '')
+const copyOutput = () => copyText(outputEditor?.getValue() || '')
 const useAsInput = () => {
-  // 输出是二进制占位说明时不应回填
-  if (binaryOutput) return;
-  const outputValue = outputEditor?.getValue() || '';
-  binaryInput = null;
-  replaceTextInEditor(outputValue);
-  operation.value = operation.value === 'encode' ? 'decode' : 'encode';
-};
+  if (binaryOutput.value) return
+  const outputValue = outputEditor?.getValue() || ''
+  binaryInput.value = null
+  replaceTextInEditor(outputValue)
+  operation.value = operation.value === 'encode' ? 'decode' : 'encode'
+}
 
 watch(operation, (newValue) => {
-  saveToStorage(STORAGE_KEYS.operation, newValue);
-  if (autoProcess.value) processText();
-});
+  saveToStorage(STORAGE_KEYS.operation, newValue)
+  if (autoProcess.value) processText()
+})
 
 watch(urlSafe, (newValue) => {
-  saveToStorage(STORAGE_KEYS.urlSafe, newValue);
-  if (autoProcess.value) processText();
-});
+  saveToStorage(STORAGE_KEYS.urlSafe, newValue)
+  if (autoProcess.value) processText()
+})
 
 watch(autoProcess, (newValue) => {
-  saveToStorage(STORAGE_KEYS.autoProcess, newValue);
-});
+  saveToStorage(STORAGE_KEYS.autoProcess, newValue)
+  if (newValue) processText()
+})
 
 watch(wordWrapEnabled, (newValue) => {
-  const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off';
-  inputEditor?.updateOptions({ wordWrap: wrapOption });
-  outputEditor?.updateOptions({ wordWrap: wrapOption });
-  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
-});
+  const wrapOption = (newValue ? 'on' : 'off') as 'on' | 'off'
+  inputEditor?.updateOptions({ wordWrap: wrapOption })
+  outputEditor?.updateOptions({ wordWrap: wrapOption })
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue)
+})
 
-onMounted(initEditors);
+onMounted(initEditors)
 onBeforeUnmount(() => {
-  inputThemeWatcher?.();
-  outputThemeWatcher?.();
-  inputEditor?.dispose();
-  outputEditor?.dispose();
-});
+  inputThemeWatcher?.()
+  outputThemeWatcher?.()
+  inputEditor?.dispose()
+  outputEditor?.dispose()
+})
 </script>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

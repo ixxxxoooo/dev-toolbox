@@ -376,8 +376,9 @@ kbd {
   .menu-sep { height: 1px; margin: 4px; background: hsl(var(--border)); }
 
   /* ---- 分栏 ---- */
-  .split { display: grid; min-height: 0; min-width: 0; }
-  .split-h { grid-template-columns: minmax(0, var(--split, 50%)) 6px minmax(0, 1fr); }
+  /* 默认撑满父容器：父级是 flex 列时靠 flex，父级有明确高度时靠 height:100% */
+  .split { display: grid; flex: 1 1 0%; height: 100%; min-height: 0; min-width: 0; }
+  .split-h { grid-template-columns: minmax(0, var(--split, 50%)) 6px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
   .split-v { grid-template-rows: minmax(0, var(--split, 50%)) 6px minmax(0, 1fr); }
   .split-gutter { position: relative; touch-action: none; }
   .split-h > .split-gutter { cursor: col-resize; }

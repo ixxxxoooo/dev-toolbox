@@ -1,5 +1,5 @@
 <template>
-  <div ref="triggerEl" class="inline-flex shrink-0" @click.stop="toggle">
+  <div ref="triggerEl" class="inline-flex shrink-0" v-bind="$attrs" @click.stop="toggle">
     <slot name="trigger" :open="open" />
   </div>
 
@@ -42,6 +42,10 @@
 <script setup lang="ts">
 import { ref, nextTick, watch, onBeforeUnmount, type Component } from 'vue'
 import { Check } from 'lucide-vue-next'
+
+// 根节点是 Fragment（触发器 + Teleport），手动把外部 class/属性挂到触发器容器上，
+// 否则 max-lg:hidden 这类响应式类会被静默丢弃
+defineOptions({ inheritAttrs: false })
 
 /**
  * 下拉菜单：

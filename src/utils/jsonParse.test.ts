@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseJsonLossless, stringifyJson, hasUnsafeIntegerLiteral } from './jsonParse'
+import { parseJsonLossless, stringifyJson, hasUnsafeIntegerLiteral, toPlainJson } from './jsonParse'
 
 describe('parseJsonLossless / stringifyJson', () => {
   it('严格 JSON 中的大整数往返不丢精度', () => {
@@ -35,5 +35,16 @@ describe('hasUnsafeIntegerLiteral', () => {
   })
   it('不把小数/科学计数法的一部分当整数', () => {
     expect(hasUnsafeIntegerLiteral('[0.12345678901234567890]')).toBe(false)
+  })
+})
+
+describe('toPlainJson', () => {
+  it('把 LosslessNumber 展开为普通值并保留大整数精度', () => {
+    const { data } = parseJsonLossless('{"a":1,"b":1.5,"c":12345678901234567890,"d":[2]}')
+    const plain = toPlainJson(data) as Record<string, unknown>
+    expect(plain.a).toBe(1)
+    expect(plain.b).toBe(1.5)
+    expect(String(plain.c)).toBe('12345678901234567890')
+    expect(plain.d).toEqual([2])
   })
 })

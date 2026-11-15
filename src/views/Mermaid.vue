@@ -1,150 +1,174 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Share2 class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.mermaid.name') }}</span>
-        </div>
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-        <button @click="downloadPng" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
-          {{ $t('tools.mermaid.downloadPng') }}
-        </button>
-        <button @click="downloadSvg" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
-          {{ $t('tools.mermaid.downloadSvg') }}
-        </button>
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-        <div class="flex items-center space-x-2">
-          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.theme') }}:</span>
-          <CustomSelect v-model="mermaidTheme" :options="themeOptions" />
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.look') }}:</span>
-          <CustomSelect v-model="mermaidLook" :options="lookOptions" />
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.curve') }}:</span>
-          <CustomSelect v-model="mermaidCurve" :options="curveOptions" />
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.mermaid.background') }}:</span>
-          <CustomSelect v-model="exportBg" :options="bgOptions" />
-        </div>
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-        <button @click="showHistory = true" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1">
-          <History class="w-4 h-4" />
-          <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
-        </button>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button @click="toggleFullscreen" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <Maximize2 v-if="!isFullscreen" class="w-4 h-4" />
-          <Minimize2 v-else class="w-4 h-4" />
-        </button>
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <main ref="mainContainer" class="flex-1 overflow-hidden flex">
-      <!-- Editor -->
-      <div v-show="!editorCollapsed" class="flex flex-col min-w-0 transition-all" :style="{ width: leftWidth + 'px' }">
-        <div class="h-8 px-3 flex items-center justify-between bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground">
-          <span>Mermaid Code</span>
-          <button @click="editorCollapsed = true" class="p-1 hover:bg-muted rounded" title="Collapse">
-            <PanelLeftClose class="w-4 h-4" />
+  <ToolShell :icon="Share2" :title="t('tools.mermaid.name')" flush>
+    <template #actions>
+      <Segmented v-model="layoutMode" :options="layoutOptions" small />
+      <DropdownMenu :items="themeMenuItems" align="left" class="max-xl:hidden" @select="onThemeSelect">
+        <template #trigger>
+          <button type="button" class="chip max-w-[8rem] truncate">
+            {{ themeLabel }}
+            <ChevronDown class="w-3 h-3 opacity-60 shrink-0" />
           </button>
-        </div>
-        <div ref="editorContainer" class="flex-1"></div>
-      </div>
+        </template>
+      </DropdownMenu>
+      <DropdownMenu :items="lookMenuItems" align="left" class="max-lg:hidden" @select="onLookSelect">
+        <template #trigger>
+          <button type="button" class="chip max-w-[7rem] truncate">
+            {{ lookLabel }}
+            <ChevronDown class="w-3 h-3 opacity-60 shrink-0" />
+          </button>
+        </template>
+      </DropdownMenu>
+      <DropdownMenu :items="curveMenuItems" align="left" class="max-lg:hidden" @select="onCurveSelect">
+        <template #trigger>
+          <button type="button" class="chip max-w-[7rem] truncate">
+            {{ curveLabel }}
+            <ChevronDown class="w-3 h-3 opacity-60 shrink-0" />
+          </button>
+        </template>
+      </DropdownMenu>
+      <DropdownMenu :items="bgMenuItems" align="left" class="max-md:hidden" @select="onBgSelect">
+        <template #trigger>
+          <button type="button" class="chip">
+            {{ bgLabel }}
+            <ChevronDown class="w-3 h-3 opacity-60 shrink-0" />
+          </button>
+        </template>
+      </DropdownMenu>
+    </template>
 
-      <!-- Collapsed Editor Toggle -->
-      <div v-if="editorCollapsed" class="flex flex-col border-r border-border bg-muted/30">
-        <button @click="editorCollapsed = false" class="p-2 hover:bg-muted" title="Expand Editor">
-          <PanelLeftOpen class="w-4 h-4" />
-        </button>
-      </div>
-
-      <!-- Resizer -->
-      <div 
-        v-show="!editorCollapsed"
-        class="w-1 bg-border hover:bg-primary/50 cursor-col-resize flex-shrink-0 transition-colors"
-        @mousedown="startResize"
-      ></div>
-
-      <!-- Preview -->
-      <div 
-        ref="previewContainer"
-        class="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#1e1e1e]"
-        :class="{ 'fixed inset-0 z-50': isFullscreen }"
+    <template #right>
+      <IconButton :title="t('tools.mermaid.downloadPng')" :disabled="!displaySvg" @click="downloadPng">
+        <FileImage class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('tools.mermaid.downloadSvg')" :disabled="!displaySvg" class="max-sm:hidden" @click="downloadSvg">
+        <Download class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.buttons.history')" @click="showHistory = true">
+        <History class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton
+        :title="isFullscreen ? t('tools.mermaid.exitFullscreen') : t('tools.mermaid.fullscreen')"
+        :active="isFullscreen"
+        @click="toggleFullscreen"
       >
-        <div class="h-8 px-3 flex items-center bg-muted/30 border-b border-border text-xs font-medium text-muted-foreground justify-between">
-          <span>Preview</span>
-          <div class="flex items-center space-x-1">
-            <button @click="zoomOut" class="p-1 hover:bg-muted rounded" title="Zoom Out">
-              <ZoomOut class="w-4 h-4" />
-            </button>
-            <input 
-              type="range" 
-              :value="currentScale * 100" 
-              @input="onScaleInput" 
-              min="10" 
-              max="1000" 
-              step="10"
-              class="w-20 h-1 accent-primary cursor-pointer"
+        <Minimize2 v-if="isFullscreen" class="w-3.5 h-3.5" />
+        <Maximize2 v-else class="w-3.5 h-3.5" />
+      </IconButton>
+      <DropdownMenu :items="overflowItems" align="right" @select="onOverflow">
+        <template #trigger>
+          <IconButton :title="t('tools.mermaid.overflowMenu')" small>
+            <MoreHorizontal class="w-3.5 h-3.5" />
+          </IconButton>
+        </template>
+      </DropdownMenu>
+    </template>
+
+    <template #help>
+      <p>{{ t('tools.mermaid.description') }}</p>
+      <p class="font-semibold mt-3 mb-1">{{ t('tools.mermaid.coreFeatures') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li>{{ t('tools.mermaid.helpDrag') }}</li>
+        <li>{{ t('tools.mermaid.helpZoom') }}</li>
+      </ul>
+    </template>
+
+    <SplitPane v-if="layoutMode === 'split' && !isFullscreen" storage-key="mermaid" class="flex-1 min-h-0">
+      <template #a>
+        <Pane :title="t('tools.mermaid.editorPanel')" :badge="lineCount">
+          <div ref="editorMount" class="absolute inset-0"></div>
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :title="t('tools.mermaid.previewPanel')">
+          <div
+            ref="previewArea"
+            class="absolute inset-0 overflow-hidden bg-card cursor-grab active:cursor-grabbing"
+            @mousedown="startDrag"
+            @wheel="handleWheel"
+          >
+            <div
+              ref="svgContainer"
+              class="absolute select-none"
+              :class="{ 'is-stale is-stale-anim': error && lastGoodSvg }"
+              :style="{
+                transform: `translate(${currentPosition.x}px, ${currentPosition.y}px) scale(${currentScale})`,
+                transformOrigin: '0 0',
+              }"
+              v-html="displaySvg"
             />
-            <span class="text-xs w-12 text-center">{{ Math.round(currentScale * 100) }}%</span>
-            <button @click="zoomIn" class="p-1 hover:bg-muted rounded" title="Zoom In">
-              <ZoomIn class="w-4 h-4" />
-            </button>
-            <button @click="resetZoom" class="p-1 hover:bg-muted rounded" title="Reset">
-              <RotateCcw class="w-4 h-4" />
-            </button>
-            <button v-if="isFullscreen" @click="isFullscreen = false" class="p-1 hover:bg-muted rounded">
-              <X class="w-4 h-4" />
-            </button>
+            <div class="absolute bottom-2 right-2 flex items-center gap-0.5 p-0.5 rounded-lg border border-border bg-card shadow-sm">
+              <IconButton :title="t('tools.mermaid.zoomOut')" small @click="zoomOut">
+                <ZoomOut class="w-3.5 h-3.5" />
+              </IconButton>
+              <IconButton :title="t('tools.mermaid.zoomIn')" small @click="zoomIn">
+                <ZoomIn class="w-3.5 h-3.5" />
+              </IconButton>
+              <IconButton :title="t('tools.mermaid.zoomReset')" small @click="resetZoom">
+                <RotateCcw class="w-3.5 h-3.5" />
+              </IconButton>
+            </div>
           </div>
-        </div>
-        <div 
-          ref="previewArea"
-          class="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
-          @mousedown="startDrag"
-          @wheel="handleWheel"
-        >
-          <div 
-            ref="svgContainer"
-            class="absolute select-none"
-            :style="{ transform: `translate(${currentPosition.x}px, ${currentPosition.y}px) scale(${currentScale})`, transformOrigin: '0 0' }"
-            v-html="svgOutput"
-          ></div>
-          <div v-if="error" class="absolute inset-0 flex items-center justify-center p-3">
-            <div class="text-destructive text-sm bg-destructive/10 p-3 rounded-lg max-w-md">{{ error }}</div>
-          </div>
+        </Pane>
+      </template>
+    </SplitPane>
+
+    <Pane v-else-if="layoutMode === 'edit' && !isFullscreen" class="flex-1 min-h-0" :title="t('tools.mermaid.editorPanel')" :badge="lineCount">
+      <div ref="editorMount" class="absolute inset-0"></div>
+    </Pane>
+
+    <Pane
+      v-else
+      class="flex-1 min-h-0"
+      :class="{ '!fixed inset-0 z-[80] !m-0 rounded-none': isFullscreen }"
+      :title="t('tools.mermaid.previewPanel')"
+    >
+      <div
+        ref="previewArea"
+        class="absolute inset-0 overflow-hidden bg-card cursor-grab active:cursor-grabbing"
+        @mousedown="startDrag"
+        @wheel="handleWheel"
+      >
+        <div
+          ref="svgContainer"
+          class="absolute select-none"
+          :class="{ 'is-stale is-stale-anim': error && lastGoodSvg }"
+          :style="{
+            transform: `translate(${currentPosition.x}px, ${currentPosition.y}px) scale(${currentScale})`,
+            transformOrigin: '0 0',
+          }"
+          v-html="displaySvg"
+        />
+        <div class="absolute bottom-2 right-2 flex items-center gap-0.5 p-0.5 rounded-lg border border-border bg-card shadow-sm">
+          <IconButton :title="t('tools.mermaid.zoomOut')" small @click="zoomOut">
+            <ZoomOut class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="t('tools.mermaid.zoomIn')" small @click="zoomIn">
+            <ZoomIn class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="t('tools.mermaid.zoomReset')" small @click="resetZoom">
+            <RotateCcw class="w-3.5 h-3.5" />
+          </IconButton>
         </div>
       </div>
-    </main>
+    </Pane>
 
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.mermaid.name') }}</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-2 text-sm text-muted-foreground">
-          <p>{{ $t('tools.mermaid.description') }}</p>
-          <p>{{ $t('tools.mermaid.helpDrag') }}</p>
-          <p>{{ $t('tools.mermaid.helpZoom') }}</p>
-        </div>
-      </div>
-    </div>
+    <template #status>
+      <StatusBar :state="error ? 'error' : renderPending ? 'warn' : 'ok'">
+        <button v-if="error" type="button" class="sb-err max-w-[50%] truncate" :title="error">
+          <AlertCircle class="shrink-0" />
+          {{ t('tools.mermaid.renderErrorLabel') }}: {{ error }}
+        </button>
+        <span v-else-if="renderPending" class="sb-warn">{{ t('tools.mermaid.renderPending') }}</span>
+        <span v-else class="sb-ok"><Check class="shrink-0" />{{ t('tools.mermaid.renderOk') }}</span>
+        <span>{{ t('tools.mermaid.lineCount', { n: lineCount }) }}</span>
+        <span v-if="lastRenderMs > 0">{{ t('tools.mermaid.renderMs', { n: lastRenderMs }) }}</span>
+        <template #right>
+          <span>{{ t('tools.mermaid.zoomPercent', { n: Math.round(currentScale * 100) }) }}</span>
+          <span class="max-lg:hidden">{{ themeLabel }}</span>
+        </template>
+      </StatusBar>
+    </template>
 
-    <!-- History Modal -->
     <HistoryModal
       :show="showHistory"
       :history="history"
@@ -154,38 +178,96 @@
       @delete="deleteHistory"
       @clear="clearHistory"
     />
-  </div>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, onBeforeUnmount, nextTick, computed } from 'vue';
-import { Share2, HelpCircle, X, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw, History, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
-import * as monaco from '@/utils/monaco';
-import mermaid from 'mermaid';
-import { useI18n } from 'vue-i18n';
-import { getMonacoTheme, watchThemeChange } from '@/utils/monaco-theme';
-import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage';
-import { useHistory } from '@/composables/useHistory';
-import { showToast } from '@/composables/useToast';
-import { useThemeStore } from '@/stores/theme';
-import HistoryModal from '@/components/HistoryModal.vue';
-import CustomSelect from '@/components/CustomSelect.vue';
+import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount, nextTick } from 'vue'
+import {
+  Share2,
+  History,
+  Download,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  MoreHorizontal,
+  ChevronDown,
+  Check,
+  AlertCircle,
+  FileImage,
+} from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import mermaid from 'mermaid'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
+import { useHistory } from '@/composables/useHistory'
+import { showToast } from '@/composables/useToast'
+import { useThemeStore } from '@/stores/theme'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import Segmented, { type SegmentedOption } from '@/components/ui/Segmented.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import HistoryModal from '@/components/HistoryModal.vue'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-// 追踪 onDidPaste 内的 setTimeout，组件卸载时统一清理
-const pendingTimers: ReturnType<typeof setTimeout>[] = [];
-const trackTimer = (handler: () => void, delay: number): ReturnType<typeof setTimeout> => {
-  const id = setTimeout(handler, delay);
-  pendingTimers.push(id);
-  return id;
-};
+/** 将界面 CSS 变量转为 #rrggbb，供 Mermaid themeVariables 使用 */
+function cssVarToHex(name: string, alpha?: number): string {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  const m = raw.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/)
+  if (!m) return '#808080'
+  const h = parseFloat(m[1])
+  const s = parseFloat(m[2]) / 100
+  const l = parseFloat(m[3]) / 100
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(255 * c).toString(16).padStart(2, '0')
+  }
+  const hex = `#${f(0)}${f(8)}${f(4)}`
+  return alpha === undefined ? hex : hex + Math.round(alpha * 255).toString(16).padStart(2, '0')
+}
 
-// 注册 Mermaid 语言
-monaco.languages.register({ id: 'mermaid' });
+type LayoutMode = 'edit' | 'split' | 'preview'
+type MermaidThemeKey = 'default' | 'dark' | 'forest' | 'neutral' | 'base' | 'github' | 'dracula' | 'nord'
+type MermaidLook = 'classic' | 'handDrawn'
+type MermaidCurve =
+  | 'linear' | 'basis' | 'cardinal' | 'step' | 'stepBefore' | 'stepAfter' | 'natural' | 'monotoneX'
+type ExportBg = 'white' | 'transparent'
+
+const DEFAULT_CODE = `graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[OK]
+    B -->|No| D[Cancel]`
+
+const STORAGE_KEY = 'mermaid-code'
+const THEME_STORAGE_KEY = 'mermaid-theme'
+const LOOK_STORAGE_KEY = 'mermaid-look'
+const CURVE_STORAGE_KEY = 'mermaid-curve'
+const VIEW_MODE_KEY = 'mermaid-view-mode'
+
+const pendingTimers: ReturnType<typeof setTimeout>[] = []
+const trackTimer = (handler: () => void, delay: number) => {
+  const id = setTimeout(handler, delay)
+  pendingTimers.push(id)
+  return id
+}
+
+// Mermaid 语法高亮（注册一次即可）
+monaco.languages.register({ id: 'mermaid' })
 monaco.languages.setMonarchTokensProvider('mermaid', {
-  keywords: ['graph', 'subgraph', 'end', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram', 'gantt', 'pie', 'gitGraph', 'mindmap', 'timeline', 'participant', 'actor', 'Note', 'loop', 'alt', 'else', 'opt', 'par', 'rect', 'activate', 'deactivate', 'autonumber', 'title', 'section'],
-  directions: ['TB', 'TD', 'BT', 'RL', 'LR'],
+  keywords: [
+    'graph', 'subgraph', 'end', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram',
+    'gantt', 'pie', 'gitGraph', 'mindmap', 'timeline', 'participant', 'actor', 'Note', 'loop', 'alt', 'else',
+    'opt', 'par', 'rect', 'activate', 'deactivate', 'autonumber', 'title', 'section',
+  ],
   tokenizer: {
     root: [
       [/%%.*$/, 'comment'],
@@ -200,487 +282,450 @@ monaco.languages.setMonarchTokensProvider('mermaid', {
       [/\b[A-Za-z_][A-Za-z0-9_]*\b/, 'identifier'],
       [/"[^"]*"/, 'string'],
       [/'[^']*'/, 'string'],
-    ]
-  }
-});
+    ],
+  },
+})
 
-const DEFAULT_CODE = `graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[OK]
-    B -->|No| D[Cancel]`;
-
-const STORAGE_KEY = 'mermaid-code';
-const THEME_STORAGE_KEY = 'mermaid-theme';
-const LOOK_STORAGE_KEY = 'mermaid-look';
-const CURVE_STORAGE_KEY = 'mermaid-curve';
-
-// 自定义主题配色
-const customThemes: Record<string, object> = {
+/** 自定义主题尽量从界面色板派生，减少硬编码 */
+const buildCustomThemes = (): Record<string, Record<string, string>> => ({
   github: {
-    primaryColor: '#0969da',
-    primaryTextColor: '#fff',
-    primaryBorderColor: '#0550ae',
-    lineColor: '#57606a',
-    secondaryColor: '#ddf4ff',
-    tertiaryColor: '#f6f8fa',
+    primaryColor: cssVarToHex('--primary'),
+    primaryTextColor: cssVarToHex('--primary-foreground'),
+    primaryBorderColor: cssVarToHex('--primary'),
+    lineColor: cssVarToHex('--muted-foreground'),
+    secondaryColor: cssVarToHex('--accent'),
+    tertiaryColor: cssVarToHex('--muted'),
   },
   dracula: {
-    primaryColor: '#bd93f9',
-    primaryTextColor: '#f8f8f2',
-    primaryBorderColor: '#6272a4',
-    lineColor: '#f8f8f2',
-    secondaryColor: '#44475a',
-    tertiaryColor: '#282a36',
+    primaryColor: cssVarToHex('--primary'),
+    primaryTextColor: cssVarToHex('--foreground'),
+    primaryBorderColor: cssVarToHex('--border'),
+    lineColor: cssVarToHex('--foreground'),
+    secondaryColor: cssVarToHex('--muted'),
+    tertiaryColor: cssVarToHex('--card'),
   },
   nord: {
-    primaryColor: '#5e81ac',
-    primaryTextColor: '#eceff4',
-    primaryBorderColor: '#4c566a',
-    lineColor: '#d8dee9',
-    secondaryColor: '#81a1c1',
-    tertiaryColor: '#3b4252',
+    primaryColor: cssVarToHex('--primary'),
+    primaryTextColor: cssVarToHex('--foreground'),
+    primaryBorderColor: cssVarToHex('--border'),
+    lineColor: cssVarToHex('--muted-foreground'),
+    secondaryColor: cssVarToHex('--accent'),
+    tertiaryColor: cssVarToHex('--card'),
   },
-};
+})
 
-// Mermaid 主题选项
-const themeOptions = computed(() => [
-  { label: t('tools.mermaid.themes.default'), value: 'default' },
-  { label: t('tools.mermaid.themes.dark'), value: 'dark' },
-  { label: t('tools.mermaid.themes.forest'), value: 'forest' },
-  { label: t('tools.mermaid.themes.neutral'), value: 'neutral' },
-  { label: t('tools.mermaid.themes.base'), value: 'base' },
-  { label: 'GitHub', value: 'github' },
-  { label: 'Dracula', value: 'dracula' },
-  { label: 'Nord', value: 'nord' },
-]);
+const customThemeKeys = new Set(['github', 'dracula', 'nord'])
+const themeKeys: MermaidThemeKey[] = ['default', 'dark', 'forest', 'neutral', 'base', 'github', 'dracula', 'nord']
+const lookKeys: MermaidLook[] = ['classic', 'handDrawn']
+const curveKeys: MermaidCurve[] = ['linear', 'basis', 'cardinal', 'step', 'stepBefore', 'stepAfter', 'natural', 'monotoneX']
 
-// Mermaid 外观选项
-const lookOptions = computed(() => [
-  { label: t('tools.mermaid.looks.classic'), value: 'classic' },
-  { label: t('tools.mermaid.looks.handDrawn'), value: 'handDrawn' },
-]);
-
-// 曲线样式选项
-const curveOptions = computed(() => [
-  { label: t('tools.mermaid.curves.linear'), value: 'linear' },
-  { label: t('tools.mermaid.curves.basis'), value: 'basis' },
-  { label: t('tools.mermaid.curves.cardinal'), value: 'cardinal' },
-  { label: t('tools.mermaid.curves.step'), value: 'step' },
-  { label: t('tools.mermaid.curves.stepBefore'), value: 'stepBefore' },
-  { label: t('tools.mermaid.curves.stepAfter'), value: 'stepAfter' },
-  { label: t('tools.mermaid.curves.natural'), value: 'natural' },
-  { label: t('tools.mermaid.curves.monotoneX'), value: 'monotoneX' },
-]);
-
-// 背景色选项
-const bgOptions = computed(() => [
-  { label: t('tools.mermaid.backgrounds.white'), value: 'white' },
-  { label: t('tools.mermaid.backgrounds.transparent'), value: 'transparent' },
-]);
-
-const themeStore = useThemeStore();
-const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('mermaid', themeStore.historyLimit.value);
+const themeStore = useThemeStore()
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('mermaid', themeStore.historyLimit.value)
 
 watch(() => themeStore.historyLimit.value, (newLimit) => {
-  updateMaxItems(newLimit);
-});
+  updateMaxItems(newLimit)
+})
 
-const code = ref(loadFromStorage(STORAGE_KEY, DEFAULT_CODE));
-const mermaidTheme = ref(loadFromStorage(THEME_STORAGE_KEY, 'default'));
-const mermaidLook = ref(loadFromStorage(LOOK_STORAGE_KEY, 'classic'));
-const mermaidCurve = ref(loadFromStorage(CURVE_STORAGE_KEY, 'linear'));
-const exportBg = ref(loadFromStorage('mermaid-bg', 'white'));
-const svgOutput = ref('');
-const error = ref('');
-const showHelp = ref(false);
-const showHistory = ref(false);
-const isFullscreen = ref(false);
-const editorCollapsed = ref(false);
-const editorContainer = ref<HTMLElement | null>(null);
-const previewArea = ref<HTMLElement | null>(null);
-const svgContainer = ref<HTMLElement | null>(null);
-const mainContainer = ref<HTMLElement | null>(null);
+const layoutMode = ref<LayoutMode>(loadFromStorage(VIEW_MODE_KEY, 'split') as LayoutMode)
+const code = ref(loadFromStorage(STORAGE_KEY, DEFAULT_CODE) as string)
+const mermaidTheme = ref<MermaidThemeKey>(loadFromStorage(THEME_STORAGE_KEY, 'default') as MermaidThemeKey)
+const mermaidLook = ref<MermaidLook>(loadFromStorage(LOOK_STORAGE_KEY, 'classic') as MermaidLook)
+const mermaidCurve = ref<MermaidCurve>(loadFromStorage(CURVE_STORAGE_KEY, 'linear') as MermaidCurve)
+const exportBg = ref<ExportBg>(loadFromStorage('mermaid-bg', 'white') as ExportBg)
 
-let editor: monaco.editor.IStandaloneCodeEditor | null = null;
-let themeWatcher: (() => void) | null = null;
+const svgOutput = ref('')
+const lastGoodSvg = ref('')
+const error = ref('')
+const showHistory = ref(false)
+const isFullscreen = ref(false)
+const renderPending = ref(false)
+const lastRenderMs = ref(0)
 
-// Pan & Zoom - 分别保存普通和全屏状态
-const scale = ref(1);
-const position = ref({ x: 20, y: 20 });
-const fullscreenScale = ref(1);
-const fullscreenPosition = ref({ x: 20, y: 20 });
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
+const editorMount = ref<HTMLElement | null>(null)
+const previewArea = ref<HTMLElement | null>(null)
+const svgContainer = ref<HTMLElement | null>(null)
 
-// 根据全屏状态获取当前值
-const currentScale = computed(() => isFullscreen.value ? fullscreenScale.value : scale.value);
-const currentPosition = computed(() => isFullscreen.value ? fullscreenPosition.value : position.value);
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+let themeWatcher: (() => void) | null = null
+let contentListener: monaco.IDisposable | null = null
 
-// Resizer
-const leftWidth = ref(window.innerWidth / 2 - 100);
-const isResizing = ref(false);
+const scale = ref(1)
+const position = ref({ x: 20, y: 20 })
+const fullscreenScale = ref(1)
+const fullscreenPosition = ref({ x: 20, y: 20 })
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
 
-const startResize = (e: MouseEvent) => {
-  isResizing.value = true;
-  document.addEventListener('mousemove', onResize);
-  document.addEventListener('mouseup', stopResize);
-  e.preventDefault();
-};
+const currentScale = computed(() => (isFullscreen.value ? fullscreenScale.value : scale.value))
+const currentPosition = computed(() => (isFullscreen.value ? fullscreenPosition.value : position.value))
+const displaySvg = computed(() => svgOutput.value || lastGoodSvg.value)
+const lineCount = computed(() => editor?.getModel()?.getLineCount() ?? code.value.split('\n').length)
 
-const onResize = (e: MouseEvent) => {
-  if (!isResizing.value || !mainContainer.value) return;
-  const rect = mainContainer.value.getBoundingClientRect();
-  const newWidth = e.clientX - rect.left;
-  leftWidth.value = Math.max(200, Math.min(newWidth, rect.width - 200));
-};
+const layoutOptions = computed<SegmentedOption<LayoutMode>[]>(() => [
+  { value: 'edit', label: t('tools.mermaid.viewEdit') },
+  { value: 'split', label: t('tools.mermaid.viewSplit') },
+  { value: 'preview', label: t('tools.mermaid.viewPreview') },
+])
 
-const stopResize = () => {
-  isResizing.value = false;
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', stopResize);
-};
+const themeLabel = computed(() => t(`tools.mermaid.themes.${mermaidTheme.value}`))
+const lookLabel = computed(() => t(`tools.mermaid.looks.${mermaidLook.value}`))
+const curveLabel = computed(() => t(`tools.mermaid.curves.${mermaidCurve.value}`))
+const bgLabel = computed(() => t(`tools.mermaid.backgrounds.${exportBg.value}`))
 
-let renderId = 0;
-// 记录上次 initialize 的配置，配置未变化时不重复初始化
-let lastInitKey = '';
+const themeMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.mermaid.theme') },
+  ...themeKeys.map(k => ({ type: 'item' as const, value: k, label: t(`tools.mermaid.themes.${k}`), checked: mermaidTheme.value === k })),
+])
+const lookMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.mermaid.look') },
+  ...lookKeys.map(k => ({ type: 'item' as const, value: k, label: t(`tools.mermaid.looks.${k}`), checked: mermaidLook.value === k })),
+])
+const curveMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.mermaid.curve') },
+  ...curveKeys.map(k => ({ type: 'item' as const, value: k, label: t(`tools.mermaid.curves.${k}`), checked: mermaidCurve.value === k })),
+])
+const bgMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.mermaid.background') },
+  { type: 'item', value: 'white', label: t('tools.mermaid.backgrounds.white'), checked: exportBg.value === 'white' },
+  { type: 'item', value: 'transparent', label: t('tools.mermaid.backgrounds.transparent'), checked: exportBg.value === 'transparent' },
+])
+
+const overflowItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.mermaid.theme') },
+  ...themeKeys.map(k => ({
+    type: 'item' as const,
+    value: `theme:${k}`,
+    label: t(`tools.mermaid.themes.${k}`),
+    checked: mermaidTheme.value === k,
+  })),
+  { type: 'sep' },
+  { type: 'header', label: t('tools.mermaid.look') },
+  ...lookKeys.map(k => ({
+    type: 'item' as const,
+    value: `look:${k}`,
+    label: t(`tools.mermaid.looks.${k}`),
+    checked: mermaidLook.value === k,
+  })),
+  { type: 'sep' },
+  ...curveKeys.map(k => ({
+    type: 'item' as const,
+    value: `curve:${k}`,
+    label: t(`tools.mermaid.curves.${k}`),
+    checked: mermaidCurve.value === k,
+  })),
+  { type: 'sep' },
+  { type: 'item', value: 'bg:white', label: t('tools.mermaid.backgrounds.white'), checked: exportBg.value === 'white' },
+  { type: 'item', value: 'bg:transparent', label: t('tools.mermaid.backgrounds.transparent'), checked: exportBg.value === 'transparent' },
+  { type: 'sep' },
+  { type: 'item', value: 'png', label: t('tools.mermaid.downloadPng') },
+  { type: 'item', value: 'svg', label: t('tools.mermaid.downloadSvg'), disabled: !displaySvg.value },
+])
+
+let renderId = 0
+let lastInitKey = ''
+let renderDebounce: ReturnType<typeof setTimeout> | null = null
 
 const initMermaid = (extra: { htmlLabels?: boolean } = {}) => {
-  const isCustomTheme = mermaidTheme.value in customThemes;
-  const key = JSON.stringify([mermaidTheme.value, mermaidLook.value, mermaidCurve.value, extra]);
-  if (key === lastInitKey) return;
-  lastInitKey = key;
+  const customThemes = buildCustomThemes()
+  const isCustomTheme = customThemeKeys.has(mermaidTheme.value)
+  const key = JSON.stringify([mermaidTheme.value, mermaidLook.value, mermaidCurve.value, extra])
+  if (key === lastInitKey) return
+  lastInitKey = key
+  type MermaidInit = NonNullable<Parameters<typeof mermaid.initialize>[0]>
+  const builtInTheme = (isCustomTheme ? 'base' : mermaidTheme.value) as MermaidInit['theme']
   mermaid.initialize({
     startOnLoad: false,
-    theme: isCustomTheme ? 'base' : mermaidTheme.value as any,
+    theme: builtInTheme,
     themeVariables: isCustomTheme ? customThemes[mermaidTheme.value] : undefined,
-    look: mermaidLook.value as any,
-    flowchart: { curve: mermaidCurve.value as any, ...extra },
-    // strict：禁止图内注入 HTML 与点击回调，降低 XSS 风险（输出会被 v-html 渲染）
-    securityLevel: 'strict'
-  });
-};
+    look: mermaidLook.value,
+    flowchart: { curve: mermaidCurve.value, ...extra },
+    securityLevel: 'strict',
+  })
+}
 
-/** mermaid 渲染失败时会在 body 里留下 #d{id} 残留节点，这里手动清理避免泄漏 */
 const cleanupMermaidLeftovers = (id: string) => {
-  document.getElementById(`d${id}`)?.remove();
-  document.getElementById(id)?.remove();
-};
+  document.getElementById(`d${id}`)?.remove()
+  document.getElementById(id)?.remove()
+}
 
 const renderMermaid = async (resetView = false) => {
   if (!code.value.trim()) {
-    svgOutput.value = '';
-    error.value = '';
-    return;
+    svgOutput.value = ''
+    error.value = ''
+    lastGoodSvg.value = ''
+    renderPending.value = false
+    return
   }
-  // 每次渲染分配自增 id；异步返回时若已有更新的渲染请求，丢弃过期结果，避免旧图覆盖新图
-  const myId = ++renderId;
-  const domId = `mermaid-svg-${myId}`;
+  const myId = ++renderId
+  const domId = `mermaid-svg-${myId}`
+  const t0 = performance.now()
   try {
-    initMermaid();
-    const { svg } = await mermaid.render(domId, code.value);
-    if (myId !== renderId) return;
-    svgOutput.value = svg;
-    error.value = '';
-    // 只在代码变化时自动居中适配
-    if (resetView) {
-      nextTick(() => fitToCenter());
-    }
-  } catch (e: any) {
-    cleanupMermaidLeftovers(domId);
-    if (myId !== renderId) return;
-    error.value = e?.message || e?.str || String(e) || 'Render error';
+    initMermaid()
+    const { svg } = await mermaid.render(domId, code.value)
+    if (myId !== renderId) return
+    svgOutput.value = svg
+    lastGoodSvg.value = svg
+    error.value = ''
+    renderPending.value = false
+    lastRenderMs.value = Math.round(performance.now() - t0)
+    if (resetView) nextTick(() => fitToCenter())
+  } catch (e: unknown) {
+    cleanupMermaidLeftovers(domId)
+    if (myId !== renderId) return
+    const msg = e instanceof Error ? e.message : String(e)
+    error.value = msg
+    svgOutput.value = ''
+    renderPending.value = false
+    lastRenderMs.value = Math.round(performance.now() - t0)
   }
-};
+}
 
-// 输入时防抖，避免每次按键都重新渲染
-let renderDebounce: ReturnType<typeof setTimeout> | null = null;
 const scheduleRender = (resetView: boolean) => {
-  if (renderDebounce) clearTimeout(renderDebounce);
+  renderPending.value = true
+  if (renderDebounce) clearTimeout(renderDebounce)
   renderDebounce = setTimeout(() => {
-    renderDebounce = null;
-    renderMermaid(resetView);
-  }, 300);
-};
+    renderDebounce = null
+    void renderMermaid(resetView)
+  }, 300)
+}
 
-// 自动居中并适配大小
 const fitToCenter = () => {
-  if (!previewArea.value || !svgContainer.value) return;
-  const svg = svgContainer.value.querySelector('svg');
-  if (!svg) return;
-  
-  const containerRect = previewArea.value.getBoundingClientRect();
-  const currentScaleVal = isFullscreen.value ? fullscreenScale.value : scale.value;
-  const svgRect = svg.getBoundingClientRect();
-  const svgWidth = svgRect.width / currentScaleVal;
-  const svgHeight = svgRect.height / currentScaleVal;
-  
-  if (svgWidth === 0 || svgHeight === 0) return;
-  
-  const padding = 40;
-  const availableWidth = containerRect.width - padding * 2;
-  const availableHeight = containerRect.height - padding * 2;
-  
-  // 计算适配比例，最小0.8保证字体可读，最大2
-  const scaleX = availableWidth / svgWidth;
-  const scaleY = availableHeight / svgHeight;
-  const newScale = Math.max(0.8, Math.min(2, Math.min(scaleX, scaleY)));
-  
-  // 居中
-  const scaledWidth = svgWidth * newScale;
-  const scaledHeight = svgHeight * newScale;
+  if (!previewArea.value || !svgContainer.value) return
+  const svg = svgContainer.value.querySelector('svg')
+  if (!svg) return
+  const containerRect = previewArea.value.getBoundingClientRect()
+  const currentScaleVal = currentScale.value
+  const svgRect = svg.getBoundingClientRect()
+  const svgWidth = svgRect.width / currentScaleVal
+  const svgHeight = svgRect.height / currentScaleVal
+  if (svgWidth === 0 || svgHeight === 0) return
+  const padding = 40
+  const availableWidth = containerRect.width - padding * 2
+  const availableHeight = containerRect.height - padding * 2
+  const scaleX = availableWidth / svgWidth
+  const scaleY = availableHeight / svgHeight
+  const newScale = Math.max(0.8, Math.min(2, Math.min(scaleX, scaleY)))
+  const scaledWidth = svgWidth * newScale
+  const scaledHeight = svgHeight * newScale
   const newPosition = {
     x: (containerRect.width - scaledWidth) / 2,
-    y: (containerRect.height - scaledHeight) / 2
-  };
-  
+    y: (containerRect.height - scaledHeight) / 2,
+  }
   if (isFullscreen.value) {
-    fullscreenScale.value = newScale;
-    fullscreenPosition.value = newPosition;
+    fullscreenScale.value = newScale
+    fullscreenPosition.value = newPosition
   } else {
-    scale.value = newScale;
-    position.value = newPosition;
+    scale.value = newScale
+    position.value = newPosition
   }
-};
+}
 
-// 保存到 localStorage
 watch(code, (newCode) => {
-  saveToStorageDebounced(STORAGE_KEY, newCode);
-  scheduleRender(true);
-});
-renderMermaid(true);
+  saveToStorageDebounced(STORAGE_KEY, newCode)
+  scheduleRender(true)
+})
 
-// 监听主题变化
-watch(mermaidTheme, (newTheme) => {
-  saveToStorage(THEME_STORAGE_KEY, newTheme);
-  renderMermaid();
-});
+watch(mermaidTheme, (v) => { saveToStorage(THEME_STORAGE_KEY, v); void renderMermaid() })
+watch(mermaidLook, (v) => { saveToStorage(LOOK_STORAGE_KEY, v); void renderMermaid() })
+watch(mermaidCurve, (v) => { saveToStorage(CURVE_STORAGE_KEY, v); void renderMermaid() })
+watch(exportBg, (v) => saveToStorage('mermaid-bg', v))
+watch(layoutMode, (v) => {
+  saveToStorage(VIEW_MODE_KEY, v)
+  nextTick(() => remountEditor())
+})
 
-// 监听外观变化
-watch(mermaidLook, (newLook) => {
-  saveToStorage(LOOK_STORAGE_KEY, newLook);
-  renderMermaid();
-});
+const remountEditor = () => {
+  const mount = editorMount.value
+  if (!mount || !editor) return
+  const node = editor.getContainerDomNode()
+  if (node.parentElement !== mount) mount.replaceChildren(node)
+  editor.layout()
+}
 
-// 监听曲线变化
-watch(mermaidCurve, (newCurve) => {
-  saveToStorage(CURVE_STORAGE_KEY, newCurve);
-  renderMermaid();
-});
-
-// 监听背景色变化
-watch(exportBg, (newBg) => {
-  saveToStorage('mermaid-bg', newBg);
-});
-
-// 监听左侧宽度变化，调整编辑器大小
-watch(leftWidth, () => {
-  editor?.layout();
-});
-
-// 使用历史记录
 const useHistoryItem = (content: string) => {
-  code.value = content;
-  editor?.setValue(content);
-  showHistory.value = false;
-};
+  code.value = content
+  editor?.setValue(content)
+  showHistory.value = false
+}
 
-onMounted(() => {
-  if (editorContainer.value) {
-    editor = monaco.editor.create(editorContainer.value, {
-      value: code.value,
-      language: 'mermaid',
-      theme: getMonacoTheme(),
-      minimap: { enabled: false },
-      fontSize: 14,
-      lineNumbers: 'on',
-      wordWrap: 'on',
-      automaticLayout: true,
-      scrollBeyondLastLine: false,
-    });
-    
-    editor.onDidChangeModelContent(() => {
-      code.value = editor?.getValue() || '';
-    });
-    
-    editor.onDidPaste(() => {
-      trackTimer(() => {
-        const content = editor?.getValue() || '';
-        if (content.trim()) {
-          addHistory(content);
-        }
-      }, 50);
-    });
-    
-    themeWatcher = watchThemeChange(editor);
-  }
-});
+const onThemeSelect = (v: string) => { mermaidTheme.value = v as MermaidThemeKey }
+const onLookSelect = (v: string) => { mermaidLook.value = v as MermaidLook }
+const onCurveSelect = (v: string) => { mermaidCurve.value = v as MermaidCurve }
+const onBgSelect = (v: string) => { exportBg.value = v as ExportBg }
 
-// 离开页面时保存历史
-onBeforeUnmount(() => {
-  if (code.value.trim() && code.value !== DEFAULT_CODE) {
-    addHistory(code.value);
-  }
-});
+const onOverflow = (v: string) => {
+  if (v.startsWith('theme:')) onThemeSelect(v.slice(6))
+  else if (v.startsWith('look:')) onLookSelect(v.slice(5))
+  else if (v.startsWith('curve:')) onCurveSelect(v.slice(6))
+  else if (v === 'bg:white') onBgSelect('white')
+  else if (v === 'bg:transparent') onBgSelect('transparent')
+  else if (v === 'png') void downloadPng()
+  else if (v === 'svg') downloadSvg()
+}
 
 const startDrag = (e: MouseEvent) => {
-  isDragging.value = true;
-  const pos = isFullscreen.value ? fullscreenPosition.value : position.value;
-  dragStart.value = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-  document.addEventListener('mousemove', onDrag);
-  document.addEventListener('mouseup', stopDrag);
-};
+  isDragging.value = true
+  const pos = currentPosition.value
+  dragStart.value = { x: e.clientX - pos.x, y: e.clientY - pos.y }
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+}
 
 const onDrag = (e: MouseEvent) => {
-  if (!isDragging.value) return;
-  const newPos = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-  if (isFullscreen.value) {
-    fullscreenPosition.value = newPos;
-  } else {
-    position.value = newPos;
-  }
-};
+  if (!isDragging.value) return
+  const newPos = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y }
+  if (isFullscreen.value) fullscreenPosition.value = newPos
+  else position.value = newPos
+}
 
 const stopDrag = () => {
-  isDragging.value = false;
-  document.removeEventListener('mousemove', onDrag);
-  document.removeEventListener('mouseup', stopDrag);
-};
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
 
 const handleWheel = (e: WheelEvent) => {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? 0.9 : 1.1
   if (isFullscreen.value) {
-    fullscreenScale.value = Math.min(Math.max(0.1, fullscreenScale.value * delta), 10);
+    fullscreenScale.value = Math.min(Math.max(0.1, fullscreenScale.value * delta), 10)
   } else {
-    scale.value = Math.min(Math.max(0.1, scale.value * delta), 10);
+    scale.value = Math.min(Math.max(0.1, scale.value * delta), 10)
   }
-};
+}
 
 const zoomIn = () => {
-  if (isFullscreen.value) {
-    fullscreenScale.value = Math.min(fullscreenScale.value * 1.2, 10);
-  } else {
-    scale.value = Math.min(scale.value * 1.2, 10);
-  }
-};
+  if (isFullscreen.value) fullscreenScale.value = Math.min(fullscreenScale.value * 1.2, 10)
+  else scale.value = Math.min(scale.value * 1.2, 10)
+}
 const zoomOut = () => {
-  if (isFullscreen.value) {
-    fullscreenScale.value = Math.max(fullscreenScale.value / 1.2, 0.1);
-  } else {
-    scale.value = Math.max(scale.value / 1.2, 0.1);
-  }
-};
-const resetZoom = () => { fitToCenter(); };
-
-const onScaleInput = (e: Event) => {
-  const value = (e.target as HTMLInputElement).valueAsNumber / 100;
-  if (isFullscreen.value) {
-    fullscreenScale.value = value;
-  } else {
-    scale.value = value;
-  }
-};
+  if (isFullscreen.value) fullscreenScale.value = Math.max(fullscreenScale.value / 1.2, 0.1)
+  else scale.value = Math.max(scale.value / 1.2, 0.1)
+}
+const resetZoom = () => fitToCenter()
 
 const toggleFullscreen = () => {
-  isFullscreen.value = !isFullscreen.value;
-  nextTick(() => fitToCenter());
-};
+  isFullscreen.value = !isFullscreen.value
+  nextTick(() => {
+    fitToCenter()
+    editor?.layout()
+  })
+}
 
 const downloadSvg = () => {
-  if (!svgOutput.value) return;
-  const blob = new Blob([svgOutput.value], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'mermaid-diagram.svg';
-  a.click();
-  URL.revokeObjectURL(url);
-};
+  const svg = displaySvg.value
+  if (!svg) return
+  const blob = new Blob([svg], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'mermaid-diagram.svg'
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const downloadPng = async () => {
-  if (!code.value.trim()) return;
-
-  const exportId = `mermaid-png-${++renderId}`;
+  if (!code.value.trim()) return
+  const exportId = `mermaid-png-${++renderId}`
   try {
-    // 重新渲染一个不使用 foreignObject 的版本（htmlLabels: false）
-    initMermaid({ htmlLabels: false });
-    const { svg: pngSvg } = await mermaid.render(exportId, code.value);
-    // 导出配置不同于预览配置，清空缓存让下次预览渲染时重新初始化
-    lastInitKey = '';
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(pngSvg, 'image/svg+xml');
-    const svg = doc.querySelector('svg');
-    if (!svg) return;
-
-    let width = parseFloat(svg.getAttribute('width') || '0');
-    let height = parseFloat(svg.getAttribute('height') || '0');
+    initMermaid({ htmlLabels: false })
+    const { svg: pngSvg } = await mermaid.render(exportId, code.value)
+    lastInitKey = ''
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(pngSvg, 'image/svg+xml')
+    const svg = doc.querySelector('svg')
+    if (!svg) return
+    let width = parseFloat(svg.getAttribute('width') || '0')
+    let height = parseFloat(svg.getAttribute('height') || '0')
     if (!width || !height) {
-      const viewBox = svg.getAttribute('viewBox')?.split(' ').map(Number);
+      const viewBox = svg.getAttribute('viewBox')?.split(' ').map(Number)
       if (viewBox && viewBox.length === 4) {
-        width = viewBox[2];
-        height = viewBox[3];
+        width = viewBox[2]
+        height = viewBox[3]
       }
     }
-    const padding = 20;
-    width += padding * 2;
-    height += padding * 2;
-    svg.setAttribute('width', String(width));
-    svg.setAttribute('height', String(height));
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    const exportScale = 2;
-
+    const padding = 20
+    width += padding * 2
+    height += padding * 2
+    svg.setAttribute('width', String(width))
+    svg.setAttribute('height', String(height))
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    const exportScale = 2
     img.onload = () => {
       try {
-        canvas.width = width * exportScale;
-        canvas.height = height * exportScale;
+        canvas.width = width * exportScale
+        canvas.height = height * exportScale
         if (exportBg.value === 'white') {
-          ctx!.fillStyle = '#ffffff';
-          ctx!.fillRect(0, 0, canvas.width, canvas.height);
+          ctx!.fillStyle = cssVarToHex('--background')
+          ctx!.fillRect(0, 0, canvas.width, canvas.height)
         }
-        ctx!.scale(exportScale, exportScale);
-        ctx!.drawImage(img, 0, 0);
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/png', 1.0);
-        a.download = 'mermaid-diagram.png';
-        a.click();
+        ctx!.scale(exportScale, exportScale)
+        ctx!.drawImage(img, 0, 0)
+        const a = document.createElement('a')
+        a.href = canvas.toDataURL('image/png', 1.0)
+        a.download = 'mermaid-diagram.png'
+        a.click()
       } catch (err) {
-        // 画布被污染（部分图表含 foreignObject）或超出尺寸限制时会抛 SecurityError / RangeError
-        console.error('PNG export failed:', err);
-        showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
+        console.error('PNG export failed:', err)
+        showToast(t('tools.mermaid.pngFailed'), 'error', 4000)
       }
-    };
-    img.onerror = () => {
-      console.error('PNG export failed: image load error');
-      showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
-    };
-    img.src = dataUrl;
+    }
+    img.onerror = () => showToast(t('tools.mermaid.pngFailed'), 'error', 4000)
+    img.src = dataUrl
   } catch (e) {
-    cleanupMermaidLeftovers(exportId);
-    lastInitKey = '';
-    console.error('PNG export failed:', e);
-    showToast(t('tools.mermaid.pngFailed'), 'error', 4000);
+    cleanupMermaidLeftovers(exportId)
+    lastInitKey = ''
+    console.error('PNG export failed:', e)
+    showToast(t('tools.mermaid.pngFailed'), 'error', 4000)
   }
-};
+}
+
+onMounted(() => {
+  nextTick(() => {
+    if (editorMount.value) {
+      editor = monaco.editor.create(editorMount.value, {
+        value: code.value,
+        language: 'mermaid',
+        theme: getMonacoTheme(),
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineNumbers: 'on',
+        wordWrap: 'on',
+        automaticLayout: true,
+        scrollBeyondLastLine: false,
+      })
+      registerGlobalShortcuts(editor)
+      themeWatcher = watchThemeChange(editor)
+      contentListener = editor.onDidChangeModelContent(() => {
+        code.value = editor?.getValue() ?? ''
+      })
+      editor.onDidPaste(() => {
+        trackTimer(() => {
+          const content = editor?.getValue() ?? ''
+          if (content.trim()) addHistory(content)
+        }, 50)
+      })
+    }
+    void renderMermaid(true)
+  })
+})
+
+onBeforeUnmount(() => {
+  if (code.value.trim() && code.value !== DEFAULT_CODE) addHistory(code.value)
+})
 
 onUnmounted(() => {
-  if (renderDebounce) clearTimeout(renderDebounce);
-  while (pendingTimers.length) {
-    clearTimeout(pendingTimers.pop());
-  }
-  themeWatcher?.();
-  themeWatcher = null;
-  editor?.dispose();
-  editor = null;
-  document.removeEventListener('mousemove', onDrag);
-  document.removeEventListener('mouseup', stopDrag);
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', stopResize);
-});
+  if (renderDebounce) clearTimeout(renderDebounce)
+  while (pendingTimers.length) clearTimeout(pendingTimers.pop())
+  contentListener?.dispose()
+  themeWatcher?.()
+  editor?.dispose()
+  editor = null
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+})
 </script>

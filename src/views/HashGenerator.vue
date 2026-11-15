@@ -1,159 +1,144 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Hash class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.hash.name') }}</span>
-        </div>
-      </div>
+  <ToolShell :icon="Hash" :title="t('tools.hash.name')" flush>
+    <template #right>
+      <IconButton :title="t('common.paste')" @click="pasteInput">
+        <ClipboardPaste class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.clear')" danger @click="clearInput">
+        <Trash2 class="w-3.5 h-3.5" />
+      </IconButton>
+    </template>
 
-      <!-- Right Side Actions -->
-      <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
-        <button @click="pasteInput" class="px-3 py-1.5 text-xs font-medium rounded-md btn-secondary flex items-center space-x-1.5 transition-colors">
-          <ClipboardPaste class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">{{ $t('common.paste') }}</span>
-        </button>
-        <button @click="clearInput" class="px-3 py-1.5 text-xs font-medium rounded-md btn-destructive transition-colors flex items-center space-x-1.5">
-          <Trash2 class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">{{ $t('common.clear') }}</span>
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+    <template #help>
+      <p>{{ t('tools.hash.description') }}</p>
+      <p class="font-semibold mt-3 mb-2">{{ t('tools.hash.coreFeatures') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li><strong>MD5:</strong> {{ t('tools.hash.md5Description') }}</li>
+        <li><strong>SHA-1:</strong> {{ t('tools.hash.sha1Description') }}</li>
+        <li><strong>SHA-256:</strong> {{ t('tools.hash.sha256Description') }}</li>
+        <li><strong>SHA-512:</strong> {{ t('tools.hash.sha512Description') }}</li>
+      </ul>
+    </template>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-2">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
-        <!-- Input Editor -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('common.labels.input') }}</h3>
-            <div class="flex items-center space-x-1">
-              <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="clearInput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 relative">
+    <SplitPane storage-key="hash" :initial="42">
+      <template #a>
+        <Pane :title="t('tools.hash.inputPanel')">
+          <template #actions>
+            <IconButton :title="t('common.copy')" small @click="copyInput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <div class="absolute inset-0">
             <div ref="editorRef" class="absolute inset-0"></div>
           </div>
-        </div>
-
-        <!-- Hash Results -->
-        <div class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-          <div class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-            <h3 class="text-xs font-medium text-muted-foreground">{{ $t('tools.hash.result') }}</h3>
-          </div>
-          <div class="flex-1 p-3 space-y-3 overflow-y-auto">
-            <div v-for="hashType in hashTypes" :key="hashType.key" class="bg-muted/30 border border-border rounded-lg p-3 hover:border-primary/50 transition-colors group">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-semibold text-foreground">{{ hashType.label }}</span>
-                <button
-                  @click="copyHash(hashType.key as HashKey)"
-                  class="p-1 hover:bg-primary/10 hover:text-primary rounded-md opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
-                  :title="$t('common.copy')"
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :title="t('tools.hash.resultPanel')" scroll>
+          <Transition name="result-fade" mode="out-in">
+            <div :key="resultKey" class="p-2 space-y-1.5">
+              <div
+                v-for="hashType in hashTypes"
+                :key="hashType.key"
+                class="flex items-start gap-2 rounded-md border border-border bg-muted/20 px-2 py-1.5 group hover:border-primary/40"
+                style="transition: border-color var(--dur-fast) var(--ease-out)"
+              >
+                <span class="text-xs font-semibold text-foreground w-16 shrink-0 pt-0.5">{{ hashType.label }}</span>
+                <span class="font-mono text-xs break-all text-muted-foreground flex-1 select-all">{{ hashes[hashType.key] || '—' }}</span>
+                <IconButton
+                  :title="t('common.copy')"
+                  small
+                  class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 shrink-0"
+                  style="transition: opacity var(--dur-fast) var(--ease-out)"
+                  @click="copyHash(hashType.key)"
                 >
                   <Copy class="w-3.5 h-3.5" />
-                </button>
+                </IconButton>
               </div>
-              <div class="font-mono text-xs break-all text-muted-foreground select-all">{{ hashes[hashType.key as HashKey] || '-' }}</div>
             </div>
-          </div>
-        </div>
-      </div>
-    </main>
+          </Transition>
+        </Pane>
+      </template>
+    </SplitPane>
 
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.hash.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.hash.description') }}</p>
-          <div>
-            <p class="font-bold mb-2">{{ $t('tools.hash.coreFeatures') }}:</p>
-            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>MD5:</strong> {{ $t('tools.hash.md5Description') }}</li>
-              <li><strong>SHA-1:</strong> {{ $t('tools.hash.sha1Description') }}</li>
-              <li><strong>SHA-256:</strong> {{ $t('tools.hash.sha256Description') }}</li>
-              <li><strong>SHA-512:</strong> {{ $t('tools.hash.sha512Description') }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    <template #status>
+      <StatusBar>
+        <span v-if="inputText.length" class="text-muted-foreground">
+          {{ t('tools.hash.statusChars', { n: inputText.length }) }}
+        </span>
+        <span v-else class="text-muted-foreground">{{ t('tools.hash.statusEmpty') }}</span>
+        <template #right>
+          <span class="max-sm:hidden">UTF-8</span>
+        </template>
+      </StatusBar>
+    </template>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import * as monaco from '@/utils/monaco';
-import { HelpCircle, Hash, ClipboardPaste, Trash2, Copy, X } from 'lucide-vue-next';
-import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme';
-import { useDebounceFn } from '../composables/useDebounceFn';
-import { copyText, readClipboardText } from '../utils/clipboard';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import { Hash, ClipboardPaste, Trash2, Copy } from 'lucide-vue-next'
+import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
+import { useDebounceFn } from '../composables/useDebounceFn'
+import { copyText, readClipboardText } from '../utils/clipboard'
 
-type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512';
+type HashKey = 'md5' | 'sha1' | 'sha256' | 'sha512'
 
-const editorRef = ref<HTMLElement | null>(null);
-let editor: monaco.editor.IStandaloneCodeEditor | null = null;
-let themeWatcher: (() => void) | null = null;
-const showHelp = ref(false);
+const { t } = useI18n()
 
-const inputText = ref('Hello World!');
-const hashes = ref({
+const editorRef = ref<HTMLElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+let themeWatcher: (() => void) | null = null
+
+const inputText = ref('Hello World!')
+const hashes = ref<Record<HashKey, string>>({
   md5: '',
   sha1: '',
   sha256: '',
   sha512: '',
-});
+})
 
 const hashTypes = [
-  { key: 'md5', label: 'MD5' },
-  { key: 'sha1', label: 'SHA-1' },
-  { key: 'sha256', label: 'SHA-256' },
-  { key: 'sha512', label: 'SHA-512' },
-];
+  { key: 'md5' as const, label: 'MD5' },
+  { key: 'sha1' as const, label: 'SHA-1' },
+  { key: 'sha256' as const, label: 'SHA-256' },
+  { key: 'sha512' as const, label: 'SHA-512' },
+]
+
+// 结果区过渡 key：哈希整体更新时触发淡入
+const resultKey = computed(() => `${hashes.value.md5}:${inputText.value.length}`)
 
 const generateHashes = () => {
-  const text = inputText.value;
-  hashes.value.md5 = MD5(text).toString();
-  hashes.value.sha1 = SHA1(text).toString();
-  hashes.value.sha256 = SHA256(text).toString();
-  hashes.value.sha512 = SHA512(text).toString();
-};
+  const text = inputText.value
+  hashes.value.md5 = MD5(text).toString()
+  hashes.value.sha1 = SHA1(text).toString()
+  hashes.value.sha256 = SHA256(text).toString()
+  hashes.value.sha512 = SHA512(text).toString()
+}
 
-// 防抖版：连续输入时每次按键都重算 4 种哈希，对 MB 级文本会明显卡顿。
-// 用 200ms 防抖，停顿后才计算。粘贴/清空等场景仍用上面的立即版本。
-const generateHashesDebounced = useDebounceFn(generateHashes, 200);
+const generateHashesDebounced = useDebounceFn(generateHashes, 200)
 
 const replaceTextInEditor = (newText: string) => {
-  if (!editor) return;
-  const model = editor.getModel();
+  if (!editor) return
+  const model = editor.getModel()
   if (model) {
-    const fullRange = model.getFullModelRange();
-    editor.executeEdits('hash-processor', [{ range: fullRange, text: newText }]);
+    const fullRange = model.getFullModelRange()
+    editor.executeEdits('hash-processor', [{ range: fullRange, text: newText }])
   } else {
-    editor.setValue(newText);
+    editor.setValue(newText)
   }
-};
+}
 
 const initEditor = async () => {
-  await nextTick();
+  await nextTick()
   if (editorRef.value) {
     editor = monaco.editor.create(editorRef.value, {
       value: inputText.value,
@@ -166,53 +151,53 @@ const initEditor = async () => {
       padding: { top: 16, bottom: 16 },
       fontSize: 14,
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-    });
+    })
     editor.onDidChangeModelContent(() => {
-      inputText.value = editor?.getValue() || '';
-      // 连续输入走防抖，避免大文本时每次按键都重算 4 种哈希
-      generateHashesDebounced.run();
-    });
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-    themeWatcher = watchThemeChange(editor);
-    registerGlobalShortcuts(editor);
+      inputText.value = editor?.getValue() || ''
+      generateHashesDebounced.run()
+    })
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+    themeWatcher = watchThemeChange(editor)
+    registerGlobalShortcuts(editor)
   }
-  generateHashes();
-};
+  generateHashes()
+}
 
 const pasteInput = async () => {
-  const text = await readClipboardText();
-  if (text === null) return;
-  // 取消可能挂起的防抖计算，避免和下面的立即计算重复
-  generateHashesDebounced.cancel();
-  replaceTextInEditor(text);
-  // 粘贴后立即计算哈希，给用户即时反馈（不防抖）
-  generateHashes();
-};
+  const text = await readClipboardText()
+  if (text === null) return
+  generateHashesDebounced.cancel()
+  replaceTextInEditor(text)
+  generateHashes()
+}
 
 const clearInput = () => {
-  generateHashesDebounced.cancel();
-  replaceTextInEditor('');
-  // 清空后立即重算（显示空输入的哈希），不防抖
-  generateHashes();
-};
+  generateHashesDebounced.cancel()
+  replaceTextInEditor('')
+  generateHashes()
+}
+
+const copyInput = () => copyText(inputText.value)
 
 const copyHash = (key: HashKey) => {
-  void copyText(hashes.value[key]);
-};
+  void copyText(hashes.value[key])
+}
 
-onMounted(initEditor);
+onMounted(initEditor)
 onBeforeUnmount(() => {
-  themeWatcher?.();
-  editor?.dispose();
-});
+  themeWatcher?.()
+  editor?.dispose()
+})
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.result-fade-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.result-fade-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
 }
 </style>

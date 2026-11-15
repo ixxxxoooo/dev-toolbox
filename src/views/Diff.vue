@@ -1,185 +1,145 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <FileDiff class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.diff.name') }}</span>
-        </div>
+  <ToolShell :icon="FileDiff" :title="$t('tools.diff.name')" flush>
+    <template #actions>
+      <Segmented v-model="diffMode" :options="modeOptions" small />
+      <ToggleChip v-model="ignoreWhitespace">{{ $t('tools.diff.ignoreWhitespace') }}</ToggleChip>
+      <ToggleChip v-model="ignoreCase" class="max-xl:hidden">{{ $t('tools.diff.ignoreCase') }}</ToggleChip>
+      <ToggleChip v-model="trimTrailing" class="max-lg:hidden">{{ $t('tools.diff.trimTrailing') }}</ToggleChip>
+      <span
+        class="inline-flex"
+        :title="!canIgnoreKeyOrder ? $t('tools.diff.ignoreKeyOrderDisabledTip') : undefined"
+      >
+        <ToggleChip v-model="ignoreKeyOrder" :disabled="!canIgnoreKeyOrder" class="max-lg:hidden">
+          {{ $t('tools.diff.ignoreKeyOrder') }}
+        </ToggleChip>
+      </span>
+      <ToggleChip
+        :model-value="decodeUnicode"
+        class="max-md:hidden"
+        @update:model-value="onDecodeUnicodeChange"
+      >
+        <Languages class="w-3 h-3" />
+        {{ $t('tools.diff.unicodeDecode') }}
+      </ToggleChip>
 
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- Mode Selection -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            @click="diffMode = 'split'"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="diffMode === 'split' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t('tools.diff.sideBySide') }}
-          </button>
-          <button
-            @click="diffMode = 'inline'"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent"
-            :class="diffMode === 'inline' ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'"
-          >
-            {{ $t('tools.diff.inline') }}
-          </button>
-        </div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- History Action -->
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button
-            @click="showHistory = true"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground flex items-center space-x-1"
-            :title="$t('common.buttons.history')"
-          >
-            <History class="w-3.5 h-3.5" />
-            <span class="hidden sm:inline">{{ $t('common.buttons.history') }}</span>
-          </button>
-        </div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-
-        <!-- Options -->
-        <div class="flex items-center space-x-3 flex-shrink-0">
-          <CustomCheckbox
-            v-model="ignoreWhitespace"
-            :label="$t('tools.diff.ignoreWhitespace')"
-          />
-          <CustomCheckbox
-            v-model="wordWrapEnabled"
-            :label="$t('tools.diff.wordWrap')"
-          />
-
-          <!-- Unicode 解码开关：选中=把左右两侧的 \uXXXX 解码成中文 -->
-          <button
-            @click="toggleDecodeUnicode"
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all border flex items-center space-x-1"
-            :class="decodeUnicode ? 'bg-primary/10 text-primary border-primary/20' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'"
-            :title="$t('tools.diff.unicodeDecodeDesc')"
-          >
-            <Languages class="w-3.5 h-3.5" />
-            <span>{{ $t('tools.diff.unicodeDecode') }}</span>
-          </button>
-
-          <button
-            @click="showMinimap = !showMinimap"
-            class="p-1.5 rounded-md transition-colors h-7 w-7 flex items-center justify-center border border-transparent"
-            :class="showMinimap ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground hover:bg-muted'"
-            title="Toggle Minimap"
-          >
-            <Map class="w-3.5 h-3.5" />
-          </button>
-        </div>
+      <span class="tool-vr max-sm:hidden"></span>
+      <div class="inline-flex items-center gap-0.5 shrink-0" :aria-label="$t('tools.diff.diffNavigation')">
+        <IconButton :title="$t('tools.diff.previousDiff')" small @click="goToPrevDiff">
+          <ChevronUp class="w-4 h-4" />
+        </IconButton>
+        <span class="badge min-w-[2.75rem] justify-center tabular-nums">{{ diffPositionLabel }}</span>
+        <IconButton :title="$t('tools.diff.nextDiff')" small @click="goToNextDiff">
+          <ChevronDown class="w-4 h-4" />
+        </IconButton>
       </div>
+    </template>
 
-      <!-- Right Side Actions -->
-      <div class="flex items-center space-x-1 flex-shrink-0 ml-4">
-        <button @click="goToPrevDiff" :title="$t('tools.diff.previousDiff')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <ArrowUp class="w-4 h-4" />
-        </button>
-        <button @click="goToNextDiff" :title="$t('tools.diff.nextDiff')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <ArrowDown class="w-4 h-4" />
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="swapContent" :title="$t('tools.diff.swapContent')" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <ArrowRightLeft class="w-4 h-4" />
-        </button>
-        <button @click="clearAll" :title="$t('tools.diff.clearAll')" class="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-muted-foreground">
-          <Trash2 class="w-4 h-4" />
-        </button>
-        <div class="h-4 w-px bg-border mx-1"></div>
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+    <template #right>
+      <IconButton :title="$t('tools.diff.swapContent')" @click="swapContent">
+        <ArrowLeftRight class="w-4 h-4" />
+      </IconButton>
+      <IconButton :title="$t('tools.diff.formatBoth')" class="max-sm:hidden" @click="formatBothSides">
+        <Wand2 class="w-4 h-4" />
+      </IconButton>
+      <IconButton :title="$t('common.buttons.history')" @click="showHistory = true">
+        <History class="w-4 h-4" />
+      </IconButton>
+      <IconButton :title="$t('tools.diff.clearAll')" danger @click="clearAll">
+        <Trash2 class="w-4 h-4" />
+      </IconButton>
+      <IconButton
+        :title="$t('tools.diff.toggleMinimap')"
+        :active="showMinimap"
+        @click="showMinimap = !showMinimap"
+      >
+        <Map class="w-4 h-4" />
+      </IconButton>
+      <DropdownMenu :items="moreMenuItems" align="right" @select="onMoreMenu">
+        <template #trigger>
+          <IconButton :title="$t('tools.diff.moreOptions')">
+            <MoreHorizontal class="w-4 h-4" />
+          </IconButton>
+        </template>
+      </DropdownMenu>
+    </template>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-2">
-      <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-        <!-- Headers for split view -->
-        <div v-if="diffMode === 'split'" class="grid grid-cols-2 bg-muted/30 border-b border-border">
-          <div class="flex items-center justify-between px-3 py-1.5 border-r border-border">
-            <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.leftPanel') }}</span>
-            <div class="flex items-center space-x-1">
-              <button @click="formatSide('original')" :title="$t('tools.diff.format')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Wand2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="pasteTo('original')" :title="$t('tools.diff.pasteLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyFrom('original')" :title="$t('tools.diff.copyLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div class="flex items-center justify-between px-3 py-1.5">
-            <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.rightPanel') }}</span>
-            <div class="flex items-center space-x-1">
-              <button @click="formatSide('modified')" :title="$t('tools.diff.format')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Wand2 class="w-3.5 h-3.5" />
-              </button>
-              <button @click="pasteTo('modified')" :title="$t('tools.diff.pasteRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <ClipboardPaste class="w-3.5 h-3.5" />
-              </button>
-              <button @click="copyFrom('modified')" :title="$t('tools.diff.copyRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- Header for inline view -->
-        <div v-else class="flex items-center justify-between px-3 py-1.5 bg-muted/30 border-b border-border">
-          <span class="text-xs font-medium text-muted-foreground">{{ $t('tools.diff.name') }} ({{ $t('tools.diff.inline') }})</span>
-          <div class="flex items-center space-x-1">
-            <button @click="formatSide('original')" :title="$t('tools.diff.formatLeft')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Wand2 class="w-3.5 h-3.5" />
-              <span class="sr-only">{{ $t('tools.diff.formatLeft') }}</span>
-            </button>
-            <button @click="formatSide('modified')" :title="$t('tools.diff.formatRight')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-              <Wand2 class="w-3.5 h-3.5" />
-              <span class="sr-only">{{ $t('tools.diff.formatRight') }}</span>
-            </button>
-          </div>
-        </div>
+    <template #help>
+      <p>{{ $t('tools.diff.helpIntro') }}</p>
+      <ul class="mt-3 space-y-1.5 list-disc list-inside text-muted-foreground">
+        <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.ignoreCase') }}:</strong> {{ $t('tools.diff.ignoreCaseDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.trimTrailing') }}:</strong> {{ $t('tools.diff.trimTrailingDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.ignoreKeyOrder') }}:</strong> {{ $t('tools.diff.ignoreKeyOrderDescription') }}</li>
+        <li><strong>{{ $t('tools.diff.unicodeDecode') }}:</strong> {{ $t('tools.diff.unicodeDecodeDesc') }}</li>
+        <li>{{ $t('tools.diff.diffNavShortcut') }}</li>
+      </ul>
+    </template>
 
-        <!-- The actual editor container -->
-        <div class="flex-1 relative">
-          <div ref="diffEditorRef" class="absolute inset-0"></div>
+    <Pane class="flex-1 min-h-0 m-2 mb-0">
+      <template #title>
+        <span class="truncate max-sm:hidden">{{ $t('tools.diff.mode') }}</span>
+        <span class="badge max-md:hidden">{{ $t('tools.diff.statsLeftLines', { n: leftLineCount }) }}</span>
+        <span class="badge max-md:hidden">{{ $t('tools.diff.statsRightLines', { n: rightLineCount }) }}</span>
+        <span v-if="diffSummary.hunks" class="badge badge-primary max-lg:hidden">
+          {{ $t('tools.diff.statsHunks', { n: diffSummary.hunks }) }}
+        </span>
+        <span v-if="diffSummary.added" class="badge badge-add">{{ $t('tools.diff.statsAdded', { n: diffSummary.added }) }}</span>
+        <span v-if="diffSummary.removed" class="badge badge-del">{{ $t('tools.diff.statsRemoved', { n: diffSummary.removed }) }}</span>
+      </template>
+      <template v-if="diffMode === 'split'" #actions>
+        <div class="inline-flex items-center gap-0.5 max-sm:hidden">
+          <IconButton :title="$t('tools.diff.formatLeft')" small @click="formatSide('original')">
+            <Wand2 class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="$t('tools.diff.pasteLeft')" small @click="pasteTo('original')">
+            <ClipboardPaste class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="$t('tools.diff.copyLeft')" small @click="copyFrom('original')">
+            <Copy class="w-3.5 h-3.5" />
+          </IconButton>
         </div>
-      </div>
-    </main>
+        <span class="text-muted-foreground/50 px-1 max-sm:hidden">|</span>
+        <div class="inline-flex items-center gap-0.5">
+          <IconButton :title="$t('tools.diff.formatRight')" small @click="formatSide('modified')">
+            <Wand2 class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="$t('tools.diff.pasteRight')" small @click="pasteTo('modified')">
+            <ClipboardPaste class="w-3.5 h-3.5" />
+          </IconButton>
+          <IconButton :title="$t('tools.diff.copyRight')" small @click="copyFrom('modified')">
+            <Copy class="w-3.5 h-3.5" />
+          </IconButton>
+        </div>
+      </template>
+      <div ref="diffEditorRef" class="absolute inset-0"></div>
+    </Pane>
 
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.diff.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.diff.description') }}</p>
-          <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong>{{ $t('tools.diff.sideBySide') }}:</strong> {{ $t('tools.diff.sideBySideDescription') }}</li>
-            <li><strong>{{ $t('tools.diff.inline') }}:</strong> {{ $t('tools.diff.inlineDescription') }}</li>
-            <li><strong>{{ $t('tools.diff.ignoreWhitespace') }}:</strong> {{ $t('tools.diff.ignoreWhitespaceDescription') }}</li>
-            <li><strong>{{ $t('tools.diff.unicodeDecode') }}:</strong> {{ $t('tools.diff.unicodeDecodeDesc') }}</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    <template #status>
+      <StatusBar :state="statusError ? 'error' : 'ok'">
+        <template v-if="statusError">
+          <span class="sb-err"><AlertCircle class="w-3.5 h-3.5" />{{ statusError }}</span>
+        </template>
+        <template v-else-if="diffSummary.hunks">
+          <span class="sb-warn">{{ $t('tools.diff.diffHunks', { n: diffSummary.hunks }) }}</span>
+          <span v-if="diffSummary.added" class="text-[hsl(var(--success))]">
+            {{ $t('tools.diff.statsAdded', { n: diffSummary.added }) }}
+          </span>
+          <span v-if="diffSummary.removed" class="text-[hsl(var(--destructive))]">
+            {{ $t('tools.diff.statsRemoved', { n: diffSummary.removed }) }}
+          </span>
+          <span>{{ $t('tools.diff.similarity', { n: similarityPercent }) }}</span>
+        </template>
+        <span v-else class="sb-ok"><Check class="w-3.5 h-3.5" />{{ $t('tools.diff.contentIdentical') }}</span>
+        <template #right>
+          <span class="max-md:hidden">{{ $t('tools.diff.statsLeftLines', { n: leftLineCount }) }}</span>
+          <span class="max-md:hidden">{{ $t('tools.diff.statsRightLines', { n: rightLineCount }) }}</span>
+          <span>{{ diffMode === 'split' ? $t('tools.diff.sideBySide') : $t('tools.diff.inline') }}</span>
+        </template>
+      </StatusBar>
+    </template>
 
-    <!-- History Modal -->
     <HistoryModal
       :show="showHistory"
       :history="history"
@@ -189,197 +149,331 @@
       @delete="deleteHistory"
       @clear="clearHistory"
     />
-
-    <!-- Error Toast -->
-    <Transition name="slide-up">
-      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-3 py-2 rounded-lg shadow-lg flex items-start space-x-3 z-50">
-        <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <div class="flex-1">
-          <p class="font-medium text-sm">{{ errorMessage }}</p>
-        </div>
-        <button @click="errorMessage = ''" class="flex-shrink-0 hover:opacity-70">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
-    </Transition>
-  </div>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
-import * as monaco from '@/utils/monaco';
-import { HelpCircle, FileDiff, ArrowUp, ArrowDown, ArrowRightLeft, Trash2, ClipboardPaste, Copy, X, History, Map, Languages, Wand2, AlertCircle } from 'lucide-vue-next';
-import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme';
-import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage';
-import CustomCheckbox from '../components/CustomCheckbox.vue';
-import { useHistory } from '../composables/useHistory';
-import { useThemeStore } from '../stores/theme';
-import HistoryModal from '../components/HistoryModal.vue';
-import { formatText } from '../utils/textFormat';
-import { decodeUnicodeEscapes } from '../utils/unicode';
-import { copyText, readClipboardText } from '../utils/clipboard';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import * as monaco from '@/utils/monaco'
+import {
+  FileDiff,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeftRight,
+  Trash2,
+  ClipboardPaste,
+  Copy,
+  History,
+  Map,
+  Languages,
+  Wand2,
+  AlertCircle,
+  Check,
+  Columns2,
+  Rows3,
+  MoreHorizontal,
+} from 'lucide-vue-next'
+import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme'
+import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
+import { useHistory } from '../composables/useHistory'
+import { useThemeStore } from '../stores/theme'
+import HistoryModal from '../components/HistoryModal.vue'
+import { formatText } from '../utils/textFormat'
+import { decodeUnicodeEscapes } from '../utils/unicode'
+import { copyText, readClipboardText } from '../utils/clipboard'
+import ToolShell from '../components/ui/ToolShell.vue'
+import Pane from '../components/ui/Pane.vue'
+import StatusBar from '../components/ui/StatusBar.vue'
+import Segmented from '../components/ui/Segmented.vue'
+import type { SegmentedOption } from '../components/ui/Segmented.vue'
+import ToggleChip from '../components/ui/ToggleChip.vue'
+import IconButton from '../components/ui/IconButton.vue'
+import DropdownMenu from '../components/ui/DropdownMenu.vue'
+import type { MenuItem } from '../components/ui/DropdownMenu.vue'
+import {
+  bothStrictJson,
+  normalizeTextLines,
+  formatJsonWithSortedKeys,
+  summarizeLineChanges,
+  computeSimilarityPercent,
+} from '../utils/diffNormalize'
 
-const diffEditorRef = ref<HTMLElement | null>(null);
-let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null;
-let originalModel: monaco.editor.ITextModel | null = null;
-let modifiedModel: monaco.editor.ITextModel | null = null;
-let originalContentListener: monaco.IDisposable | null = null;
-let modifiedContentListener: monaco.IDisposable | null = null;
-let originalPasteListener: monaco.IDisposable | null = null;
-let modifiedPasteListener: monaco.IDisposable | null = null;
-let originalPasteTimer: NodeJS.Timeout | null = null;
-let modifiedPasteTimer: NodeJS.Timeout | null = null;
-let minimapTimer: NodeJS.Timeout | null = null;
-let themeWatcher: (() => void) | null = null;
-
-const showHelp = ref(false);
-const showHistory = ref(false);
-const errorMessage = ref('');
-let errorTimer: NodeJS.Timeout | null = null;
-
-const themeStore = useThemeStore();
-const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('diff', themeStore.historyLimit.value);
+const { t } = useI18n()
+const route = useRoute()
+const themeStore = useThemeStore()
+const { history, addHistory, deleteHistory, clearHistory, updateMaxItems } = useHistory('diff', themeStore.historyLimit.value)
 
 watch(() => themeStore.historyLimit.value, (newLimit) => {
-  updateMaxItems(newLimit);
-});
+  updateMaxItems(newLimit)
+})
 
-const route = useRoute();
+const diffEditorRef = ref<HTMLElement | null>(null)
+let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null
+let originalModel: monaco.editor.ITextModel | null = null
+let modifiedModel: monaco.editor.ITextModel | null = null
+let originalContentListener: monaco.IDisposable | null = null
+let modifiedContentListener: monaco.IDisposable | null = null
+let originalPasteListener: monaco.IDisposable | null = null
+let modifiedPasteListener: monaco.IDisposable | null = null
+let diffUpdateListener: monaco.IDisposable | null = null
+let originalPasteTimer: ReturnType<typeof setTimeout> | null = null
+let modifiedPasteTimer: ReturnType<typeof setTimeout> | null = null
+let minimapTimer: ReturnType<typeof setTimeout> | null = null
+let normalizeTimer: ReturnType<typeof setTimeout> | null = null
+let statusErrorTimer: ReturnType<typeof setTimeout> | null = null
+let themeWatcher: (() => void) | null = null
+let suppressContentSync = false
+
+const showHistory = ref(false)
+const statusError = ref('')
 
 const STORAGE_KEYS = {
   leftContent: 'diff-left-content',
   rightContent: 'diff-right-content',
   diffMode: 'diff-mode',
   ignoreWhitespace: 'diff-ignore-whitespace',
+  ignoreCase: 'diff-ignore-case',
+  trimTrailing: 'diff-trim-trailing',
+  ignoreKeyOrder: 'diff-ignore-key-order',
   showLineNumbers: 'diff-show-line-numbers',
-  theme: 'diff-theme',
   wordWrapEnabled: 'diff-word-wrap-enabled',
   showMinimap: 'diff-show-minimap',
   decodeUnicode: 'diff-decode-unicode',
   leftDecodeSnapshot: 'diff-left-decode-snapshot',
-  rightDecodeSnapshot: 'diff-right-decode-snapshot'
-};
+  rightDecodeSnapshot: 'diff-right-decode-snapshot',
+}
 
-const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'));
-const rightContent = ref(loadFromStorage(STORAGE_KEYS.rightContent, '  function sayHello() {\n    console.log("Hello, world!");\n  }\n'));
-const diffMode = ref<'split' | 'inline'>(loadFromStorage(STORAGE_KEYS.diffMode, 'split'));
-const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, false));
-const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true));
-const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true));
-const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false));
-const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false));
+const leftContent = ref(loadFromStorage(STORAGE_KEYS.leftContent, 'function sayHello() {\n  console.log("Hello, world!");\n}'))
+const rightContent = ref(loadFromStorage(STORAGE_KEYS.rightContent, '  function sayHello() {\n    console.log("Hello, world!");\n  }\n'))
+const diffMode = ref<'split' | 'inline'>(loadFromStorage(STORAGE_KEYS.diffMode, 'split'))
+const ignoreWhitespace = ref(loadFromStorage(STORAGE_KEYS.ignoreWhitespace, false))
+const ignoreCase = ref(loadFromStorage(STORAGE_KEYS.ignoreCase, false))
+const trimTrailing = ref(loadFromStorage(STORAGE_KEYS.trimTrailing, false))
+const ignoreKeyOrder = ref(loadFromStorage(STORAGE_KEYS.ignoreKeyOrder, false))
+const showLineNumbers = ref(loadFromStorage(STORAGE_KEYS.showLineNumbers, true))
+const wordWrapEnabled = ref(loadFromStorage(STORAGE_KEYS.wordWrapEnabled, true))
+const showMinimap = ref(loadFromStorage(STORAGE_KEYS.showMinimap, false))
+const decodeUnicode = ref(loadFromStorage(STORAGE_KEYS.decodeUnicode, false))
 
-// Unicode 解码快照持久化
-const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null));
-const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null));
+const leftDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.leftDecodeSnapshot, null))
+const rightDecodeSnapshot = ref<string | null>(loadFromStorage(STORAGE_KEYS.rightDecodeSnapshot, null))
 
-const decodeUnicodeText = decodeUnicodeEscapes;
+const leftLineCount = ref(1)
+const rightLineCount = ref(1)
+const lineChanges = ref<monaco.editor.ILineChange[]>([])
+const currentDiffIndex = ref(-1)
+const similarityPercent = ref(100)
 
-/**
- * 检查并应用来自路由状态（history.state）中的单侧内容传递。
- * 该 state 在刷新、前进/后退时依然存在，因此必须“一次性消费”：
- * 应用后立即清除相关字段（保留 vue-router 自己写入的字段），避免之后覆盖用户已编辑的内容。
- * @returns 被消费的 { side, content }；没有可用 state 时返回 null
- */
+const diffSummary = computed(() => summarizeLineChanges(lineChanges.value))
+
+const canIgnoreKeyOrder = computed(() => bothStrictJson(leftContent.value, rightContent.value))
+
+const diffPositionLabel = computed(() => {
+  const total = diffSummary.value.hunks
+  if (!total) return t('tools.diff.diffPosition', { current: 0, total: 0 })
+  const current = currentDiffIndex.value < 0 ? 0 : currentDiffIndex.value + 1
+  return t('tools.diff.diffPosition', { current, total })
+})
+
+const modeOptions = computed<SegmentedOption<'split' | 'inline'>[]>(() => [
+  { value: 'split', label: t('tools.diff.sideBySide'), icon: Columns2 },
+  { value: 'inline', label: t('tools.diff.inline'), icon: Rows3 },
+])
+
+const moreMenuItems = computed<MenuItem[]>(() => [
+  { type: 'header', label: t('tools.diff.moreOptions') },
+  { type: 'item', value: 'wordWrap', label: t('tools.diff.wordWrap'), checked: wordWrapEnabled.value },
+  { type: 'item', value: 'lineNumbers', label: t('tools.diff.showLineNumbers'), checked: showLineNumbers.value },
+  { type: 'item', value: 'ignoreCase', label: t('tools.diff.ignoreCase'), checked: ignoreCase.value },
+  { type: 'item', value: 'trimTrailing', label: t('tools.diff.trimTrailing'), checked: trimTrailing.value },
+  {
+    type: 'item',
+    value: 'ignoreKeyOrder',
+    label: t('tools.diff.ignoreKeyOrder'),
+    checked: ignoreKeyOrder.value,
+    disabled: !canIgnoreKeyOrder.value,
+  },
+  { type: 'item', value: 'unicode', label: t('tools.diff.unicodeDecode'), checked: decodeUnicode.value },
+  { type: 'sep' },
+  { type: 'item', value: 'formatBoth', label: t('tools.diff.formatBoth') },
+  { type: 'item', value: 'formatLeft', label: t('tools.diff.formatLeft') },
+  { type: 'item', value: 'formatRight', label: t('tools.diff.formatRight') },
+])
+
+const decodeUnicodeText = decodeUnicodeEscapes
+
+const refreshLineCounts = () => {
+  if (!diffEditor) return
+  const l = diffEditor.getOriginalEditor().getModel()?.getLineCount() ?? 1
+  const r = diffEditor.getModifiedEditor().getModel()?.getLineCount() ?? 1
+  leftLineCount.value = l
+  rightLineCount.value = r
+}
+
+const refreshDiffSnapshot = () => {
+  if (!diffEditor) return
+  const changes = diffEditor.getLineChanges() ?? []
+  lineChanges.value = changes
+  if (currentDiffIndex.value >= changes.length) {
+    currentDiffIndex.value = changes.length ? changes.length - 1 : -1
+  }
+  similarityPercent.value = computeSimilarityPercent(leftLineCount.value, rightLineCount.value, changes)
+}
+
+/** 对比前对单侧文本做键排序与行级规范化 */
+const transformSideForCompare = (text: string): string => {
+  let out = text
+  if (ignoreKeyOrder.value && bothStrictJson(leftContent.value, rightContent.value)) {
+    try {
+      out = formatJsonWithSortedKeys(out)
+    } catch {
+      /* 保持原文 */
+    }
+  }
+  out = normalizeTextLines(out, { ignoreCase: ignoreCase.value, trimTrailing: trimTrailing.value })
+  return out
+}
+
+const applyComparisonTransforms = () => {
+  if (!diffEditor || decodeUnicode.value) return
+  if (!ignoreCase.value && !trimTrailing.value && !ignoreKeyOrder.value) return
+  const origEd = diffEditor.getOriginalEditor()
+  const modEd = diffEditor.getModifiedEditor()
+  const nextLeft = transformSideForCompare(origEd.getValue())
+  const nextRight = transformSideForCompare(modEd.getValue())
+  if (nextLeft === origEd.getValue() && nextRight === modEd.getValue()) return
+  suppressContentSync = true
+  origEd.setValue(nextLeft)
+  modEd.setValue(nextRight)
+  leftContent.value = nextLeft
+  rightContent.value = nextRight
+  saveToStorage(STORAGE_KEYS.leftContent, nextLeft)
+  saveToStorage(STORAGE_KEYS.rightContent, nextRight)
+  suppressContentSync = false
+}
+
+const scheduleNormalize = () => {
+  if (!ignoreCase.value && !trimTrailing.value && !ignoreKeyOrder.value) return
+  if (normalizeTimer) clearTimeout(normalizeTimer)
+  normalizeTimer = setTimeout(() => applyComparisonTransforms(), 280)
+}
+
+const flashLine = (editor: monaco.editor.IStandaloneCodeEditor, lineNumber: number) => {
+  const collection = editor.createDecorationsCollection([
+    {
+      range: new monaco.Range(lineNumber, 1, lineNumber, 1),
+      options: { isWholeLine: true, className: 'diff-flash-line' },
+    },
+  ])
+  window.setTimeout(() => collection.clear(), 1000)
+}
+
+const navigateToDiff = (change: monaco.editor.ILineChange) => {
+  if (!diffEditor) return
+  const orig = diffEditor.getOriginalEditor()
+  const mod = diffEditor.getModifiedEditor()
+  if (change.originalStartLineNumber > 0) {
+    const line = Math.max(1, change.originalStartLineNumber)
+    orig.setPosition({ lineNumber: line, column: 1 })
+    orig.revealLineInCenter(line)
+    flashLine(orig, line)
+  }
+  if (change.modifiedStartLineNumber > 0) {
+    const line = Math.max(1, change.modifiedStartLineNumber)
+    mod.setPosition({ lineNumber: line, column: 1 })
+    mod.revealLineInCenter(line)
+    flashLine(mod, line)
+  }
+}
+
 const applyRouteStateIfPresent = (): { side: 'left' | 'right'; content: string } | null => {
-  const state = window.history.state;
+  const state = window.history.state
   if (!state || (state.targetSide !== 'left' && state.targetSide !== 'right') || typeof state.content !== 'string') {
-    return null;
+    return null
   }
-  const side = state.targetSide as 'left' | 'right';
-  const targetContent: string = state.content;
+  const side = state.targetSide as 'left' | 'right'
+  const targetContent: string = state.content
   if (side === 'left') {
-    leftContent.value = targetContent;
-    saveToStorage(STORAGE_KEYS.leftContent, targetContent);
-    // 清除旧快照，并在开启 Unicode 解码时重新基于新内容建立快照
-    leftDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
-    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
+    leftContent.value = targetContent
+    saveToStorage(STORAGE_KEYS.leftContent, targetContent)
+    leftDecodeSnapshot.value = decodeUnicode.value ? targetContent : null
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value)
   } else {
-    rightContent.value = targetContent;
-    saveToStorage(STORAGE_KEYS.rightContent, targetContent);
-    rightDecodeSnapshot.value = decodeUnicode.value ? targetContent : null;
-    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
+    rightContent.value = targetContent
+    saveToStorage(STORAGE_KEYS.rightContent, targetContent)
+    rightDecodeSnapshot.value = decodeUnicode.value ? targetContent : null
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value)
   }
-  window.history.replaceState(
-    { ...state, targetSide: undefined, content: undefined, timestamp: undefined },
-    ''
-  );
-  return { side, content: targetContent };
-};
+  window.history.replaceState({ ...state, targetSide: undefined, content: undefined, timestamp: undefined }, '')
+  return { side, content: targetContent }
+}
 
 const cleanupEditorResources = () => {
-  if (originalPasteTimer) clearTimeout(originalPasteTimer);
-  if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer);
-  if (minimapTimer) clearTimeout(minimapTimer);
-  originalContentListener?.dispose();
-  modifiedContentListener?.dispose();
-  originalPasteListener?.dispose();
-  modifiedPasteListener?.dispose();
-  themeWatcher?.();
-  themeWatcher = null;
+  if (originalPasteTimer) clearTimeout(originalPasteTimer)
+  if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer)
+  if (minimapTimer) clearTimeout(minimapTimer)
+  if (normalizeTimer) clearTimeout(normalizeTimer)
+  originalContentListener?.dispose()
+  modifiedContentListener?.dispose()
+  originalPasteListener?.dispose()
+  modifiedPasteListener?.dispose()
+  diffUpdateListener?.dispose()
+  themeWatcher?.()
+  themeWatcher = null
   if (diffEditor) {
-    diffEditor.dispose();
-    diffEditor = null;
+    diffEditor.dispose()
+    diffEditor = null
   }
   if (originalModel) {
-    originalModel.dispose();
-    originalModel = null;
+    originalModel.dispose()
+    originalModel = null
   }
   if (modifiedModel) {
-    modifiedModel.dispose();
-    modifiedModel = null;
+    modifiedModel.dispose()
+    modifiedModel = null
   }
-};
+}
 
-/**
- * 解码模式下协调“当前内容”与“解码前快照”：
- * - 快照存在且当前内容仍等于 decode(快照)：说明用户没有编辑过，沿用快照；
- * - 否则（无快照，或用户在解码状态下编辑过）：以当前内容为准重新建立快照，避免用旧快照覆盖用户编辑。
- */
 const syncSnapshot = (content: string, snapshot: string | null) => {
   if (snapshot !== null && content === decodeUnicodeText(snapshot)) {
-    return { snapshot, display: content };
+    return { snapshot, display: content }
   }
-  return { snapshot: content, display: decodeUnicodeText(content) };
-};
+  return { snapshot: content, display: decodeUnicodeText(content) }
+}
 
-/**
- * 关闭解码模式时决定编辑器应还原成什么：
- * 内容未被编辑则还原为快照；已被编辑则保留当前内容。
- */
 const restoreFromSnapshot = (current: string, snapshot: string | null) =>
-  snapshot !== null && current === decodeUnicodeText(snapshot) ? snapshot : current;
+  snapshot !== null && current === decodeUnicodeText(snapshot) ? snapshot : current
 
 const initMonacoDiffEditor = async () => {
-  await nextTick();
-  if (!diffEditorRef.value) return;
+  await nextTick()
+  if (!diffEditorRef.value) return
 
-  cleanupEditorResources();
+  cleanupEditorResources()
+  applyRouteStateIfPresent()
 
-  // 1. 优先应用路由定向传参
-  applyRouteStateIfPresent();
+  leftContent.value = loadFromStorage(STORAGE_KEYS.leftContent, leftContent.value)
+  rightContent.value = loadFromStorage(STORAGE_KEYS.rightContent, rightContent.value)
 
-  // 2. 加载最新的内容
-  leftContent.value = loadFromStorage(STORAGE_KEYS.leftContent, leftContent.value);
-  rightContent.value = loadFromStorage(STORAGE_KEYS.rightContent, rightContent.value);
-
-  // 3. 计算初始显示内容（若开启 Unicode 解码，则做解码展示并确保快照已存）
-  let initialLeft = leftContent.value;
-  let initialRight = rightContent.value;
+  let initialLeft = leftContent.value
+  let initialRight = rightContent.value
   if (decodeUnicode.value) {
-    const left = syncSnapshot(leftContent.value, leftDecodeSnapshot.value);
-    const right = syncSnapshot(rightContent.value, rightDecodeSnapshot.value);
-    leftDecodeSnapshot.value = left.snapshot;
-    rightDecodeSnapshot.value = right.snapshot;
-    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, left.snapshot);
-    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, right.snapshot);
-    initialLeft = left.display;
-    initialRight = right.display;
+    const left = syncSnapshot(leftContent.value, leftDecodeSnapshot.value)
+    const right = syncSnapshot(rightContent.value, rightDecodeSnapshot.value)
+    leftDecodeSnapshot.value = left.snapshot
+    rightDecodeSnapshot.value = right.snapshot
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, left.snapshot)
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, right.snapshot)
+    initialLeft = left.display
+    initialRight = right.display
+  } else {
+    initialLeft = transformSideForCompare(initialLeft)
+    initialRight = transformSideForCompare(initialRight)
   }
 
-  originalModel = monaco.editor.createModel(initialLeft, 'text/plain');
-  modifiedModel = monaco.editor.createModel(initialRight, 'text/plain');
+  originalModel = monaco.editor.createModel(initialLeft, 'text/plain')
+  modifiedModel = monaco.editor.createModel(initialRight, 'text/plain')
 
   diffEditor = monaco.editor.createDiffEditor(diffEditorRef.value, {
     theme: getMonacoTheme(),
@@ -398,292 +492,289 @@ const initMonacoDiffEditor = async () => {
     ignoreTrimWhitespace: ignoreWhitespace.value,
     minimap: { enabled: showMinimap.value },
     padding: { top: 16, bottom: 16 },
-  });
+  })
 
-  diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+  diffEditor.setModel({ original: originalModel, modified: modifiedModel })
 
-  minimapTimer = setTimeout(() => {
-    applyMinimapOption();
-  }, 100);
+  minimapTimer = setTimeout(() => applyMinimapOption(), 100)
+  themeWatcher = watchThemeChangeForDiffEditor(diffEditor)
+  registerGlobalShortcutsForDiffEditor(diffEditor)
 
-  themeWatcher = watchThemeChangeForDiffEditor(diffEditor);
-  registerGlobalShortcutsForDiffEditor(diffEditor);
+  diffUpdateListener = diffEditor.onDidUpdateDiff(() => {
+    refreshLineCounts()
+    refreshDiffSnapshot()
+  })
 
-  const originalEditor = diffEditor.getOriginalEditor();
-  const modifiedEditor = diffEditor.getModifiedEditor();
+  const originalEditor = diffEditor.getOriginalEditor()
+  const modifiedEditor = diffEditor.getModifiedEditor()
 
-  originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
-  modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {});
+  originalEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
+  modifiedEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {})
 
   originalContentListener = originalEditor.onDidChangeModelContent(() => {
-    if (originalEditor) {
-      leftContent.value = originalEditor.getValue() || '';
-      saveToStorageDebounced(STORAGE_KEYS.leftContent, leftContent.value);
-    }
-  });
+    if (suppressContentSync || !originalEditor) return
+    leftContent.value = originalEditor.getValue() || ''
+    saveToStorageDebounced(STORAGE_KEYS.leftContent, leftContent.value)
+    refreshLineCounts()
+    scheduleNormalize()
+  })
   modifiedContentListener = modifiedEditor.onDidChangeModelContent(() => {
-    if (modifiedEditor) {
-      rightContent.value = modifiedEditor.getValue() || '';
-      saveToStorageDebounced(STORAGE_KEYS.rightContent, rightContent.value);
-    }
-  });
+    if (suppressContentSync || !modifiedEditor) return
+    rightContent.value = modifiedEditor.getValue() || ''
+    saveToStorageDebounced(STORAGE_KEYS.rightContent, rightContent.value)
+    refreshLineCounts()
+    scheduleNormalize()
+  })
 
   originalPasteListener = originalEditor.onDidPaste(() => {
-    if (originalPasteTimer) clearTimeout(originalPasteTimer);
+    if (originalPasteTimer) clearTimeout(originalPasteTimer)
     originalPasteTimer = setTimeout(() => {
-      if (originalEditor) {
-        addHistory(originalEditor.getValue());
-      }
-    }, 50);
-  });
-
+      if (originalEditor) addHistory(originalEditor.getValue())
+    }, 50)
+  })
   modifiedPasteListener = modifiedEditor.onDidPaste(() => {
-    if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer);
+    if (modifiedPasteTimer) clearTimeout(modifiedPasteTimer)
     modifiedPasteTimer = setTimeout(() => {
-      if (modifiedEditor) {
-        addHistory(modifiedEditor.getValue());
-      }
-    }, 50);
-  });
-};
+      if (modifiedEditor) addHistory(modifiedEditor.getValue())
+    }, 50)
+  })
 
-const swapContent = () => {
-  const originalValue = diffEditor?.getOriginalEditor().getValue() || '';
-  const modifiedValue = diffEditor?.getModifiedEditor().getValue() || '';
-  diffEditor?.getOriginalEditor().setValue(modifiedValue);
-  diffEditor?.getModifiedEditor().setValue(originalValue);
-};
-
-const clearAll = () => {
-  diffEditor?.getOriginalEditor().setValue('');
-  diffEditor?.getModifiedEditor().setValue('');
-};
-
-const findNextDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  const currentPosition = editor.getPosition();
-  if (!currentPosition) return null;
-  const diffs = diffEditor?.getLineChanges();
-  if (!diffs || diffs.length === 0) return null;
-  const nextDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalStartLineNumber > currentPosition.lineNumber || d.modifiedStartLineNumber > currentPosition.lineNumber);
-  if (nextDiffs.length > 0) {
-    return nextDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
-      const prevLine = Math.min(prev.originalStartLineNumber, prev.modifiedStartLineNumber);
-      const currLine = Math.min(curr.originalStartLineNumber, curr.modifiedStartLineNumber);
-      return currLine < prevLine ? curr : prev;
-    });
-  }
-  return null;
-};
-
-const findPrevDiff = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  const currentPosition = editor.getPosition();
-  if (!currentPosition) return null;
-  const diffs = diffEditor?.getLineChanges();
-  if (!diffs || diffs.length === 0) return null;
-  const prevDiffs = diffs.filter((d: monaco.editor.ILineChange) => d.originalEndLineNumber < currentPosition.lineNumber || d.modifiedEndLineNumber < currentPosition.lineNumber);
-  if (prevDiffs.length > 0) {
-    return prevDiffs.reduce((prev: monaco.editor.ILineChange, curr: monaco.editor.ILineChange) => {
-      const prevLine = Math.max(prev.originalEndLineNumber, prev.modifiedEndLineNumber);
-      const currLine = Math.max(curr.originalEndLineNumber, curr.modifiedEndLineNumber);
-      return currLine > prevLine ? curr : prev;
-    });
-  }
-  return null;
-};
+  refreshLineCounts()
+  refreshDiffSnapshot()
+}
 
 const goToNextDiff = () => {
-  if (!diffEditor) return;
-  const originalEditor = diffEditor.getOriginalEditor();
-  const modifiedEditor = diffEditor.getModifiedEditor();
-  const nextDiff = findNextDiff(originalEditor) || findNextDiff(modifiedEditor);
-  if (nextDiff) {
-    // 同时移动光标，否则连续点击“下一处”会因光标位置不变而停在同一处差异
-    const origLine = Math.max(1, nextDiff.originalStartLineNumber);
-    const modLine = Math.max(1, nextDiff.modifiedStartLineNumber);
-    originalEditor.setPosition({ lineNumber: origLine, column: 1 });
-    modifiedEditor.setPosition({ lineNumber: modLine, column: 1 });
-    originalEditor.revealLineInCenter(origLine);
-    modifiedEditor.revealLineInCenter(modLine);
-  }
-};
+  const diffs = lineChanges.value
+  if (!diffs.length || !diffEditor) return
+  currentDiffIndex.value = (currentDiffIndex.value + 1) % diffs.length
+  navigateToDiff(diffs[currentDiffIndex.value])
+}
 
 const goToPrevDiff = () => {
-  if (!diffEditor) return;
-  const originalEditor = diffEditor.getOriginalEditor();
-  const modifiedEditor = diffEditor.getModifiedEditor();
-  const prevDiff = findPrevDiff(originalEditor) || findPrevDiff(modifiedEditor);
-  if (prevDiff) {
-    const origLine = Math.max(1, prevDiff.originalEndLineNumber || prevDiff.originalStartLineNumber);
-    const modLine = Math.max(1, prevDiff.modifiedEndLineNumber || prevDiff.modifiedStartLineNumber);
-    originalEditor.setPosition({ lineNumber: origLine, column: 1 });
-    modifiedEditor.setPosition({ lineNumber: modLine, column: 1 });
-    originalEditor.revealLineInCenter(origLine);
-    modifiedEditor.revealLineInCenter(modLine);
-  }
-};
+  const diffs = lineChanges.value
+  if (!diffs.length || !diffEditor) return
+  currentDiffIndex.value = currentDiffIndex.value <= 0 ? diffs.length - 1 : currentDiffIndex.value - 1
+  navigateToDiff(diffs[currentDiffIndex.value])
+}
+
+const onGlobalKeydown = (e: KeyboardEvent) => {
+  if (e.key !== 'F7') return
+  e.preventDefault()
+  if (e.shiftKey) goToPrevDiff()
+  else goToNextDiff()
+}
+
+const swapContent = () => {
+  const originalValue = diffEditor?.getOriginalEditor().getValue() || ''
+  const modifiedValue = diffEditor?.getModifiedEditor().getValue() || ''
+  diffEditor?.getOriginalEditor().setValue(modifiedValue)
+  diffEditor?.getModifiedEditor().setValue(originalValue)
+}
+
+const clearAll = () => {
+  diffEditor?.getOriginalEditor().setValue('')
+  diffEditor?.getModifiedEditor().setValue('')
+}
 
 const pasteTo = async (side: 'original' | 'modified') => {
-  const text = await readClipboardText();
-  if (text === null) return;
-  if (side === 'original') {
-    diffEditor?.getOriginalEditor().setValue(text);
-  } else {
-    diffEditor?.getModifiedEditor().setValue(text);
-  }
-  addHistory(text);
-};
+  const text = await readClipboardText()
+  if (text === null) return
+  if (side === 'original') diffEditor?.getOriginalEditor().setValue(text)
+  else diffEditor?.getModifiedEditor().setValue(text)
+  addHistory(text)
+}
 
-const handleHistorySelect = ({ content, side }: { content: string, side: 'original' | 'modified' }) => {
-  if (side === 'original') {
-    diffEditor?.getOriginalEditor().setValue(content);
-  } else {
-    diffEditor?.getModifiedEditor().setValue(content);
-  }
-  showHistory.value = false;
-};
+const handleHistorySelect = ({ content, side }: { content: string; side: 'original' | 'modified' }) => {
+  if (side === 'original') diffEditor?.getOriginalEditor().setValue(content)
+  else diffEditor?.getModifiedEditor().setValue(content)
+  showHistory.value = false
+}
 
+const showStatusError = (message: string) => {
+  statusError.value = message
+  if (statusErrorTimer) clearTimeout(statusErrorTimer)
+  statusErrorTimer = setTimeout(() => {
+    statusError.value = ''
+  }, 5000)
+}
 
-const showError = (message: string) => {
-  errorMessage.value = message;
-  if (errorTimer) clearTimeout(errorTimer);
-  errorTimer = setTimeout(() => {
-    errorMessage.value = '';
-  }, 5000);
-};
-
-/**
- * 格式化指定一侧（左侧/右侧）编辑器的内容。
- * @param side 编辑器侧（original=左，modified=右）
- */
 const formatSide = (side: 'original' | 'modified') => {
-  if (!diffEditor) return;
-  const editor = side === 'original' ? diffEditor.getOriginalEditor() : diffEditor.getModifiedEditor();
-  const text = editor.getValue() || '';
-  if (!text.trim()) return;
-
+  if (!diffEditor) return
+  const editor = side === 'original' ? diffEditor.getOriginalEditor() : diffEditor.getModifiedEditor()
+  const text = editor.getValue() || ''
+  if (!text.trim()) return
   try {
-    const formatted = formatText(text);
-    if (formatted !== text) {
-      editor.setValue(formatted);
-    }
+    const formatted = formatText(text)
+    if (formatted !== text) editor.setValue(formatted)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : '格式化失败';
-    showError(message);
+    const message = err instanceof Error ? err.message : t('tools.diff.formatFailed')
+    showStatusError(message)
   }
-};
+}
 
-// Unicode 解码开关：选中=两边都把 \uXXXX 解码成中文，去掉=两边都还原。
-// 快照还原模式：开启时分别保存左右原始内容，关闭时一键还原（支持来回切换不丢数据）。
-// 快照持久化到 localStorage：即使切走页面再回来，关闭开关也能还原原始内容。
-const toggleDecodeUnicode = () => {
-  if (!diffEditor) return;
-  const originalEditor = diffEditor.getOriginalEditor();
-  const modifiedEditor = diffEditor.getModifiedEditor();
-  const turningOn = !decodeUnicode.value;
+const formatBothSides = () => {
+  formatSide('original')
+  formatSide('modified')
+}
 
-  if (turningOn) {
-    // 开启：保存两侧原始内容，然后对当前内容应用解码
-    leftDecodeSnapshot.value = originalEditor.getValue() || '';
-    rightDecodeSnapshot.value = modifiedEditor.getValue() || '';
-    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value);
-    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value);
-    decodeUnicode.value = true;
-    originalEditor.setValue(decodeUnicodeText(leftDecodeSnapshot.value));
-    modifiedEditor.setValue(decodeUnicodeText(rightDecodeSnapshot.value));
+const onDecodeUnicodeChange = (next: boolean) => {
+  if (!diffEditor) {
+    decodeUnicode.value = next
+    return
+  }
+  if (next === decodeUnicode.value) return
+  const originalEditor = diffEditor.getOriginalEditor()
+  const modifiedEditor = diffEditor.getModifiedEditor()
+  if (next) {
+    leftDecodeSnapshot.value = originalEditor.getValue() || ''
+    rightDecodeSnapshot.value = modifiedEditor.getValue() || ''
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, leftDecodeSnapshot.value)
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, rightDecodeSnapshot.value)
+    decodeUnicode.value = true
+    originalEditor.setValue(decodeUnicodeText(leftDecodeSnapshot.value))
+    modifiedEditor.setValue(decodeUnicodeText(rightDecodeSnapshot.value))
   } else {
-    // 关闭：未编辑的一侧还原为开启前的原始内容；已编辑的一侧保留用户当前内容
-    originalEditor.setValue(restoreFromSnapshot(originalEditor.getValue() || '', leftDecodeSnapshot.value));
-    modifiedEditor.setValue(restoreFromSnapshot(modifiedEditor.getValue() || '', rightDecodeSnapshot.value));
-    leftDecodeSnapshot.value = null;
-    rightDecodeSnapshot.value = null;
-    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, null);
-    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, null);
-    decodeUnicode.value = false;
+    originalEditor.setValue(restoreFromSnapshot(originalEditor.getValue() || '', leftDecodeSnapshot.value))
+    modifiedEditor.setValue(restoreFromSnapshot(modifiedEditor.getValue() || '', rightDecodeSnapshot.value))
+    leftDecodeSnapshot.value = null
+    rightDecodeSnapshot.value = null
+    saveToStorage(STORAGE_KEYS.leftDecodeSnapshot, null)
+    saveToStorage(STORAGE_KEYS.rightDecodeSnapshot, null)
+    decodeUnicode.value = false
   }
-};
+}
 
 const copyFrom = async (side: 'original' | 'modified') => {
-  const text = side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue();
-  if (text) await copyText(text);
-};
+  const text =
+    side === 'original' ? diffEditor?.getOriginalEditor().getValue() : diffEditor?.getModifiedEditor().getValue()
+  if (text) await copyText(text)
+}
 
 const applyMinimapOption = () => {
-  if (!diffEditor) return;
-  const enabled = showMinimap.value;
-  // Apply to the diff editor itself
-  diffEditor.updateOptions({ minimap: { enabled } });
-  // Explicitly apply to both internal editors as DiffEditor doesn't always propagate this correctly
-  diffEditor.getOriginalEditor().updateOptions({ minimap: { enabled } });
-  diffEditor.getModifiedEditor().updateOptions({ minimap: { enabled } });
-};
+  if (!diffEditor) return
+  const enabled = showMinimap.value
+  diffEditor.updateOptions({ minimap: { enabled } })
+  diffEditor.getOriginalEditor().updateOptions({ minimap: { enabled } })
+  diffEditor.getModifiedEditor().updateOptions({ minimap: { enabled } })
+}
 
-onMounted(initMonacoDiffEditor);
+const onMoreMenu = (value: string) => {
+  switch (value) {
+    case 'wordWrap':
+      wordWrapEnabled.value = !wordWrapEnabled.value
+      break
+    case 'lineNumbers':
+      showLineNumbers.value = !showLineNumbers.value
+      break
+    case 'ignoreCase':
+      ignoreCase.value = !ignoreCase.value
+      break
+    case 'trimTrailing':
+      trimTrailing.value = !trimTrailing.value
+      break
+    case 'ignoreKeyOrder':
+      if (canIgnoreKeyOrder.value) ignoreKeyOrder.value = !ignoreKeyOrder.value
+      break
+    case 'unicode':
+      onDecodeUnicodeChange(!decodeUnicode.value)
+      break
+    case 'formatBoth':
+      formatBothSides()
+      break
+    case 'formatLeft':
+      formatSide('original')
+      break
+    case 'formatRight':
+      formatSide('modified')
+      break
+    default:
+      break
+  }
+}
+
+onMounted(() => {
+  initMonacoDiffEditor()
+  window.addEventListener('keydown', onGlobalKeydown)
+})
 
 onBeforeUnmount(() => {
-  cleanupEditorResources();
-});
+  window.removeEventListener('keydown', onGlobalKeydown)
+  if (statusErrorTimer) clearTimeout(statusErrorTimer)
+  cleanupEditorResources()
+})
 
 watch(diffMode, (newMode) => {
-  diffEditor?.updateOptions({
-    renderSideBySide: newMode === 'split'
-  });
-  saveToStorage(STORAGE_KEYS.diffMode, newMode);
-});
+  diffEditor?.updateOptions({ renderSideBySide: newMode === 'split' })
+  saveToStorage(STORAGE_KEYS.diffMode, newMode)
+})
 
 watch(showLineNumbers, (newValue) => {
-  diffEditor?.updateOptions({ lineNumbers: newValue ? 'on' : 'off' });
-  saveToStorage(STORAGE_KEYS.showLineNumbers, newValue);
-});
+  diffEditor?.updateOptions({ lineNumbers: newValue ? 'on' : 'off' })
+  saveToStorage(STORAGE_KEYS.showLineNumbers, newValue)
+})
 
 watch(ignoreWhitespace, (newValue) => {
-  diffEditor?.updateOptions({ ignoreTrimWhitespace: newValue });
-  saveToStorage(STORAGE_KEYS.ignoreWhitespace, newValue);
-});
+  diffEditor?.updateOptions({ ignoreTrimWhitespace: newValue })
+  saveToStorage(STORAGE_KEYS.ignoreWhitespace, newValue)
+})
+
+watch(ignoreCase, (v) => {
+  saveToStorage(STORAGE_KEYS.ignoreCase, v)
+  applyComparisonTransforms()
+})
+
+watch(trimTrailing, (v) => {
+  saveToStorage(STORAGE_KEYS.trimTrailing, v)
+  applyComparisonTransforms()
+})
+
+watch(ignoreKeyOrder, (v) => {
+  saveToStorage(STORAGE_KEYS.ignoreKeyOrder, v)
+  applyComparisonTransforms()
+})
+
+watch(canIgnoreKeyOrder, (ok) => {
+  if (!ok && ignoreKeyOrder.value) ignoreKeyOrder.value = false
+})
 
 watch(wordWrapEnabled, (newValue) => {
-  diffEditor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' });
-  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue);
-});
+  diffEditor?.updateOptions({ wordWrap: newValue ? 'on' : 'off' })
+  saveToStorage(STORAGE_KEYS.wordWrapEnabled, newValue)
+})
 
 watch(showMinimap, (newValue) => {
-  applyMinimapOption();
-  saveToStorage(STORAGE_KEYS.showMinimap, newValue);
-});
+  applyMinimapOption()
+  saveToStorage(STORAGE_KEYS.showMinimap, newValue)
+})
 
 watch(decodeUnicode, (newValue) => {
-  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue);
-});
+  saveToStorage(STORAGE_KEYS.decodeUnicode, newValue)
+})
 
 watch(() => route.fullPath, () => {
-  if (!diffEditor) return;
-  const consumed = applyRouteStateIfPresent();
-  if (!consumed) return;
-  const displayVal = decodeUnicode.value ? decodeUnicodeText(consumed.content) : consumed.content;
-  if (consumed.side === 'left') {
-    diffEditor.getOriginalEditor().setValue(displayVal);
-  } else {
-    diffEditor.getModifiedEditor().setValue(displayVal);
-  }
-});
+  if (!diffEditor) return
+  const consumed = applyRouteStateIfPresent()
+  if (!consumed) return
+  const displayVal = decodeUnicode.value ? decodeUnicodeText(consumed.content) : consumed.content
+  if (consumed.side === 'left') diffEditor.getOriginalEditor().setValue(displayVal)
+  else diffEditor.getModifiedEditor().setValue(displayVal)
+})
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+:global(.monaco-editor .diff-flash-line) {
+  animation: diff-flash-line 1s var(--ease-out);
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  transform: translateY(20px);
-  opacity: 0;
+@keyframes diff-flash-line {
+  0%,
+  100% {
+    opacity: 0;
+    background-color: hsl(var(--primary) / 0);
+  }
+  25%,
+  45% {
+    opacity: 1;
+    background-color: hsl(var(--primary) / 0.22);
+  }
 }
 </style>

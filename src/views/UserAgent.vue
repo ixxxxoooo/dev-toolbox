@@ -1,144 +1,140 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3">
-        <!-- Title & Icon -->
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
-          <Monitor class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.userAgent.name') }}</span>
-        </div>
-        <div class="h-4 w-px bg-border flex-shrink-0"></div>
-        <button @click="useMyUa" class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
-          {{ $t('tools.userAgent.useMyUa') }}
-        </button>
-      </div>
-      <div class="flex items-center space-x-3">
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+  <ToolShell :icon="Monitor" :title="t('tools.userAgent.name')" scroll>
+    <template #right>
+      <IconButton :title="t('tools.userAgent.useMyUa')" @click="useMyUa">
+        <Laptop class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('common.copy')" :disabled="!uaString" @click="copyUa">
+        <Copy class="w-3.5 h-3.5" />
+      </IconButton>
+    </template>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-auto p-3">
-      <div class="max-w-4xl mx-auto space-y-4">
-        <!-- Input -->
-        <CustomTextarea
-          v-model="uaString"
-          :label="$t('common.labels.input')"
-          :placeholder="$t('tools.userAgent.placeholder')"
-          class="h-32"
-        />
+    <template #help>
+      <p>{{ t('tools.userAgent.description') }}</p>
+    </template>
 
-        <!-- Result -->
-        <div v-if="parsedUa" class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <!-- Browser -->
-          <div class="bg-card border border-border rounded-lg p-3">
-            <div class="flex items-center space-x-2 mb-4">
-              <Globe class="w-5 h-5 text-primary" />
-              <h3 class="font-medium">{{ $t('tools.userAgent.browser') }}</h3>
-            </div>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Name</span>
-                <span class="font-medium">{{ parsedUa.browser.name || '-' }}</span>
-              </div>
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Version</span>
-                <span class="font-medium">{{ parsedUa.browser.version || '-' }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-muted-foreground">Engine</span>
-                <span class="font-medium">{{ parsedUa.engine.name || '-' }} {{ parsedUa.engine.version || '' }}</span>
-              </div>
-            </div>
-          </div>
+    <div class="flex flex-col gap-2 min-h-0">
+      <textarea
+        v-model="uaString"
+        class="field w-full min-h-[4.5rem] max-h-32 resize-y font-mono text-xs leading-relaxed py-2"
+        :placeholder="t('tools.userAgent.placeholder')"
+        spellcheck="false"
+      />
 
-          <!-- OS -->
-          <div class="bg-card border border-border rounded-lg p-3">
-            <div class="flex items-center space-x-2 mb-4">
-              <Cpu class="w-5 h-5 text-primary" />
-              <h3 class="font-medium">{{ $t('tools.userAgent.os') }}</h3>
+      <div
+        v-if="parsedUa"
+        class="grid gap-2 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]"
+      >
+        <section
+          v-for="card in infoCards"
+          :key="card.id"
+          class="rounded-lg border border-border bg-card p-2"
+        >
+          <header class="flex items-center gap-1.5 mb-2 text-xs font-semibold text-foreground">
+            <component :is="card.icon" class="w-3.5 h-3.5 text-primary shrink-0" />
+            {{ card.title }}
+          </header>
+          <dl class="space-y-1.5 text-xs">
+            <div
+              v-for="row in card.rows"
+              :key="row.label"
+              class="flex items-start justify-between gap-2 border-b border-border/40 pb-1 last:border-0 last:pb-0"
+            >
+              <dt class="text-muted-foreground shrink-0">{{ row.label }}</dt>
+              <dd class="font-medium text-right break-all">{{ row.value }}</dd>
             </div>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Name</span>
-                <span class="font-medium">{{ parsedUa.os.name || '-' }}</span>
-              </div>
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Version</span>
-                <span class="font-medium">{{ parsedUa.os.version || '-' }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-muted-foreground">Platform</span>
-                <span class="font-medium">{{ parsedUa.cpu.architecture || '-' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Device -->
-          <div class="bg-card border border-border rounded-lg p-3">
-            <div class="flex items-center space-x-2 mb-4">
-              <Smartphone class="w-5 h-5 text-primary" />
-              <h3 class="font-medium">{{ $t('tools.userAgent.device') }}</h3>
-            </div>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Vendor</span>
-                <span class="font-medium">{{ parsedUa.device.vendor || '-' }}</span>
-              </div>
-              <div class="flex justify-between border-b border-border/50 pb-1">
-                <span class="text-muted-foreground">Model</span>
-                <span class="font-medium">{{ parsedUa.device.model || '-' }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-muted-foreground">Type</span>
-                <span class="font-medium">{{ parsedUa.device.type || 'Desktop' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.userAgent.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.userAgent.description') }}</p>
-        </div>
+          </dl>
+        </section>
       </div>
     </div>
-  </div>
+
+    <template #status>
+      <StatusBar>
+        <span v-if="parsedUa" class="sb-ok">
+          <Check class="shrink-0" />
+          {{ parsedUa.browser.name || '—' }}
+          {{ parsedUa.browser.version || '' }}
+        </span>
+        <span v-else class="text-muted-foreground">{{ t('tools.userAgent.statusEmpty') }}</span>
+        <template #right>
+          <span v-if="uaString">{{ t('tools.userAgent.statusLength', { n: uaString.length }) }}</span>
+        </template>
+      </StatusBar>
+    </template>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { Monitor, HelpCircle, X, Globe, Cpu, Smartphone } from 'lucide-vue-next';
-import { UAParser } from 'ua-parser-js';
-import CustomTextarea from '../components/CustomTextarea.vue';
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Monitor, Globe, Cpu, Smartphone, Copy, Laptop, Check } from 'lucide-vue-next'
+import { UAParser, type IResult } from 'ua-parser-js'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import { copyText } from '@/utils/clipboard'
+const { t } = useI18n()
 
-const uaString = ref('');
-const showHelp = ref(false);
+const uaString = ref('')
 
-const parsedUa = computed(() => {
-  if (!uaString.value) return null;
-  const parser = new UAParser(uaString.value);
-  return parser.getResult();
-});
+const parsedUa = computed((): IResult | null => {
+  if (!uaString.value.trim()) return null
+  return new UAParser(uaString.value).getResult()
+})
+
+const dash = '—'
+
+const infoCards = computed(() => {
+  const p = parsedUa.value
+  if (!p) return []
+  const deviceType = p.device.type || t('tools.userAgent.desktop')
+  return [
+    {
+      id: 'browser',
+      icon: Globe,
+      title: t('tools.userAgent.browser'),
+      rows: [
+        { label: t('tools.userAgent.fields.name'), value: p.browser.name || dash },
+        { label: t('tools.userAgent.fields.version'), value: p.browser.version || dash },
+        {
+          label: t('tools.userAgent.fields.engine'),
+          value: [p.engine.name, p.engine.version].filter(Boolean).join(' ') || dash,
+        },
+      ],
+    },
+    {
+      id: 'os',
+      icon: Cpu,
+      title: t('tools.userAgent.os'),
+      rows: [
+        { label: t('tools.userAgent.fields.name'), value: p.os.name || dash },
+        { label: t('tools.userAgent.fields.version'), value: p.os.version || dash },
+        { label: t('tools.userAgent.fields.platform'), value: p.cpu.architecture || dash },
+      ],
+    },
+    {
+      id: 'device',
+      icon: Smartphone,
+      title: t('tools.userAgent.device'),
+      rows: [
+        { label: t('tools.userAgent.fields.vendor'), value: p.device.vendor || dash },
+        { label: t('tools.userAgent.fields.model'), value: p.device.model || dash },
+        { label: t('tools.userAgent.fields.type'), value: deviceType },
+      ],
+    },
+  ]
+})
 
 const useMyUa = () => {
-  uaString.value = navigator.userAgent;
-};
+  uaString.value = navigator.userAgent
+}
+
+const copyUa = () => {
+  if (!uaString.value) return
+  void copyText(uaString.value)
+}
 
 onMounted(() => {
-  useMyUa();
-});
+  useMyUa()
+})
 </script>

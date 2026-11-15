@@ -3,7 +3,7 @@
  * 解析失败再回退到 JSON5（支持注释、尾逗号、单引号等宽松语法，但大整数会丢精度）。
  */
 import JSON5 from 'json5'
-import { parse as losslessParse, stringify as losslessStringify } from 'lossless-json'
+import { parse as losslessParse, stringify as losslessStringify, isLosslessNumber } from 'lossless-json'
 
 export interface ParsedJson {
   data: unknown
@@ -35,4 +35,32 @@ export const stringifyJson = (data: unknown, indent?: number, lossless = true): 
     if (out !== undefined) return out
   }
   return JSON.stringify(data, null, indent)
+}
+
+
+/**
+ * 把 lossless-json 解析出的 LosslessNumber 展开成普通值，供树 / 表格 / 关系图 / 统计使用：
+ * 安全范围内的数字转 number；超出安全范围的整数转 bigint（String() 后仍是完整精度），小数转 number。
+ */
+export const toPlainJson = (value: unknown): unknown => {
+  if (isLosslessNumber(value)) {
+    const raw = value.toString()
+    const n = Number(raw)
+    if (Number.isSafeInteger(n) || !/^-?\d+$/.test(raw)) return n
+    return BigInt(raw)
+  }
+  if (Array.isArray(value)) return value.map(toPlainJson)
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(value as Record<string, unknown>)) {
+      Object.defineProperty(out, k, {
+        value: toPlainJson((value as Record<string, unknown>)[k]),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      })
+    }
+    return out
+  }
+  return value
 }

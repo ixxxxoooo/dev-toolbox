@@ -1,119 +1,120 @@
 <template>
-  <div class="h-full flex flex-col bg-background text-foreground">
-    <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2 text-primary flex-shrink-0">
-          <Languages class="w-5 h-5" />
-          <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.unicodeConverter.name') }}</span>
-        </div>
-      </div>
-      <div class="flex items-center space-x-3">
-        <button @click="showHelp = !showHelp" class="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-          <HelpCircle class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+  <ToolShell :icon="Languages" :title="t('tools.unicodeConverter.name')" flush>
+    <template #actions>
+      <ToggleChip v-model="onlyNonAscii" :title="t('tools.unicodeConverter.onlyNonAscii')">
+        {{ t('tools.unicodeConverter.onlyNonAscii') }}
+      </ToggleChip>
+    </template>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-2 gap-2">
-      <!-- Input Panel -->
-      <CustomTextarea
-        v-model="inputText"
-        :label="$t('common.labels.input')"
-        :placeholder="$t('tools.unicodeConverter.inputPlaceholder')"
-        @update:model-value="handleInput"
-      >
-        <template #header>
-          <button @click="pasteInput" :title="$t('common.paste')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-            <ClipboardPaste class="w-3.5 h-3.5" />
-          </button>
-          <button @click="clearInput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-            <Trash2 class="w-3.5 h-3.5" />
-          </button>
+    <template #right>
+      <IconButton :title="t('tools.unicodeConverter.textToUnicode')" @click="textToUnicode">
+        <ArrowDown class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('tools.unicodeConverter.unicodeToText')" @click="unicodeToText">
+        <ArrowUp class="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton :title="t('tools.unicodeConverter.swap')" @click="swapContent">
+        <ArrowUpDown class="w-3.5 h-3.5" />
+      </IconButton>
+    </template>
+
+    <template #help>
+      <p>{{ t('tools.unicodeConverter.description') }}</p>
+      <p class="font-semibold mt-3 mb-2">{{ t('tools.unicodeConverter.features') }}</p>
+      <ul class="list-disc list-inside space-y-1 text-muted-foreground">
+        <li>
+          <strong>{{ t('tools.unicodeConverter.textToUnicode') }}:</strong>
+          {{ t('tools.unicodeConverter.textToUnicodeDesc') }}
+        </li>
+        <li>
+          <strong>{{ t('tools.unicodeConverter.unicodeToText') }}:</strong>
+          {{ t('tools.unicodeConverter.unicodeToTextDesc') }}
+        </li>
+      </ul>
+    </template>
+
+    <SplitPane storage-key="unicode" class="flex-1 min-h-0 h-full">
+      <template #a>
+        <Pane :title="t('common.labels.input')">
+          <template #actions>
+            <IconButton :title="t('common.paste')" small @click="pasteInput">
+              <ClipboardPaste class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.clear')" small @click="clearInput">
+              <Trash2 class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <textarea
+            v-model="inputText"
+            class="absolute inset-0 w-full h-full resize-none border-0 bg-transparent p-2 text-sm font-mono outline-none"
+            :placeholder="t('tools.unicodeConverter.inputPlaceholder')"
+            spellcheck="false"
+          />
+        </Pane>
+      </template>
+      <template #b>
+        <Pane :title="t('common.labels.output')" :badge="outputBadge">
+          <template #actions>
+            <IconButton :title="t('common.copy')" small :disabled="!outputText" @click="copyOutput">
+              <Copy class="w-3.5 h-3.5" />
+            </IconButton>
+            <IconButton :title="t('common.clear')" small @click="clearOutput">
+              <Trash2 class="w-3.5 h-3.5" />
+            </IconButton>
+          </template>
+          <textarea
+            v-model="outputText"
+            readonly
+            class="absolute inset-0 w-full h-full resize-none border-0 bg-transparent p-2 text-sm font-mono outline-none text-muted-foreground"
+            :placeholder="t('tools.unicodeConverter.outputPlaceholder')"
+            spellcheck="false"
+          />
+        </Pane>
+      </template>
+    </SplitPane>
+
+    <template #status>
+      <StatusBar>
+        <span v-if="inputText">{{ t('tools.unicodeConverter.statusInput', { n: inputText.length }) }}</span>
+        <span v-else class="text-muted-foreground">{{ t('tools.unicodeConverter.statusReady') }}</span>
+        <template #right>
+          <span v-if="outputText">{{ t('tools.unicodeConverter.statusOutput', { n: outputText.length }) }}</span>
         </template>
-      </CustomTextarea>
-
-      <!-- Action Buttons -->
-      <div class="flex items-center justify-center gap-2">
-        <button @click="textToUnicode" class="px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-md transition-colors flex items-center space-x-2">
-          <ArrowDown class="w-4 h-4" />
-          <span>{{ $t('tools.unicodeConverter.textToUnicode') }}</span>
-        </button>
-        <button @click="unicodeToText" class="px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-md transition-colors flex items-center space-x-2">
-          <ArrowUp class="w-4 h-4" />
-          <span>{{ $t('tools.unicodeConverter.unicodeToText') }}</span>
-        </button>
-        <CustomCheckbox v-model="onlyNonAscii" :label="$t('tools.unicodeConverter.onlyNonAscii')" />
-        <button @click="swapContent" class="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground" :title="$t('tools.unicodeConverter.swap')">
-          <ArrowUpDown class="w-4 h-4" />
-        </button>
-      </div>
-
-      <!-- Output Panel -->
-      <CustomTextarea
-        v-model="outputText"
-        :label="$t('common.labels.output')"
-        :placeholder="$t('tools.unicodeConverter.outputPlaceholder')"
-        readonly
-      >
-        <template #header>
-          <button @click="copyOutput" :title="$t('common.copy')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-            <Copy class="w-3.5 h-3.5" />
-          </button>
-          <button @click="clearOutput" :title="$t('common.clear')" class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors">
-            <Trash2 class="w-3.5 h-3.5" />
-          </button>
-        </template>
-      </CustomTextarea>
-    </main>
-
-    <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ $t('tools.unicodeConverter.name') }} Help</h3>
-          <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="space-y-4 text-sm">
-          <p>{{ $t('tools.unicodeConverter.description') }}</p>
-          <div>
-            <p class="font-bold mb-2">{{ $t('tools.unicodeConverter.features') }}:</p>
-            <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>{{ $t('tools.unicodeConverter.textToUnicode') }}:</strong> {{ $t('tools.unicodeConverter.textToUnicodeDesc') }}</li>
-              <li><strong>{{ $t('tools.unicodeConverter.unicodeToText') }}:</strong> {{ $t('tools.unicodeConverter.unicodeToTextDesc') }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+      </StatusBar>
+    </template>
+  </ToolShell>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Languages, HelpCircle, ClipboardPaste, Copy, Trash2, ArrowDown, ArrowUp, ArrowUpDown, X } from 'lucide-vue-next'
-import CustomTextarea from '../components/CustomTextarea.vue'
-import CustomCheckbox from '../components/CustomCheckbox.vue'
-import { encodeUnicodeEscapes, decodeUnicodeEscapes } from '../utils/unicode'
-import { copyText, readClipboardText } from '../utils/clipboard'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import {
+  Languages,
+  ClipboardPaste,
+  Copy,
+  Trash2,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+} from 'lucide-vue-next'
+import ToolShell from '@/components/ui/ToolShell.vue'
+import SplitPane from '@/components/ui/SplitPane.vue'
+import Pane from '@/components/ui/Pane.vue'
+import StatusBar from '@/components/ui/StatusBar.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
+import { encodeUnicodeEscapes, decodeUnicodeEscapes } from '@/utils/unicode'
+import { copyText, readClipboardText } from '@/utils/clipboard'
+const { t } = useI18n()
 
 const inputText = ref('')
 const outputText = ref('')
-const showHelp = ref(false)
-
-// 仅转换非 ASCII 字符（保留英文、数字、符号原样）
 const onlyNonAscii = ref(false)
 
-const handleInput = () => {
-  // 预留：如需实时转换可在此处理
-}
+const outputBadge = computed(() => (outputText.value ? `${outputText.value.length}` : ''))
 
 const textToUnicode = () => {
   if (!inputText.value) return
-  // 按 UTF-16 代码单元输出，emoji 等非 BMP 字符会得到完整代理对（如 \uD83D\uDE00）
   outputText.value = encodeUnicodeEscapes(inputText.value, onlyNonAscii.value)
 }
 
