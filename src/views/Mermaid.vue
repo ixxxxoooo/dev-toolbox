@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3">
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <Share2 class="w-5 h-5" />
           <span class="font-semibold text-sm hidden sm:inline">{{ $t('tools.mermaid.name') }}</span>
@@ -120,16 +120,16 @@
             :style="{ transform: `translate(${currentPosition.x}px, ${currentPosition.y}px) scale(${currentScale})`, transformOrigin: '0 0' }"
             v-html="svgOutput"
           ></div>
-          <div v-if="error" class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="text-destructive text-sm bg-destructive/10 p-4 rounded-lg max-w-md">{{ error }}</div>
+          <div v-if="error" class="absolute inset-0 flex items-center justify-center p-3">
+            <div class="text-destructive text-sm bg-destructive/10 p-3 rounded-lg max-w-md">{{ error }}</div>
           </div>
         </div>
       </div>
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.mermaid.name') }}</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

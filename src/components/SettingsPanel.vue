@@ -1,257 +1,337 @@
 <template>
-  <div class="relative w-full">
-    <!-- Trigger Button -->
+  <div class="w-full">
+    <!-- 触发按钮 -->
     <button
-      @click.stop="isOpen = !isOpen"
-      class="flex items-center h-10 px-3 rounded-lg text-sm font-medium transition-all duration-300 group/btn w-full overflow-hidden"
+      type="button"
+      class="w-full h-8 rounded-md flex items-center text-[13px] font-medium press"
       :class="[
+        collapsed ? 'justify-center' : 'px-2.5 gap-2.5',
         isOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       ]"
       :title="$t('common.settings.title')"
+      @click.stop="isOpen = true"
     >
-      <div class="w-6 h-6 shrink-0 flex items-center justify-center transition-all duration-300" :class="collapsed ? 'mr-0' : 'mr-3'">
-        <Settings 
-          class="w-5 h-5 transition-transform duration-300 shrink-0" 
-          :class="{ 'rotate-90': isOpen }" 
-        />
-      </div>
-      <span 
-        class="whitespace-nowrap transition-all duration-300 overflow-hidden"
-        :class="collapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'"
-      >
-        {{ $t('common.settings.title') }}
-      </span>
+      <Settings class="w-4 h-4 shrink-0 transition-transform duration-500 ease-out" :class="{ 'rotate-90': isOpen }" />
+      <span v-if="!collapsed" class="flex-1 text-left truncate">{{ $t('common.settings.title') }}</span>
     </button>
 
-    <!-- Settings Modal (Centered Overlay) -->
-    <Transition name="fade">
-      <div v-if="isOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm" @click.self="isOpen = false">
-        <div class="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]">
-          
-          <!-- Header -->
-          <div class="px-8 py-5 border-b border-border bg-muted/30 flex items-center justify-between shrink-0 font-sans">
-            <div class="flex items-center space-x-2">
-              <Settings class="w-5 h-5 text-primary" />
-              <h3 class="font-bold text-base text-card-foreground">{{ $t('common.settings.title') }}</h3>
-            </div>
-            <button @click="isOpen = false" class="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-card-foreground">
-              <X class="w-5 h-5" />
-            </button>
-          </div>
+    <!-- 设置弹层：Teleport 到 body，避免被侧栏的层叠上下文限制 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="isOpen"
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/75"
+          @click.self="isOpen = false"
+          @keydown.esc="isOpen = false"
+        >
+          <Transition name="pop" appear>
+            <div
+              v-if="isOpen"
+              ref="dialogRef"
+              role="dialog"
+              aria-modal="true"
+              tabindex="-1"
+              class="bg-popover text-popover-foreground border border-border rounded-xl shadow-pop w-full max-w-[640px] max-h-[88vh] flex flex-col overflow-hidden outline-none"
+            >
+              <!-- 头部 -->
+              <div class="h-toolbar px-3 border-b border-border flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2 font-semibold text-[13px]">
+                  <Settings class="w-4 h-4 text-primary" />
+                  {{ $t('common.settings.title') }}
+                </div>
+                <button
+                  type="button"
+                  class="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground press"
+                  @click="isOpen = false"
+                >
+                  <X class="w-4 h-4" />
+                </button>
+              </div>
 
-          <!-- Content -->
-          <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar font-sans">
-            <div class="grid grid-cols-2 gap-x-12">
-              
-              <!-- Left Column: Core Settings -->
-              <div class="space-y-10">
-                <!-- Appearance Section -->
-                <section class="space-y-4">
-                  <div class="flex items-center space-x-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
-                    <Monitor class="w-3.5 h-3.5" />
-                    <span>{{ $t('common.settings.appearance') }}</span>
-                  </div>
-                  
-                  <div class="grid grid-cols-3 gap-2">
-                    <button
-                      v-for="mode in ['system', 'light', 'dark'] as const"
-                      :key="mode"
-                      @click="themeStore.setThemeMode(mode)"
-                      class="flex flex-col items-center justify-center space-y-2 px-3 py-3.5 rounded-xl border text-xs transition-all duration-200"
-                      :class="(mode === 'system' && themeStore.followSystemMode.value) || 
-                              (mode === 'light' && !themeStore.followSystemMode.value && !themeStore.isDark.value) ||
-                              (mode === 'dark' && !themeStore.followSystemMode.value && themeStore.isDark.value)
-                              ? 'bg-primary/10 border-primary/20 text-primary shadow-sm ring-1 ring-primary/20' 
-                              : 'bg-muted/10 border-transparent text-muted-foreground hover:bg-muted/20 hover:border-border/50'"
-                    >
-                      <component :is="mode === 'system' ? Laptop : (mode === 'light' ? Sun : Moon)" class="w-4 h-4" />
-                      <span class="font-medium">{{ mode === 'system' ? $t('common.editorTheme.auto') : (mode === 'light' ? $t('common.settings.lightMode') : $t('common.settings.darkMode')) }}</span>
-                    </button>
-                  </div>
-                </section>
-
-                <!-- Language Section -->
-                <section class="space-y-4">
-                  <div class="flex items-center space-x-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
-                    <Languages class="w-3.5 h-3.5" />
-                    <span>{{ $t('common.settings.language') }}</span>
-                  </div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button
-                      v-for="lang in ['system', 'zh', 'en'] as const"
-                      :key="lang"
-                      @click="themeStore.setLanguage(lang)"
-                      class="flex flex-col items-center justify-center space-y-2 px-3 py-3.5 rounded-xl border text-xs transition-all duration-200"
-                      :class="(lang === 'system' && themeStore.followSystemLang.value) || 
-                              (lang === 'zh' && !themeStore.followSystemLang.value && currentLang === 'zh') ||
-                              (lang === 'en' && !themeStore.followSystemLang.value && currentLang === 'en')
-                              ? 'bg-primary/10 border-primary/20 text-primary shadow-sm ring-1 ring-primary/20' 
-                              : 'bg-muted/10 border-transparent text-muted-foreground hover:bg-muted/20 hover:border-border/50'"
-                    >
-                      <Globe v-if="lang === 'system'" class="w-4 h-4" />
-                      <span v-else class="text-[10px] font-bold">{{ lang.toUpperCase() }}</span>
-                      <span class="font-medium">{{ lang === 'system' ? $t('common.editorTheme.auto') : (lang === 'zh' ? '中文' : 'English') }}</span>
-                    </button>
-                  </div>
-                </section>
-
-                <!-- History Section -->
-                <section class="space-y-4">
-                  <div class="flex items-center space-x-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
-                    <HistoryIcon class="w-3.5 h-3.5" />
-                    <span>{{ $t('common.settings.history') }}</span>
-                  </div>
-                  <div class="space-y-5 bg-muted/10 p-5 rounded-2xl border border-border/40">
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-foreground font-semibold">{{ $t('common.settings.historyLimit') }}</span>
-                      <span class="text-xs font-mono font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{{ themeStore.historyLimit.value }}</span>
+              <div class="overflow-y-auto p-3 grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-x-5 gap-y-4 stagger">
+                <!-- 左列：界面 -->
+                <div class="space-y-4 min-w-0">
+                  <!-- 明暗模式 -->
+                  <section class="space-y-1.5">
+                    <h4 class="sec-title"><Monitor class="w-3 h-3" />{{ $t('common.settings.appearance') }}</h4>
+                    <div class="seg">
+                      <button
+                        v-for="m in modes"
+                        :key="m.id"
+                        type="button"
+                        class="seg-btn press"
+                        :class="{ 'is-active': currentMode === m.id }"
+                        @click="themeStore.setThemeMode(m.id)"
+                      >
+                        <component :is="m.icon" class="w-3.5 h-3.5" />
+                        {{ m.label }}
+                      </button>
                     </div>
-                    <div class="px-1">
-                      <input 
-                        type="range" 
-                        min="10" 
-                        max="200" 
+                  </section>
+
+                  <!-- 色板 -->
+                  <section class="space-y-1.5">
+                    <h4 class="sec-title"><Palette class="w-3 h-3" />{{ $t('common.settings.palette') }}</h4>
+                    <div class="grid grid-cols-3 gap-1.5">
+                      <button
+                        v-for="p in UI_PALETTES"
+                        :key="p.id"
+                        type="button"
+                        class="palette-btn press"
+                        :class="{ 'is-active': themeStore.palette.value === p.id }"
+                        @click="themeStore.setPalette(p.id)"
+                      >
+                        <span class="swatch" :style="{ background: themeStore.isDark.value ? p.swatch[1] : p.swatch[0] }">
+                          <Check v-if="themeStore.palette.value === p.id" class="w-3 h-3 text-white mix-blend-difference" />
+                        </span>
+                        <span class="truncate">{{ $t('common.settings.palettes.' + p.id) }}</span>
+                      </button>
+                    </div>
+                  </section>
+
+                  <!-- 语言 -->
+                  <section class="space-y-1.5">
+                    <h4 class="sec-title"><Languages class="w-3 h-3" />{{ $t('common.settings.language') }}</h4>
+                    <div class="seg">
+                      <button
+                        v-for="l in langs"
+                        :key="l.id"
+                        type="button"
+                        class="seg-btn press"
+                        :class="{ 'is-active': currentLangMode === l.id }"
+                        @click="themeStore.setLanguage(l.id)"
+                      >
+                        {{ l.label }}
+                      </button>
+                    </div>
+                  </section>
+
+                  <!-- 历史 -->
+                  <section class="space-y-1.5">
+                    <h4 class="sec-title"><HistoryIcon class="w-3 h-3" />{{ $t('common.settings.history') }}</h4>
+                    <div class="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-2">
+                      <div class="flex items-center justify-between text-[13px]">
+                        <span>{{ $t('common.settings.historyLimit') }}</span>
+                        <span class="font-mono text-xs font-semibold text-primary tabular-nums">{{ themeStore.historyLimit.value }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="200"
                         step="10"
                         :value="themeStore.historyLimit.value"
-                        @input="(e: any) => themeStore.setHistoryLimit(parseInt(e.target.value))"
-                        class="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
-                      >
+                        class="range w-full"
+                        @input="(e: Event) => themeStore.setHistoryLimit(parseInt((e.target as HTMLInputElement).value))"
+                      />
                     </div>
-                    <div class="flex justify-between text-[10px] text-muted-foreground/60 font-medium px-1">
-                      <span>10 items</span>
-                      <span>100 items</span>
-                      <span>200 items</span>
-                    </div>
+                  </section>
+                </div>
+
+                <!-- 右列：编辑器主题 -->
+                <section class="space-y-1.5 min-w-0">
+                  <h4 class="sec-title justify-between">
+                    <span class="flex items-center gap-1.5"><Palette class="w-3 h-3" />{{ $t('common.editorTheme.title') }}</span>
+                    <span class="normal-case tracking-normal text-primary/80 font-medium">{{ currentThemeName }}</span>
+                  </h4>
+                  <div class="grid grid-cols-1 gap-1 max-h-[380px] overflow-y-auto pr-1">
+                    <button
+                      v-for="theme in EDITOR_THEMES"
+                      :key="theme.id"
+                      type="button"
+                      class="editor-theme press"
+                      :class="{ 'is-active': themeStore.editorTheme.value === theme.id }"
+                      @click="themeStore.setEditorTheme(theme.id)"
+                    >
+                      <span class="flex -space-x-1">
+                        <i class="dot" :style="{ background: theme.colors[0] }"></i>
+                        <i class="dot" :style="{ background: theme.colors[1] }"></i>
+                      </span>
+                      <span class="flex-1 text-left truncate">{{ theme.id === 'auto' ? $t('common.editorTheme.auto') : theme.name }}</span>
+                      <span class="text-[10px] uppercase opacity-50 font-semibold">{{ theme.type }}</span>
+                      <Check v-if="themeStore.editorTheme.value === theme.id" class="w-3.5 h-3.5 shrink-0" />
+                    </button>
                   </div>
                 </section>
               </div>
-
-              <!-- Right Column: Editor Themes -->
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
-                    <Palette class="w-3.5 h-3.5" />
-                    <span>{{ $t('common.editorTheme.title') }}</span>
-                  </div>
-                  <span class="text-[10px] text-primary/60 font-medium px-2 py-0.5 bg-primary/5 rounded-full border border-primary/10">
-                    {{ currentThemeName }}
-                  </span>
-                </div>
-
-                <div class="grid grid-cols-1 gap-2 max-h-[460px] overflow-y-auto custom-scrollbar pr-2 pb-4">
-                  <button
-                    v-for="theme in EDITOR_THEMES"
-                    :key="theme.id"
-                    @click="themeStore.setEditorTheme(theme.id)"
-                    class="flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 group/item"
-                    :class="themeStore.editorTheme.value === theme.id 
-                      ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                      : 'bg-muted/10 border-transparent text-muted-foreground hover:bg-muted/20 hover:border-border/50 hover:text-foreground'"
-                  >
-                    <div class="flex items-center space-x-4">
-                      <!-- Progressively overlapping dots -->
-                      <div class="flex -space-x-1.5">
-                        <div 
-                          class="w-4 h-4 rounded-full border border-background shadow-sm z-10" 
-                          :style="{ backgroundColor: theme.colors[0] }"
-                        ></div>
-                        <div 
-                          class="w-4 h-4 rounded-full border border-background shadow-sm" 
-                          :style="{ backgroundColor: theme.colors[1] }"
-                        ></div>
-                      </div>
-                      <div class="flex flex-col items-start">
-                        <span class="text-sm font-semibold tracking-tight">
-                          {{ theme.id === 'auto' ? $t('common.editorTheme.auto') : theme.name }}
-                        </span>
-                        <span class="text-[10px] uppercase opacity-50 font-bold tracking-wider">
-                          {{ theme.type }}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-center space-x-2">
-                      <Check v-if="themeStore.editorTheme.value === theme.id" class="w-4 h-4" />
-                    </div>
-                  </button>
-                </div>
-              </div>
             </div>
-          </div>
+          </Transition>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Settings, X, Sun, Moon, Palette, Languages, Check, Monitor, Laptop, Globe, History as HistoryIcon } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
+import { Settings, X, Sun, Moon, Palette, Languages, Check, Monitor, Laptop, History as HistoryIcon } from 'lucide-vue-next'
 import { useThemeStore } from '../stores/theme'
 import { useI18n } from 'vue-i18n'
 import { EDITOR_THEMES } from '../utils/monaco-themes'
+import { UI_PALETTES } from '../utils/palettes'
 
-defineProps<{
-  collapsed?: boolean
-}>()
+defineProps<{ collapsed?: boolean }>()
 
 const themeStore = useThemeStore()
 const { locale, t } = useI18n()
 const isOpen = ref(false)
+const dialogRef = ref<HTMLElement | null>(null)
 
-const currentLang = computed(() => locale.value)
+// 明暗模式：system / light / dark
+const modes = computed(() => [
+  { id: 'system' as const, icon: Laptop, label: t('common.editorTheme.auto') },
+  { id: 'light' as const, icon: Sun, label: t('common.settings.lightMode') },
+  { id: 'dark' as const, icon: Moon, label: t('common.settings.darkMode') }
+])
+const currentMode = computed(() =>
+  themeStore.followSystemMode.value ? 'system' : themeStore.isDark.value ? 'dark' : 'light'
+)
+
+// 语言：system / zh / en
+const langs = computed(() => [
+  { id: 'system' as const, label: t('common.editorTheme.auto') },
+  { id: 'zh' as const, label: '中文' },
+  { id: 'en' as const, label: 'English' }
+])
+const currentLangMode = computed(() =>
+  themeStore.followSystemLang.value ? 'system' : (locale.value as 'zh' | 'en')
+)
+
 const currentThemeName = computed(() => {
-  const theme = EDITOR_THEMES.find(t => t.id === themeStore.editorTheme.value)
-  return theme?.id === 'auto' ? t('common.editorTheme.auto') : (theme?.name || '')
+  const theme = EDITOR_THEMES.find(x => x.id === themeStore.editorTheme.value)
+  return theme?.id === 'auto' ? t('common.editorTheme.auto') : theme?.name || ''
 })
+
+// 弹层打开后聚焦对话框，使 Esc 能被捕获；打开期间锁定背景滚动不需要（应用本身不滚动）
+const onGlobalEsc = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') isOpen.value = false
+}
+watch(isOpen, async open => {
+  if (open) {
+    window.addEventListener('keydown', onGlobalEsc)
+    await nextTick()
+    dialogRef.value?.focus()
+  } else {
+    window.removeEventListener('keydown', onGlobalEsc)
+  }
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalEsc))
 </script>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+.sec-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+
+/* 分段控件 */
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 2px;
+  border-radius: calc(var(--radius) + 1px);
+  background: hsl(var(--muted));
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
+.seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 1.625rem;
+  border-radius: calc(var(--radius) - 1px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  transition: background-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), box-shadow var(--dur-base);
+}
+.seg-btn:hover { color: hsl(var(--foreground)); }
+.seg-btn.is-active {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.12), 0 0 0 1px hsl(var(--border));
+}
+
+/* 色板按钮 */
+.palette-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  transition: border-color var(--dur-base), background-color var(--dur-base), color var(--dur-base);
+}
+.palette-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.palette-btn.is-active {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--foreground));
+}
+.swatch {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px hsl(0 0% 0% / 0.12);
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+.palette-btn:hover .swatch,
+.palette-btn.is-active .swatch { transform: scale(1.12); }
+
+/* 编辑器主题条目 */
+.editor-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  transition: background-color var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.editor-theme:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.editor-theme.is-active {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.5);
+  color: hsl(var(--primary));
+}
+.dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px hsl(var(--popover)), inset 0 0 0 1px hsl(0 0% 50% / 0.25);
+}
+
+/* 滑块 */
+.range {
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
   background: hsl(var(--border));
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.3);
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-.animate-in {
-  animation: modal-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-input[type=range]::-webkit-slider-thumb {
-  border: 2px solid white;
-  height: 14px;
-  width: 14px;
-  border-radius: 50%;
-  background: hsl(var(--primary));
   cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -6px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  accent-color: hsl(var(--primary));
 }
+.range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--card));
+  box-shadow: 0 1px 4px hsl(0 0% 0% / 0.3);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.range::-webkit-slider-thumb:hover { transform: scale(1.2); }
 </style>

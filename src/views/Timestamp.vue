@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <Clock class="w-5 h-5" />
@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <main class="flex-1 container mx-auto px-4 py-8 flex justify-center overflow-auto">
+    <main class="flex-1 container mx-auto px-3 py-8 flex justify-center overflow-auto">
       <div class="w-full max-w-3xl space-y-8">
         <!-- Input Section -->
         <div class="space-y-2">
@@ -52,11 +52,11 @@
 
         <!-- Results Section -->
         <div v-if="isValid" class="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-slide-up">
-          <div class="px-4 py-3 border-b border-border bg-muted/30">
+          <div class="px-3 py-2 border-b border-border bg-muted/30">
             <h2 class="text-sm font-semibold">{{ $t('tools.timestamp.result.title') }}</h2>
           </div>
           <div class="divide-y divide-border">
-            <div v-for="item in outputFormats" :key="item.labelKey" class="flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors group">
+            <div v-for="item in outputFormats" :key="item.labelKey" class="flex items-center justify-between px-3 py-2 hover:bg-muted/20 transition-colors group">
               <span class="text-xs font-medium text-muted-foreground">{{ $t(item.labelKey) }}</span>
               <div class="flex items-center space-x-3">
                 <span class="font-mono text-foreground text-sm select-all">{{ item.value }}</span>
@@ -75,8 +75,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.timestamp.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

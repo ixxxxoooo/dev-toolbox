@@ -2,34 +2,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
-import { cpSync, readFileSync, existsSync } from 'fs'
-
-const excalidrawVersion = JSON.parse(
-  readFileSync(resolve(__dirname, 'node_modules/@excalidraw/excalidraw/package.json'), 'utf-8')
-).version as string
-
-// 构建时把 Excalidraw 字体拷贝到 dist/excalidraw-assets/fonts，实现字体自托管。
-// 跳过 Xiaolai（中文手写体，约 12MB），该字体回退到 CDN 按需加载。
-const excalidrawFonts = () => ({
-  name: 'excalidraw-fonts',
-  apply: 'build' as const,
-  writeBundle() {
-    const src = resolve(__dirname, 'node_modules/@excalidraw/excalidraw/dist/prod/fonts')
-    if (!existsSync(src)) return
-    cpSync(src, resolve(__dirname, 'dist/excalidraw-assets/fonts'), {
-      recursive: true,
-      filter: (p) => !p.includes('/Xiaolai')
-    })
-  }
-})
 
 export default defineConfig({
-  define: {
-    __EXCALIDRAW_VERSION__: JSON.stringify(excalidrawVersion)
-  },
   plugins: [
     vue(),
-    excalidrawFonts(),
     VitePWA({
       // prompt：新版本安装后进入 waiting，由 main.ts 提示用户并在确认后刷新
       registerType: 'prompt',
@@ -44,9 +20,9 @@ export default defineConfig({
       workbox: {
         // 预缓存所有静态资源
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
-        // 排除特别大的文件从预缓存（它们会在运行时缓存）
-        globIgnores: ['**/monaco-*.js', 'excalidraw-assets/**'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+        // 完整预缓存（含 Monaco 约 3.3MB）：首次访问后即使立刻断网，所有工具也能离线打开。
+        // 代价是首次安装多下载一些，但由 Service Worker 在后台完成，不阻塞首屏。
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6 MB
         // 确保离线时能正常导航
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//],
@@ -85,16 +61,6 @@ export default defineConfig({
             }
           },
           {
-            // Excalidraw 自托管字体：不进预缓存，按需运行时缓存
-            urlPattern: /\/excalidraw-assets\/.*\.woff2$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'excalidraw-fonts-cache',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] }
-            }
-          },
-          {
             // 缓存图片资源
             urlPattern: /\.(png|jpg|jpeg|gif|svg|webp|ico)$/i,
             handler: 'CacheFirst',
@@ -115,8 +81,8 @@ export default defineConfig({
         name: 'Dev Toolbox',
         short_name: 'DevToolbox',
         description: '集成常用开发者工具的 Web 应用',
-        theme_color: '#1a1a2e',
-        background_color: '#1a1a2e',
+        theme_color: '#0d0f14',
+        background_color: '#0d0f14',
         display: 'standalone',
         icons: [
           {

@@ -9,7 +9,13 @@
     <meta name="description" content="开发者工具箱 - 集成常用开发工具的在线平台" />
     <meta name="theme-color" content="#3b82f6" />
     <link rel="manifest" href="/manifest.webmanifest">
+    <script src="/theme-init.js"></script>
     <title>Dev Toolbox - 开发者工具箱</title>
+    <style>
+      /* 首屏占位：JS 加载前先铺底色，避免白闪 */
+      html { background: #f6f7fa; }
+      html.dark { background: #0d0f14; }
+    </style>
   </head>
   <body>
     <div id="app"></div>

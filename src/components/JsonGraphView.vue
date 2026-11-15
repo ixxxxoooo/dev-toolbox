@@ -38,16 +38,16 @@
     </VueFlow>
 
     <!-- Node Details Modal -->
-    <div v-if="selectedNode" class="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" @click.self="selectedNode = null">
+    <div v-if="selectedNode" class="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-3" @click.self="selectedNode = null">
       <div class="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-foreground">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/50">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/50">
           <h3 class="font-semibold text-sm">Node Details</h3>
           <button @click="selectedNode = null" class="text-muted-foreground hover:text-foreground transition-colors">
             <X class="w-4 h-4" />
           </button>
         </div>
         
-        <div class="flex-1 overflow-auto p-4 space-y-6">
+        <div class="flex-1 overflow-auto p-3 space-y-4">
           <div>
             <div class="flex items-center justify-between mb-2">
               <h4 class="text-xs font-medium text-muted-foreground">Content (Primitives only)</h4>

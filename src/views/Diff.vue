@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <FileDiff class="w-5 h-5" />
@@ -103,7 +103,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-4">
+    <main class="flex-1 flex flex-col min-h-0 p-2">
       <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm">
         <!-- Headers for split view -->
         <div v-if="diffMode === 'split'" class="grid grid-cols-2 bg-muted/30 border-b border-border">
@@ -159,8 +159,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.diff.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
@@ -192,7 +192,7 @@
 
     <!-- Error Toast -->
     <Transition name="slide-up">
-      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-start space-x-3 z-50">
+      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-3 py-2 rounded-lg shadow-lg flex items-start space-x-3 z-50">
         <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div class="flex-1">
           <p class="font-medium text-sm">{{ errorMessage }}</p>

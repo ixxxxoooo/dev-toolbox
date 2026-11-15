@@ -2,107 +2,276 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   设计令牌（Design Tokens）
+   - 配色 = 「色板 data-palette」×「明暗 .dark」，两者正交，任意组合
+   - 色板只需声明 6 个变量：中性色相 nh、主色相 ph / 饱和度 ps、
+     亮色明度 pl、暗色明度 pld、暗色饱和度 psd
+   - 所有颜色以 "H S% L%" 形式存放，配合 tailwind 的 hsl(var(--x) / <alpha>) 使用
+   ========================================================================== */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    /* 默认色板：靛蓝 */
+    --nh: 225;
+    --ph: 239;
+    --ps: 84%;
+    --pl: 60%;
+    --psd: 92%;
+    --pld: 76%;
+
     --radius: 0.5rem;
+    /* 工具栏 / 侧栏头部统一高度：紧凑 36px */
+    --toolbar-h: 2.25rem;
+    /* 动效曲线：出场快、收尾柔和 */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-fast: 120ms;
+    --dur-base: 180ms;
+    --dur-slow: 280ms;
+
+    /* 亮色 */
+    --background: var(--nh) 25% 97.5%;
+    --foreground: var(--nh) 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: var(--nh) 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--nh) 30% 10%;
+    --primary: var(--ph) var(--ps) var(--pl);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--nh) 20% 94%;
+    --secondary-foreground: var(--nh) 30% 16%;
+    --muted: var(--nh) 20% 94.5%;
+    --muted-foreground: var(--nh) 9% 42%;
+    --accent: var(--ph) 70% 95%;
+    --accent-foreground: var(--ph) 60% 30%;
+    --destructive: 0 78% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 62% 36%;
+    --warning: 36 92% 46%;
+    --border: var(--nh) 18% 90%;
+    --input: var(--nh) 18% 88%;
+    --ring: var(--ph) var(--ps) var(--pl);
+
+    --shadow-pop: 0 10px 30px -10px hsl(var(--nh) 40% 10% / 0.25), 0 2px 8px -2px hsl(var(--nh) 40% 10% / 0.12);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --background: var(--nh) 26% 6.5%;
+    --foreground: var(--nh) 25% 94%;
+    --card: var(--nh) 24% 9%;
+    --card-foreground: var(--nh) 25% 94%;
+    --popover: var(--nh) 24% 10.5%;
+    --popover-foreground: var(--nh) 25% 94%;
+    --primary: var(--ph) var(--psd) var(--pld);
+    --primary-foreground: var(--nh) 40% 8%;
+    --secondary: var(--nh) 18% 15%;
+    --secondary-foreground: var(--nh) 25% 94%;
+    --muted: var(--nh) 18% 13.5%;
+    --muted-foreground: var(--nh) 12% 63%;
+    --accent: var(--ph) 40% 18%;
+    --accent-foreground: var(--ph) 85% 85%;
+    --destructive: 0 70% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 55% 50%;
+    --warning: 38 92% 58%;
+    --border: var(--nh) 16% 17%;
+    --input: var(--nh) 16% 20%;
+    --ring: var(--ph) var(--psd) var(--pld);
+
+    --shadow-pop: 0 14px 40px -12px hsl(0 0% 0% / 0.7), 0 2px 10px -2px hsl(0 0% 0% / 0.5);
   }
+
+  /* ---- 6 套色板：只改变量，不改结构 ---- */
+  [data-palette='indigo'] { --nh: 225; --ph: 239; --ps: 84%; --pl: 60%; --psd: 92%; --pld: 76%; }
+  [data-palette='emerald'] { --nh: 160; --ph: 160; --ps: 84%; --pl: 32%; --psd: 62%; --pld: 52%; }
+  [data-palette='rose'] { --nh: 345; --ph: 346; --ps: 77%; --pl: 50%; --psd: 90%; --pld: 68%; }
+  [data-palette='amber'] { --nh: 35; --ph: 32; --ps: 95%; --pl: 44%; --psd: 92%; --pld: 56%; }
+  [data-palette='ocean'] { --nh: 205; --ph: 199; --ps: 89%; --pl: 40%; --psd: 92%; --pld: 56%; }
+  [data-palette='graphite'] { --nh: 240; --ph: 240; --ps: 6%; --pl: 16%; --psd: 8%; --pld: 92%; }
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  html {
+    /* 紧凑基准字号：配合 tailwind.config 里下调的 text-* 刻度 */
+    font-size: 15px;
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior: none;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+  }
+  /* 键盘焦点环：只在键盘操作时出现，鼠标点击不打扰 */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.7);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+  button, [role='button'] {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ==========================================================================
+   滚动条：细、圆、仅 hover 时加深（无 border 技巧，渲染更省）
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.28) transparent;
 }
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full border-2 border-background;
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 999px;
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.45); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Monaco 编辑器覆盖 */
+.monaco-editor { --vscode-focusBorder: transparent !important; }
+
+/* ==========================================================================
+   性能规则
+   1. 全局禁用 backdrop-filter：高斯模糊是 GPU 大户，遮罩用高不透明度背景代替
+   2. transition-all 收窄为具体属性，避免对 width/height/layout 属性做过渡
+   3. 路由内容区开启 layout/style 包含，减少跨区重排
+   ========================================================================== */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.transition-all {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-timing-function: var(--ease-out);
+  transition-duration: var(--dur-base);
+}
+.transition-colors,
+.transition-opacity,
+.transition-transform,
+.transition {
+  transition-timing-function: var(--ease-out);
+}
+.view-root { contain: layout style; }
+
+/* ==========================================================================
+   动效库：只使用 transform / opacity，由合成器线程执行，不触发重排
+   ========================================================================== */
+/* 页面切换：轻微上浮 + 淡入 */
+.page-enter-active { transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
+.page-leave-active { transition: opacity 90ms ease-in; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.page-enter-from { opacity: 0; transform: translateY(6px); }
+.page-leave-to { opacity: 0; }
+
+/* 通用淡入淡出（遮罩等） */
+.fade-enter-active, .fade-leave-active { transition: opacity var(--dur-base) var(--ease-out); }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* 弹层：从锚点缩放弹出，带轻微弹性 */
+.pop-enter-active { transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-slow) var(--ease-spring); }
+.pop-leave-active { transition: opacity 100ms ease-in, transform 100ms ease-in; }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(8px) scale(0.97); }
+
+/* 列表项逐个入场（给容器加 .stagger，子项自动错峰） */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.stagger > * { animation: rise-in var(--dur-slow) var(--ease-out) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 25ms; }
+.stagger > *:nth-child(3) { animation-delay: 50ms; }
+.stagger > *:nth-child(4) { animation-delay: 75ms; }
+.stagger > *:nth-child(5) { animation-delay: 100ms; }
+.stagger > *:nth-child(6) { animation-delay: 125ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 150ms; }
+
+/* 按压反馈：所有可点击的小按钮统一手感 */
+.press { transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast), color var(--dur-fast); }
+.press:active { transform: scale(0.94); }
+
+/* 骨架屏微光 */
+@keyframes shimmer { to { transform: translateX(100%); } }
+.skeleton { position: relative; overflow: hidden; background: hsl(var(--muted)); border-radius: var(--radius); }
+.skeleton::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.06), transparent);
+  animation: shimmer 1.2s infinite;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/40;
+/* 顶部路由加载细条 */
+@keyframes route-progress { 0% { transform: scaleX(0); } 70% { transform: scaleX(0.85); } 100% { transform: scaleX(0.95); } }
+.route-progress { transform-origin: left; animation: route-progress 1.2s var(--ease-out) forwards; }
+
+/* 尊重系统「减少动态效果」设置：直接关闭所有动画与过渡 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* Monaco Editor Overrides */
-.monaco-editor {
-  --vscode-focusBorder: transparent !important;
+/* 通用工具类 */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  border-bottom-width: 2px;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
-/* Animations */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
+/* ==========================================================================
+   Driver.js 引导层适配
+   ========================================================================== */
+.driver-popover {
+  background: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 2px) !important;
+  box-shadow: var(--shadow-pop) !important;
 }
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Driver.js Overrides for Tailwind CSS */
+.driver-popover-title { font-size: 0.9rem !important; font-weight: 600 !important; }
+.driver-popover-description { font-size: 0.8rem !important; color: hsl(var(--muted-foreground)) !important; }
+.driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: hsl(var(--popover)) !important; }
+.driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: hsl(var(--popover)) !important; }
+.driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: hsl(var(--popover)) !important; }
+.driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: hsl(var(--popover)) !important; }
 .driver-popover-footer button {
-  @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded text-sm px-3 py-1.5 ml-2 font-medium transition-colors;
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded text-xs px-3 py-1.5 ml-2 font-medium transition-colors;
   text-shadow: none !important;
+  border: 0 !important;
 }
-
 .driver-popover-footer .driver-popover-prev-btn {
   @apply bg-muted text-foreground hover:bg-muted/80;
 }
-
 .driver-popover-close-btn {
   @apply text-muted-foreground hover:text-foreground transition-colors;
 }

@@ -18,8 +18,7 @@ import {
   Image,
   Eraser,
   Languages,
-  Share2,
-  PenTool
+  Share2
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
@@ -48,8 +47,7 @@ export const toolIcons: Record<string, Component> = {
   Image,
   Eraser,
   Languages,
-  Share2,
-  PenTool
+  Share2
 }
 
 export const getToolIcon = (name?: string): Component => (name && toolIcons[name]) || FileText

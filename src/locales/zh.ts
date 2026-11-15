@@ -29,6 +29,28 @@ export default {
       language: '语言选择',
       history: '历史记录',
       historyLimit: '保留记录数量',
+      palette: '主题配色',
+      palettes: {
+        indigo: '靛蓝',
+        emerald: '翠绿',
+        rose: '玫瑰',
+        amber: '琥珀',
+        ocean: '海洋',
+        graphite: '石墨'
+      },
+      uiTheme: '界面主题',
+      editorThemeHint: '代码编辑器配色'
+    },
+    nav: {
+      search: '搜索工具',
+      searchHint: '按 / 聚焦搜索',
+      pinned: '已固定',
+      recent: '最近使用',
+      all: '全部工具',
+      pin: '固定到顶部',
+      unpin: '取消固定',
+      noMatch: '没有匹配的工具',
+      openPalette: '命令面板'
     },
     download: '下载',
     upload: '上传',
@@ -492,15 +514,6 @@ export default {
       swap: '交换输入输出',
       onlyNonAscii: '仅转换非 ASCII',
       features: '功能特性'
-    },
-
-    // Excalidraw 白板
-    excalidraw: {
-      name: 'Excalidraw 白板',
-      description: '手绘风格的在线白板工具',
-      helpDraw: '使用工具栏绘制各种形状和图形',
-      helpExport: '支持导出为 PNG、SVG 等格式',
-      helpSave: '数据自动保存在浏览器本地'
     },
 
     // Mermaid 图表

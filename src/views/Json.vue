@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <Braces class="w-5 h-5" />
@@ -146,7 +146,7 @@
     </div>
 
     <!-- Main Content -->
-    <main ref="mainContainer" class="flex-1 flex min-h-0 p-4 gap-2 relative">
+    <main ref="mainContainer" class="flex-1 flex min-h-0 p-3 gap-2 relative">
       <!-- Editor Section -->
       <div v-show="rightPanelView === 'none' || !editorCollapsed" class="flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm min-w-0 h-full" :style="rightPanelView !== 'none' ? { width: leftWidth + 'px', flex: 'none' } : { flex: 1 }">
         <!-- Editor Toolbar -->
@@ -213,7 +213,7 @@
             </div>
           </div>
           <div class="flex-1 relative overflow-hidden bg-background">
-            <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-4">
+            <div v-if="rightPanelView === 'tree'" class="h-full overflow-auto p-3">
               <div v-if="treeTooLarge" class="h-full flex flex-col items-center justify-center text-muted-foreground">
                 <AlertCircle class="w-8 h-8 mb-2 opacity-50" />
                 <p class="text-sm">{{ $t('tools.json.viewTooLarge') }}</p>
@@ -241,7 +241,7 @@
 
     <!-- Error Toast -->
     <Transition name="slide-up">
-      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-start space-x-3 z-50">
+      <div v-if="errorMessage" class="fixed bottom-6 right-6 max-w-md bg-destructive text-destructive-foreground px-3 py-2 rounded-lg shadow-lg flex items-start space-x-3 z-50">
         <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div class="flex-1">
           <p class="font-medium text-sm">{{ errorMessage }}</p>
@@ -253,8 +253,8 @@
     </Transition>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.json.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

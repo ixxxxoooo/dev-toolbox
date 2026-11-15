@@ -29,6 +29,28 @@ export default {
       language: 'Language',
       history: 'History',
       historyLimit: 'History Limit',
+      palette: 'Color palette',
+      palettes: {
+        indigo: 'Indigo',
+        emerald: 'Emerald',
+        rose: 'Rose',
+        amber: 'Amber',
+        ocean: 'Ocean',
+        graphite: 'Graphite'
+      },
+      uiTheme: 'Interface theme',
+      editorThemeHint: 'Code editor theme'
+    },
+    nav: {
+      search: 'Search tools',
+      searchHint: 'Press / to focus search',
+      pinned: 'Pinned',
+      recent: 'Recent',
+      all: 'All tools',
+      pin: 'Pin to top',
+      unpin: 'Unpin',
+      noMatch: 'No matching tools',
+      openPalette: 'Command palette'
     },
     download: 'Download',
     upload: 'Upload',
@@ -492,15 +514,6 @@ export default {
       swap: 'Swap input/output',
       onlyNonAscii: 'Non-ASCII only',
       features: 'Features'
-    },
-
-    // Excalidraw Whiteboard
-    excalidraw: {
-      name: 'Excalidraw',
-      description: 'Hand-drawn style online whiteboard tool',
-      helpDraw: 'Use the toolbar to draw various shapes and graphics',
-      helpExport: 'Export to PNG, SVG and other formats',
-      helpSave: 'Data is automatically saved in browser local storage'
     },
 
     // Mermaid Diagram

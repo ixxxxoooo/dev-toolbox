@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <KeyRound class="w-5 h-5" />
@@ -28,12 +28,12 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 container mx-auto px-4 py-6 flex flex-col overflow-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+    <main class="flex-1 container mx-auto px-3 py-6 flex flex-col overflow-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pb-6">
         <!-- Left Panel: Configuration -->
-        <div class="space-y-6">
+        <div class="space-y-4">
           <!-- Password Type Selection -->
-          <div class="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div class="bg-card border border-border rounded-xl p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-4 flex items-center">
               <Settings2 class="w-4 h-4 mr-2 text-primary" />
               {{ $t('tools.password.passwordType') }}
@@ -70,7 +70,7 @@
             </div>
 
           <!-- Advanced Options -->
-          <div v-if="selectedType === 'strong'" class="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div v-if="selectedType === 'strong'" class="bg-card border border-border rounded-xl p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-4 flex items-center">
               <Sliders class="w-4 h-4 mr-2 text-primary" />
               {{ $t('tools.password.characterTypes') }}
@@ -89,7 +89,7 @@
           </div>
 
           <!-- Memorable Options -->
-          <div v-if="selectedType === 'memorable'" class="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div v-if="selectedType === 'memorable'" class="bg-card border border-border rounded-xl p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-4 flex items-center">
               <Sliders class="w-4 h-4 mr-2 text-primary" />
               {{ $t('tools.password.configOptions') }}
@@ -109,9 +109,9 @@
         </div>
 
         <!-- Right Panel: Results -->
-        <div class="space-y-6">
+        <div class="space-y-4">
           <!-- Generated Passwords -->
-          <div class="bg-card border border-border rounded-xl p-6 shadow-sm h-full flex flex-col">
+          <div class="bg-card border border-border rounded-xl p-4 shadow-sm h-full flex flex-col">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-semibold flex items-center">
                 <List class="w-4 h-4 mr-2 text-primary" />
@@ -128,7 +128,7 @@
                   type="text"
                   readonly
                   :value="password"
-                  class="w-full font-mono text-sm p-4 pr-12 bg-muted/30 border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground"
+                  class="w-full font-mono text-sm p-3 pr-12 bg-muted/30 border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground"
                 />
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -156,7 +156,7 @@
                   </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-2">
                   <div class="bg-muted/30 p-3 rounded-lg">
                     <div class="text-xs text-muted-foreground mb-1">{{ $t('tools.password.entropy') }}</div>
                     <div class="text-sm font-mono font-medium">{{ Math.round(calculateEntropy()) }} bits</div>
@@ -171,7 +171,7 @@
           </div>
 
           <!-- Security Advice -->
-          <div class="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-6">
+          <div class="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
             <h3 class="text-sm font-semibold mb-3 flex items-center text-blue-700 dark:text-blue-400">
               <Lightbulb class="w-4 h-4 mr-2" />
               {{ $t('tools.password.securityAdvice') }}
@@ -189,8 +189,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.password.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

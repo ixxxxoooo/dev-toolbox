@@ -1,8 +1,11 @@
 import { getBrowserLocale } from '@/locales'
 import { ref, type Ref } from 'vue'
+import { DEFAULT_PALETTE, isValidPalette } from '@/utils/palettes'
 
 interface ThemeStore {
   isDark: Ref<boolean>
+  palette: Ref<string>
+  setPalette: (id: string) => void
   followSystemMode: Ref<boolean>
   followSystemLang: Ref<boolean>
   editorTheme: Ref<string>
@@ -17,6 +20,8 @@ interface ThemeStore {
 
 class ThemeStoreImpl implements ThemeStore {
   isDark = ref(false)
+  // 当前 UI 色板（与明暗模式正交）
+  palette = ref(DEFAULT_PALETTE)
   followSystemMode = ref(true)
   followSystemLang = ref(true)
   editorTheme = ref('auto')
@@ -31,6 +36,18 @@ class ThemeStoreImpl implements ThemeStore {
       this.initializeTheme()
       this.initialized = true
     }
+  }
+
+  setPalette(id: string) {
+    if (!isValidPalette(id)) return
+    this.palette.value = id
+    localStorage.setItem('ui-palette', id)
+    this.applyPalette()
+  }
+
+  /** 把色板写到 <html data-palette>，实际颜色由 CSS 变量接管，无需重渲染组件 */
+  private applyPalette() {
+    document.documentElement.setAttribute('data-palette', this.palette.value)
   }
 
   setEditorTheme(theme: string) {
@@ -89,6 +106,10 @@ class ThemeStoreImpl implements ThemeStore {
     }
     const savedEditorTheme = localStorage.getItem('editor-theme') || 'auto'
     const savedHistoryLimit = localStorage.getItem('history-limit')
+
+    const savedPalette = localStorage.getItem('ui-palette')
+    this.palette.value = isValidPalette(savedPalette) ? savedPalette : DEFAULT_PALETTE
+    this.applyPalette()
 
     this.followSystemMode.value = savedMode === 'system'
     this.followSystemLang.value = savedLangMode === 'system'

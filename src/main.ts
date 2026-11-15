@@ -32,7 +32,13 @@ app.use(pinia)
 app.use(router)
 app.use(i18n)
 
-inject()
+// 访问统计：只在联网、浏览器空闲时才加载，不抢首屏资源；离线时直接跳过
+const injectAnalytics = () => { if (navigator.onLine) inject() }
+if ('requestIdleCallback' in window) {
+  window.requestIdleCallback(injectAnalytics, { timeout: 5000 })
+} else {
+  setTimeout(injectAnalytics, 3000)
+}
 
 // PWA 更新策略：不再静默 skipWaiting + 强制刷新（会打断用户正在编辑的内容），
 // 而是检测到新版本时提示用户，由用户决定何时刷新。

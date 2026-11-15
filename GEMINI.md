@@ -6,7 +6,7 @@ Dev Toolbox 是一个基于 Vue 3 + Vite 的纯 Web（PWA）开发者工具箱�
 - JSON 工具、文本对比（Diff）、Base64、URL 编解码、Unicode 转换
 - 时间戳转换、UUID 生成、密码生成、哈希生成、进制转换
 - SQL 格式化、正则测试器、文本分析、HTTP 状态码、User-Agent 解析、二维码
-- Markdown 预览、Mermaid 图表、Excalidraw 白板
+- Markdown 预览、Mermaid 图表
 
 > 注意：本项目**不是** Electron 桌面应用，没有 `electron:dev` / `build:mac` / `build:win` / `build:web` 等脚本。
 

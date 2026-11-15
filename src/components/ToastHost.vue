@@ -5,7 +5,7 @@
         v-for="item in toasts"
         :key="item.id"
         role="status"
-        class="px-4 py-2 rounded-lg shadow-lg text-sm border"
+        class="px-3 py-2 rounded-lg shadow-lg text-sm border"
         :class="{
           'bg-card text-foreground border-border': item.type === 'info',
           'bg-primary text-primary-foreground border-primary': item.type === 'success',

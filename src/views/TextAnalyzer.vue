@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <FileText class="w-5 h-5" />
@@ -28,7 +28,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0 p-4">
+    <main class="flex-1 flex flex-col min-h-0 p-2">
       <div class="flex-1 flex flex-col border border-border rounded-lg overflow-hidden bg-card shadow-sm mb-4">
         <div class="flex-1 relative">
           <div ref="editorRef" class="absolute inset-0"></div>
@@ -61,8 +61,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.textAnalyzer.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

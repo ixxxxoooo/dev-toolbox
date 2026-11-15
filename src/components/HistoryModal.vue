@@ -1,8 +1,8 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300" @click.self="$emit('close')">
+  <div v-if="show" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 transition-all duration-300" @click.self="$emit('close')">
     <div class="bg-card border border-border rounded-xl shadow-2xl max-w-7xl w-full flex flex-col h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+      <div class="flex items-center justify-between p-3 border-b border-border bg-muted/30">
         <div class="flex items-center space-x-3">
           <div class="p-2 bg-primary/10 rounded-lg">
             <History class="w-5 h-5 text-primary" />
@@ -29,7 +29,7 @@
       </div>
 
       <!-- Search Bar -->
-      <div v-if="history.length > 0" class="p-4 border-b border-border bg-background/50">
+      <div v-if="history.length > 0" class="p-3 border-b border-border bg-background/50">
         <div class="relative w-full">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input 
@@ -44,7 +44,7 @@
       <!-- History Content Area -->
       <div class="flex-1 overflow-hidden flex">
         <!-- History List -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/5">
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/5">
           <div v-if="filteredHistory.length === 0" class="h-full flex flex-col items-center justify-center text-muted-foreground py-20">
             <Clock class="w-16 h-16 mb-4 opacity-10" />
             <p class="text-base font-medium opacity-50">{{ $t('common.history.empty') }}</p>
@@ -53,11 +53,11 @@
           <div 
             v-for="item in filteredHistory" 
             :key="item.id"
-            class="group relative bg-card hover:bg-muted/5 border border-border rounded-xl px-4 py-3 transition-all cursor-pointer hover:border-primary/40 shadow-sm"
+            class="group relative bg-card hover:bg-muted/5 border border-border rounded-xl px-3 py-2 transition-all cursor-pointer hover:border-primary/40 shadow-sm"
             @click="type !== 'diff' ? $emit('select', item.content) : null"
             @mouseenter="hoveredItem = item.content"
           >
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center justify-between gap-2">
               <!-- Left: Meta & Preview -->
               <div class="flex-1 min-w-0 flex items-center space-x-3">
                 <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">

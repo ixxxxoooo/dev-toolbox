@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <Monitor class="w-5 h-5" />
@@ -21,8 +21,8 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-auto p-4">
-      <div class="max-w-4xl mx-auto space-y-6">
+    <main class="flex-1 overflow-auto p-3">
+      <div class="max-w-4xl mx-auto space-y-4">
         <!-- Input -->
         <CustomTextarea
           v-model="uaString"
@@ -32,9 +32,9 @@
         />
 
         <!-- Result -->
-        <div v-if="parsedUa" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="parsedUa" class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <!-- Browser -->
-          <div class="bg-card border border-border rounded-lg p-4">
+          <div class="bg-card border border-border rounded-lg p-3">
             <div class="flex items-center space-x-2 mb-4">
               <Globe class="w-5 h-5 text-primary" />
               <h3 class="font-medium">{{ $t('tools.userAgent.browser') }}</h3>
@@ -56,7 +56,7 @@
           </div>
 
           <!-- OS -->
-          <div class="bg-card border border-border rounded-lg p-4">
+          <div class="bg-card border border-border rounded-lg p-3">
             <div class="flex items-center space-x-2 mb-4">
               <Cpu class="w-5 h-5 text-primary" />
               <h3 class="font-medium">{{ $t('tools.userAgent.os') }}</h3>
@@ -78,7 +78,7 @@
           </div>
 
           <!-- Device -->
-          <div class="bg-card border border-border rounded-lg p-4">
+          <div class="bg-card border border-border rounded-lg p-3">
             <div class="flex items-center space-x-2 mb-4">
               <Smartphone class="w-5 h-5 text-primary" />
               <h3 class="font-medium">{{ $t('tools.userAgent.device') }}</h3>
@@ -103,8 +103,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.userAgent.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">

@@ -1,8 +1,8 @@
 <template>
   <div class="h-full flex flex-col bg-background text-foreground">
     <!-- Compact Toolbar -->
-    <div class="flex items-center justify-between h-[49px] px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div class="flex items-center space-x-4">
+    <div class="flex items-center justify-between h-toolbar px-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      <div class="flex items-center space-x-3">
         <!-- Title & Icon -->
         <div class="flex items-center space-x-2 text-primary flex-shrink-0 mr-2">
           <NotebookText class="w-5 h-5" />
@@ -43,7 +43,7 @@
           <textarea
             ref="editorRef"
             v-model="markdown"
-            class="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent border-none outline-none resize-none"
+            class="absolute inset-0 w-full h-full p-3 font-mono text-sm bg-transparent border-none outline-none resize-none"
             placeholder="# Hello World"
             @scroll="onEditorScroll"
           ></textarea>
@@ -78,11 +78,11 @@
           </button>
         </div>
         <div class="flex-1 flex overflow-hidden">
-          <div ref="previewContainer" class="flex-1 relative overflow-auto p-8 prose dark:prose-invert max-w-none" @scroll="onPreviewScroll">
+          <div ref="previewContainer" class="flex-1 relative overflow-auto p-5 prose dark:prose-invert max-w-none" @scroll="onPreviewScroll">
             <div v-html="html"></div>
           </div>
           <!-- TOC Sidebar -->
-          <div ref="tocContainer" v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-4 flex-shrink-0 text-sm">
+          <div ref="tocContainer" v-if="showToc" class="w-60 border-l border-border bg-muted/10 overflow-y-auto p-3 flex-shrink-0 text-sm">
             <div class="font-medium mb-3 text-muted-foreground text-xs uppercase tracking-wider">Outline</div>
             <div v-if="toc.length === 0" class="text-xs text-muted-foreground italic">No headings</div>
             <ul class="space-y-1">
@@ -104,8 +104,8 @@
     </main>
 
     <!-- Help Modal -->
-    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showHelp = false">
-      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6">
+    <div v-if="showHelp" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-3" @click.self="showHelp = false">
+      <div class="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold">{{ $t('tools.markdown.name') }} Help</h3>
           <button @click="showHelp = false" class="text-muted-foreground hover:text-foreground">
@@ -457,7 +457,7 @@ onUnmounted(() => {
 .prose ul { @apply list-disc list-inside mb-4; }
 .prose ol { @apply list-decimal list-inside mb-4; }
 .prose code { @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono; }
-.prose pre { @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4; }
+.prose pre { @apply bg-muted p-3 rounded-lg overflow-x-auto mb-4; }
 .prose pre code { @apply bg-transparent p-0; }
 .prose blockquote { @apply border-l-4 border-primary/50 pl-4 italic mb-4; }
 .prose a { @apply text-primary hover:underline; }

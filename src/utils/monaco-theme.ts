@@ -21,9 +21,60 @@ export function getMonacoTheme(): string {
   ensureThemes()
   const themeStore = useThemeStore()
   if (themeStore.editorTheme.value === 'auto') {
-    return themeStore.isDark.value ? 'vs-dark' : 'vs'
+    return ensureAutoTheme(themeStore.palette.value, themeStore.isDark.value)
   }
   return themeStore.editorTheme.value
+}
+
+/** 读取 CSS 变量（形如 "225 24% 9%"）并转成 #rrggbb，供 Monaco 使用 */
+function cssVarToHex(name: string, alpha?: number): string {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  const m = raw.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/)
+  if (!m) return '#808080'
+  const h = parseFloat(m[1])
+  const s = parseFloat(m[2]) / 100
+  const l = parseFloat(m[3]) / 100
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(255 * c).toString(16).padStart(2, '0')
+  }
+  const hex = `#${f(0)}${f(8)}${f(4)}`
+  return alpha === undefined ? hex : hex + Math.round(alpha * 255).toString(16).padStart(2, '0')
+}
+
+// 已注册的自动主题名缓存：同一「色板 × 明暗」只注册一次
+const autoThemes = new Set<string>()
+
+/**
+ * 「自动」编辑器主题：背景、选区、行高亮直接取自当前界面色板，
+ * 让编辑器和外围界面浑然一体。名称带上色板与明暗，切换时 Monaco 会重新套用。
+ */
+function ensureAutoTheme(palette: string, dark: boolean): string {
+  const name = `toolbox-${palette}-${dark ? 'dark' : 'light'}`
+  if (autoThemes.has(name)) return name
+  monaco.editor.defineTheme(name, {
+    base: dark ? 'vs-dark' : 'vs',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': cssVarToHex('--card'),
+      'editor.foreground': cssVarToHex('--foreground'),
+      'editor.lineHighlightBackground': cssVarToHex('--muted', dark ? 0.7 : 0.9),
+      'editorLineNumber.foreground': cssVarToHex('--muted-foreground', 0.7),
+      'editorLineNumber.activeForeground': cssVarToHex('--foreground'),
+      'editor.selectionBackground': cssVarToHex('--primary', 0.28),
+      'editor.inactiveSelectionBackground': cssVarToHex('--primary', 0.14),
+      'editorCursor.foreground': cssVarToHex('--primary'),
+      'editorWidget.background': cssVarToHex('--popover'),
+      'editorGutter.background': cssVarToHex('--card'),
+      'scrollbarSlider.background': cssVarToHex('--muted-foreground', 0.25),
+      'scrollbarSlider.hoverBackground': cssVarToHex('--muted-foreground', 0.4),
+    }
+  })
+  autoThemes.add(name)
+  return name
 }
 
 /**
@@ -47,7 +98,7 @@ export function watchThemeChange(editor: any): WatchStopHandle {
 
   // 监听主题变化
   return watch(
-    [() => themeStore.isDark.value, () => themeStore.editorTheme.value],
+    [() => themeStore.isDark.value, () => themeStore.editorTheme.value, () => themeStore.palette.value],
     () => {
       updateTheme()
     }
@@ -74,7 +125,7 @@ export function watchThemeChangeForDiffEditor(diffEditor: any): WatchStopHandle 
 
   // 监听主题变化
   return watch(
-    [() => themeStore.isDark.value, () => themeStore.editorTheme.value],
+    [() => themeStore.isDark.value, () => themeStore.editorTheme.value, () => themeStore.palette.value],
     () => {
       updateTheme()
     }

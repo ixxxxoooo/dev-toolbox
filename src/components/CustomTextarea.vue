@@ -14,7 +14,7 @@
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       :placeholder="placeholder"
       :readonly="readonly"
-      class="flex-1 p-4 bg-background resize-none outline-none font-mono text-sm placeholder:text-muted-foreground/40"
+      class="flex-1 p-3 bg-background resize-none outline-none font-mono text-sm placeholder:text-muted-foreground/40"
       :class="[readonly ? 'cursor-default' : '']"
     ></textarea>
   </div>
