@@ -41,6 +41,11 @@ export default {
       uiTheme: 'Interface theme',
       editorThemeHint: 'Code editor theme'
     },
+    ui: {
+      help: 'Help',
+      close: 'Close',
+      more: 'More actions'
+    },
     nav: {
       search: 'Search tools',
       searchHint: 'Press / to focus search',

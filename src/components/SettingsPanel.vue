@@ -1,18 +1,15 @@
 <template>
   <div class="w-full">
-    <!-- 触发按钮 -->
+    <!-- 触发按钮（沿用轨道条目样式，标签随轨道展开淡入） -->
     <button
       type="button"
-      class="w-full h-8 rounded-md flex items-center text-[13px] font-medium press"
-      :class="[
-        collapsed ? 'justify-center' : 'px-2.5 gap-2.5',
-        isOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-      ]"
+      class="rail-item"
+      :class="{ 'is-active': isOpen }"
       :title="$t('common.settings.title')"
       @click.stop="isOpen = true"
     >
       <Settings class="w-4 h-4 shrink-0 transition-transform duration-500 ease-out" :class="{ 'rotate-90': isOpen }" />
-      <span v-if="!collapsed" class="flex-1 text-left truncate">{{ $t('common.settings.title') }}</span>
+      <span class="rail-label flex-1 text-left truncate">{{ $t('common.settings.title') }}</span>
     </button>
 
     <!-- 设置弹层：Teleport 到 body，避免被侧栏的层叠上下文限制 -->
@@ -168,8 +165,6 @@ import { useThemeStore } from '../stores/theme'
 import { useI18n } from 'vue-i18n'
 import { EDITOR_THEMES } from '../utils/monaco-themes'
 import { UI_PALETTES } from '../utils/palettes'
-
-defineProps<{ collapsed?: boolean }>()
 
 const themeStore = useThemeStore()
 const { locale, t } = useI18n()

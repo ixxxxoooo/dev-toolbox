@@ -275,3 +275,163 @@ kbd {
 .driver-popover-close-btn {
   @apply text-muted-foreground hover:text-foreground transition-colors;
 }
+
+/* ==========================================================================
+   公共 UI 组件样式（配合 src/components/ui/*）
+   所有颜色/时长/曲线都来自上面的令牌，组件内不要硬编码
+   ========================================================================== */
+@layer components {
+  /* ---- 图标按钮（带纯 CSS 气泡提示，无 JS 开销） ---- */
+  .ib {
+    position: relative; display: inline-grid; place-items: center; flex-shrink: 0;
+    width: 1.625rem; height: 1.625rem; border-radius: 6px;
+    color: hsl(var(--muted-foreground));
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  .ib:hover:not(:disabled) { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .ib:active:not(:disabled) { transform: scale(0.92); }
+  .ib:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ib.is-danger:hover:not(:disabled) { background: hsl(var(--destructive) / 0.12); color: hsl(var(--destructive)); }
+  .ib.is-active { background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); }
+  .ib.ib-sm { width: 1.375rem; height: 1.375rem; }
+  .ib[data-tip]:hover::after {
+    content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%); white-space: nowrap; z-index: 80; pointer-events: none;
+    background: hsl(var(--foreground)); color: hsl(var(--background));
+    font-size: 0.6875rem; line-height: 1; padding: 5px 8px; border-radius: 6px;
+    animation: tip-in 0.14s var(--ease-out) 0.35s both;
+  }
+  @keyframes tip-in { from { opacity: 0; transform: translate(-50%, -3px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* ---- 开关 chip ---- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.3125rem; height: 1.5rem; padding: 0 0.5625rem;
+    border-radius: 6px; border: 1px solid hsl(var(--border)); white-space: nowrap; flex-shrink: 0;
+    font-size: 0.75rem; font-weight: 500; color: hsl(var(--muted-foreground));
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
+  }
+  .chip:hover:not(:disabled) { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .chip:active:not(:disabled) { transform: scale(0.95); }
+  .chip.is-on { background: hsl(var(--primary) / 0.1); border-color: hsl(var(--primary) / 0.45); color: hsl(var(--primary)); }
+  .chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ---- 分段控件：滑块只用 transform / width ---- */
+  .seg { position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 8px; background: hsl(var(--muted)); }
+  .seg > button {
+    position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 0.3125rem;
+    height: 1.5rem; padding: 0 0.625rem; border-radius: 6px; white-space: nowrap;
+    font-size: 0.75rem; font-weight: 500; color: hsl(var(--muted-foreground));
+    transition: color var(--dur-base) var(--ease-out), transform var(--dur-fast);
+  }
+  .seg > button:hover { color: hsl(var(--foreground)); }
+  .seg > button:active { transform: scale(0.95); }
+  .seg > button.is-on { color: hsl(var(--foreground)); }
+  .seg > .seg-ind {
+    position: absolute; z-index: 0; top: 2px; bottom: 2px; left: 0; border-radius: 6px;
+    background: hsl(var(--card)); box-shadow: 0 1px 2px hsl(0 0% 0% / 0.12), 0 0 0 1px hsl(var(--border));
+    transform: translateX(var(--x, 0px)); width: var(--w, 0px);
+  }
+  .seg.is-ready > .seg-ind { transition: transform var(--dur-slow) var(--ease-spring), width var(--dur-slow) var(--ease-out); }
+  .seg.seg-sm > button { height: 1.25rem; padding: 0 0.5rem; font-size: 0.6875rem; }
+
+  /* ---- 通用按钮（修复：之前多个视图用到 btn-* 却从未定义） ---- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+    height: 1.75rem; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+    border: 1px solid transparent; white-space: nowrap;
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast), transform var(--dur-fast), opacity var(--dur-fast);
+  }
+  .btn:active:not(:disabled) { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  .btn-primary:hover:not(:disabled) { background: hsl(var(--primary) / 0.88); }
+  .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); border-color: hsl(var(--border)); }
+  .btn-secondary:hover:not(:disabled) { background: hsl(var(--muted)); }
+  .btn-destructive { background: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+  .btn-destructive:hover:not(:disabled) { background: hsl(var(--destructive) / 0.18); }
+  .btn-ghost { color: hsl(var(--muted-foreground)); }
+  .btn-ghost:hover:not(:disabled) { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
+  /* ---- 浮层菜单 ---- */
+  .menu-pop {
+    position: fixed; z-index: 120; min-width: 11rem; max-height: 70vh; overflow-y: auto; padding: 4px;
+    background: hsl(var(--popover)); color: hsl(var(--popover-foreground));
+    border: 1px solid hsl(var(--border)); border-radius: 10px; box-shadow: var(--shadow-pop);
+  }
+  .menu-enter-active { transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-slow) var(--ease-spring); }
+  .menu-leave-active { transition: opacity 90ms ease-in, transform 90ms ease-in; }
+  .menu-enter-from, .menu-leave-to { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  .menu-item {
+    display: flex; align-items: center; gap: 0.5rem; width: 100%; height: 1.75rem; padding: 0 0.5rem;
+    border-radius: 6px; font-size: 0.78125rem; text-align: left; white-space: nowrap;
+    color: hsl(var(--foreground) / 0.88);
+    transition: background-color var(--dur-fast);
+  }
+  .menu-item:hover:not(:disabled), .menu-item:focus-visible { background: hsl(var(--muted)); outline: none; }
+  .menu-item:disabled { opacity: 0.4; cursor: not-allowed; }
+  .menu-item.is-checked { color: hsl(var(--primary)); }
+  .menu-item.is-danger { color: hsl(var(--destructive)); }
+  .menu-item.is-danger:hover:not(:disabled) { background: hsl(var(--destructive) / 0.1); }
+  .menu-head { padding: 6px 8px 3px; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .menu-sep { height: 1px; margin: 4px; background: hsl(var(--border)); }
+
+  /* ---- 分栏 ---- */
+  .split { display: grid; min-height: 0; min-width: 0; }
+  .split-h { grid-template-columns: minmax(0, var(--split, 50%)) 6px minmax(0, 1fr); }
+  .split-v { grid-template-rows: minmax(0, var(--split, 50%)) 6px minmax(0, 1fr); }
+  .split-gutter { position: relative; touch-action: none; }
+  .split-h > .split-gutter { cursor: col-resize; }
+  .split-v > .split-gutter { cursor: row-resize; }
+  .split-gutter::after { content: ''; position: absolute; border-radius: 3px; background: hsl(var(--primary)); opacity: 0; transition: opacity var(--dur-base); }
+  .split-h > .split-gutter::after { inset: 0 2px; }
+  .split-v > .split-gutter::after { inset: 2px 0; }
+  .split-gutter:hover::after, .split-gutter.is-drag::after { opacity: 0.55; }
+
+  /* ---- 面板 ---- */
+  .pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); }
+  .pane-head {
+    display: flex; align-items: center; gap: 0.375rem; flex-shrink: 0; height: 1.625rem; padding: 0 0.25rem 0 0.625rem;
+    border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / 0.45);
+    font-size: 0.71875rem; font-weight: 500; color: hsl(var(--muted-foreground));
+  }
+  .badge { font: 0.65625rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 2px 6px; border-radius: 999px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); white-space: nowrap; }
+  .badge-add { background: hsl(var(--success) / 0.14); color: hsl(var(--success)); }
+  .badge-del { background: hsl(var(--destructive) / 0.14); color: hsl(var(--destructive)); }
+  .badge-primary { background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); }
+
+  /* ---- 工具栏 / 状态栏 ---- */
+  .tool-bar {
+    display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; height: var(--toolbar-h); padding: 0 0.5rem;
+    border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card));
+  }
+  .tool-vr { width: 1px; height: 1rem; flex-shrink: 0; background: hsl(var(--border)); }
+  .status-bar {
+    display: flex; align-items: center; gap: 0.875rem; flex-shrink: 0; height: 1.5rem; margin-top: 0.5rem; padding: 0 0.75rem;
+    border-top: 1px solid hsl(var(--border)); background: hsl(var(--card));
+    font-size: 0.71875rem; color: hsl(var(--muted-foreground)); white-space: nowrap; overflow: hidden;
+    transition: background-color var(--dur-base), color var(--dur-base);
+  }
+  .status-bar.is-error { background: hsl(var(--destructive) / 0.1); }
+  .status-bar.is-warn { background: hsl(var(--warning) / 0.1); }
+  .status-bar svg { width: 0.8125rem; height: 0.8125rem; }
+  .sb-ok, .sb-err, .sb-warn { display: inline-flex; align-items: center; gap: 0.3125rem; font-weight: 500; }
+  .sb-ok { color: hsl(var(--success)); }
+  .sb-warn { color: hsl(var(--warning)); }
+  .sb-err { color: hsl(var(--destructive)); }
+  button.sb-err { cursor: pointer; }
+  button.sb-err:hover { text-decoration: underline; }
+  .sb-right { margin-left: auto; display: flex; align-items: center; gap: 0.875rem; }
+
+  /* 输入无效时：保留上一次结果但置灰，提示"这是旧结果" */
+  .is-stale { opacity: 0.4; filter: saturate(0.4); }
+  .is-stale-anim { transition: opacity var(--dur-slow) var(--ease-out), filter var(--dur-slow) var(--ease-out); }
+
+  /* 表单输入（紧凑版）：给无独立组件的原生 input/select 使用 */
+  .field {
+    height: 1.75rem; padding: 0 0.625rem; border-radius: 6px; font-size: 0.8125rem;
+    background: hsl(var(--background)); border: 1px solid hsl(var(--input)); color: hsl(var(--foreground));
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+  .field:focus { outline: none; border-color: hsl(var(--ring) / 0.6); box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15); }
+  .field::placeholder { color: hsl(var(--muted-foreground) / 0.7); }
+}

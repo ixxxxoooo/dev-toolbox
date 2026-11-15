@@ -41,6 +41,11 @@ export default {
       uiTheme: '界面主题',
       editorThemeHint: '代码编辑器配色'
     },
+    ui: {
+      help: '帮助',
+      close: '关闭',
+      more: '更多操作'
+    },
     nav: {
       search: '搜索工具',
       searchHint: '按 / 聚焦搜索',
