@@ -227,7 +227,7 @@ import IconButton from '@/components/ui/IconButton.vue'
 import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
 import StatusBar from '@/components/ui/StatusBar.vue'
 import HistoryModal from '@/components/HistoryModal.vue'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
 import { useHistory } from '@/composables/useHistory'
 import { copyText, readClipboardText } from '@/utils/clipboard'
@@ -547,7 +547,7 @@ onMounted(() => {
         language: 'markdown',
         theme: getMonacoTheme(),
         minimap: { enabled: false },
-        fontSize: 14,
+        fontSize: getEditorFontSize(),
         lineNumbers: 'on',
         wordWrap: 'on',
         automaticLayout: true,

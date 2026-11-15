@@ -79,7 +79,7 @@ import SplitPane from '@/components/ui/SplitPane.vue'
 import Pane from '@/components/ui/Pane.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import StatusBar from '@/components/ui/StatusBar.vue'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { useDebounceFn } from '../composables/useDebounceFn'
 import { readClipboardText } from '../utils/clipboard'
 
@@ -134,7 +134,7 @@ const initEditor = async () => {
       wordWrap: 'on',
       scrollBeyondLastLine: false,
       padding: { top: 16, bottom: 16 },
-      fontSize: 14,
+      fontSize: getEditorFontSize(),
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
     })
     editor.onDidChangeModelContent(() => {

@@ -26,6 +26,16 @@ export function getMonacoTheme(): string {
   return themeStore.editorTheme.value
 }
 
+/** 当前编辑器字号（px），来自设置 */
+export function getEditorFontSize(): number {
+  return useThemeStore().editorFontSize.value
+}
+
+/** 行高随字号等比变化，保持阅读密度一致 */
+export function getEditorLineHeight(): number {
+  return Math.round(getEditorFontSize() * 1.6)
+}
+
 /** 读取 CSS 变量（形如 "225 24% 9%"）并转成 #rrggbb，供 Monaco 使用 */
 function cssVarToHex(name: string, alpha?: number): string {
   const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -92,17 +102,28 @@ export function watchThemeChange(editor: any): WatchStopHandle {
       editor.updateOptions({ theme })
     }
   }
+  // 字号变化：设置面板调整后所有编辑器即时生效
+  const updateFont = () => {
+    if (editor && typeof editor.updateOptions === 'function') {
+      editor.updateOptions({ fontSize: getEditorFontSize() })
+    }
+  }
 
   // 立即更新主题
   updateTheme()
 
-  // 监听主题变化
-  return watch(
+  // 监听主题与字号变化
+  const stopTheme = watch(
     [() => themeStore.isDark.value, () => themeStore.editorTheme.value, () => themeStore.palette.value],
     () => {
       updateTheme()
     }
   )
+  const stopFont = watch(() => themeStore.editorFontSize.value, updateFont)
+  return () => {
+    stopTheme()
+    stopFont()
+  }
 }
 
 /**
@@ -119,17 +140,27 @@ export function watchThemeChangeForDiffEditor(diffEditor: any): WatchStopHandle 
       diffEditor.updateOptions({ theme })
     }
   }
+  const updateFont = () => {
+    if (diffEditor && typeof diffEditor.updateOptions === 'function') {
+      diffEditor.updateOptions({ fontSize: getEditorFontSize(), lineHeight: getEditorLineHeight() })
+    }
+  }
 
   // 立即更新主题
   updateTheme()
 
-  // 监听主题变化
-  return watch(
+  // 监听主题与字号变化
+  const stopTheme = watch(
     [() => themeStore.isDark.value, () => themeStore.editorTheme.value, () => themeStore.palette.value],
     () => {
       updateTheme()
     }
   )
+  const stopFont = watch(() => themeStore.editorFontSize.value, updateFont)
+  return () => {
+    stopTheme()
+    stopFont()
+  }
 }
 
 /**

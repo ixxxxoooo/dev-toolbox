@@ -201,7 +201,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import * as monaco from '@/utils/monaco'
 import mermaid from 'mermaid'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
 import { useHistory } from '@/composables/useHistory'
 import { showToast } from '@/composables/useToast'
@@ -692,7 +692,7 @@ onMounted(() => {
         language: 'mermaid',
         theme: getMonacoTheme(),
         minimap: { enabled: false },
-        fontSize: 14,
+        fontSize: getEditorFontSize(),
         lineNumbers: 'on',
         wordWrap: 'on',
         automaticLayout: true,

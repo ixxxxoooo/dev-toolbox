@@ -147,7 +147,7 @@ import ToggleChip from '@/components/ui/ToggleChip.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
 import StatusBar from '@/components/ui/StatusBar.vue'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
 import { copyText, readClipboardText } from '../utils/clipboard'
 import { showToast } from '../composables/useToast'
@@ -307,7 +307,7 @@ const initEditors = async () => {
     minimap: { enabled: false },
     wordWrap: (wordWrapEnabled.value ? 'on' : 'off') as 'on' | 'off',
     padding: { top: 16, bottom: 16 },
-    fontSize: 14,
+    fontSize: getEditorFontSize(),
     fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
   }
 

@@ -219,7 +219,7 @@ import IconButton from '@/components/ui/IconButton.vue'
 import DropdownMenu, { type MenuItem } from '@/components/ui/DropdownMenu.vue'
 import StatusBar from '@/components/ui/StatusBar.vue'
 import HistoryModal from '@/components/HistoryModal.vue'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
 import { useHistory } from '@/composables/useHistory'
 import { useThemeStore } from '@/stores/theme'
@@ -651,7 +651,7 @@ const editorOptions = (): monaco.editor.IStandaloneEditorConstructionOptions => 
   automaticLayout: true,
   minimap: { enabled: showMinimap.value },
   wordWrap: wordWrapEnabled.value ? 'on' : 'off',
-  fontSize: 14,
+  fontSize: getEditorFontSize(),
   lineNumbers: 'on',
   folding: true,
   matchBrackets: 'always',

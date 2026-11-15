@@ -122,6 +122,35 @@
                       />
                     </div>
                   </section>
+
+                  <!-- 编辑器字号：改动即时作用于所有编辑器 -->
+                  <section class="space-y-1.5">
+                    <h4 class="sec-title"><Type class="w-3 h-3" />{{ $t('common.settings.editorFontSize') }}</h4>
+                    <div class="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-2">
+                      <div class="flex items-center justify-between text-[13px]">
+                        <button
+                          v-if="themeStore.editorFontSize.value !== DEFAULT_EDITOR_FONT_SIZE"
+                          type="button"
+                          class="text-xs text-primary hover:underline"
+                          @click="themeStore.setEditorFontSize(DEFAULT_EDITOR_FONT_SIZE)"
+                        >{{ $t('common.settings.editorFontSizeReset') }}</button>
+                        <span v-else class="text-xs text-muted-foreground">{{ MIN_EDITOR_FONT_SIZE }} – {{ MAX_EDITOR_FONT_SIZE }} px</span>
+                        <span class="font-mono text-xs font-semibold text-primary tabular-nums">{{ themeStore.editorFontSize.value }}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        :min="MIN_EDITOR_FONT_SIZE"
+                        :max="MAX_EDITOR_FONT_SIZE"
+                        step="1"
+                        :value="themeStore.editorFontSize.value"
+                        class="range w-full"
+                        @input="(e: Event) => themeStore.setEditorFontSize(parseInt((e.target as HTMLInputElement).value))"
+                      />
+                      <p class="font-mono text-muted-foreground leading-snug truncate" :style="{ fontSize: themeStore.editorFontSize.value + 'px' }">
+                        {"id": 1, "name": "Aa 字体预览"}
+                      </p>
+                    </div>
+                  </section>
                 </div>
 
                 <!-- 右列：编辑器主题 -->
@@ -160,8 +189,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
-import { Settings, X, Sun, Moon, Palette, Languages, Check, Monitor, Laptop, History as HistoryIcon } from 'lucide-vue-next'
-import { useThemeStore } from '../stores/theme'
+import { Settings, X, Sun, Moon, Palette, Languages, Check, Monitor, Laptop, Type, History as HistoryIcon } from 'lucide-vue-next'
+import { useThemeStore, DEFAULT_EDITOR_FONT_SIZE, MIN_EDITOR_FONT_SIZE, MAX_EDITOR_FONT_SIZE } from '../stores/theme'
 import { useI18n } from 'vue-i18n'
 import { EDITOR_THEMES } from '../utils/monaco-themes'
 import { UI_PALETTES } from '../utils/palettes'

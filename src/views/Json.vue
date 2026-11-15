@@ -258,7 +258,7 @@ import { decodeUnicodeDeep, unescapeCommon } from '@/utils/unicode'
 import { hashText } from '@/utils/textHash'
 import { showToast } from '@/composables/useToast'
 import { copyText, readClipboardText } from '@/utils/clipboard'
-import { getMonacoTheme, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange, registerGlobalShortcuts } from '@/utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '@/utils/localStorage'
 import { useHistory } from '@/composables/useHistory'
 import { useDebounceFn } from '@/composables/useDebounceFn'
@@ -874,7 +874,7 @@ const initEditors = async () => {
       minimap: { enabled: showMinimap.value },
       wordWrap: wordWrapEnabled.value ? 'on' : 'off',
       padding: { top: 12, bottom: 12 },
-      fontSize: 14,
+      fontSize: getEditorFontSize(),
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       formatOnPaste: true,
       formatOnType: true,
@@ -916,7 +916,7 @@ const initEditors = async () => {
       minimap: { enabled: showMinimap.value },
       wordWrap: wordWrapEnabled.value ? 'on' : 'off',
       padding: { top: 12, bottom: 12 },
-      fontSize: 14,
+      fontSize: getEditorFontSize(),
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
     })
     outputThemeWatcher = watchThemeChange(outputEditor)

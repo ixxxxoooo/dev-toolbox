@@ -134,7 +134,7 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { History, X, Trash2, Clock, Search, ChevronRight, Eye, MousePointer2, Copy } from 'lucide-vue-next'
 import * as monaco from '@/utils/monaco'
-import { getMonacoTheme, watchThemeChange } from '../utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, watchThemeChange } from '../utils/monaco-theme'
 import { useThemeStore } from '../stores/theme'
 import { copyText } from '../utils/clipboard'
 import dayjs from 'dayjs'
@@ -205,7 +205,7 @@ const initPreviewEditor = async () => {
       automaticLayout: true,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      fontSize: 12,
+      fontSize: getEditorFontSize(),
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       padding: { top: 12, bottom: 12 },
       wordWrap: 'on',

@@ -175,7 +175,7 @@ import {
   Rows3,
   MoreHorizontal,
 } from 'lucide-vue-next'
-import { getMonacoTheme, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme'
+import { getMonacoTheme, getEditorFontSize, getEditorLineHeight, watchThemeChangeForDiffEditor, registerGlobalShortcutsForDiffEditor } from '../utils/monaco-theme'
 import { loadFromStorage, saveToStorage, saveToStorageDebounced } from '../utils/localStorage'
 import { useHistory } from '../composables/useHistory'
 import { useThemeStore } from '../stores/theme'
@@ -484,8 +484,8 @@ const initMonacoDiffEditor = async () => {
     enableSplitViewResizing: true,
     wordWrap: wordWrapEnabled.value ? 'on' : 'off',
     folding: true,
-    lineHeight: 20,
-    fontSize: 14,
+    lineHeight: getEditorLineHeight(),
+    fontSize: getEditorFontSize(),
     fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
     renderSideBySide: diffMode.value === 'split',
     lineNumbers: showLineNumbers.value ? 'on' : 'off',

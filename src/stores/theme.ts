@@ -2,6 +2,11 @@ import { getBrowserLocale } from '@/locales'
 import { ref, type Ref } from 'vue'
 import { DEFAULT_PALETTE, isValidPalette } from '@/utils/palettes'
 
+/** 编辑器字号默认值与可调范围（px） */
+export const DEFAULT_EDITOR_FONT_SIZE = 12
+export const MIN_EDITOR_FONT_SIZE = 10
+export const MAX_EDITOR_FONT_SIZE = 18
+
 interface ThemeStore {
   isDark: Ref<boolean>
   palette: Ref<string>
@@ -10,10 +15,12 @@ interface ThemeStore {
   followSystemLang: Ref<boolean>
   editorTheme: Ref<string>
   historyLimit: Ref<number>
+  editorFontSize: Ref<number>
   toggleTheme: () => void
   setThemeMode: (mode: 'light' | 'dark' | 'system') => void
   setEditorTheme: (theme: string) => void
   setHistoryLimit: (limit: number) => void
+  setEditorFontSize: (size: number) => void
   setLanguage: (lang: 'zh' | 'en' | 'system') => void
   initializeTheme: () => void
 }
@@ -26,6 +33,8 @@ class ThemeStoreImpl implements ThemeStore {
   followSystemLang = ref(true)
   editorTheme = ref('auto')
   historyLimit = ref(50)
+  // 代码编辑器字号（px），所有 Monaco 实例共用
+  editorFontSize = ref(DEFAULT_EDITOR_FONT_SIZE)
   private initialized = false
   // 保存系统主题变化监听器引用，便于清理，避免反复 import/卸载时累积监听
   private mediaQueryListener: (() => void) | null = null
@@ -53,6 +62,12 @@ class ThemeStoreImpl implements ThemeStore {
   setEditorTheme(theme: string) {
     this.editorTheme.value = theme
     localStorage.setItem('editor-theme', theme)
+  }
+
+  setEditorFontSize(size: number) {
+    const v = Math.min(MAX_EDITOR_FONT_SIZE, Math.max(MIN_EDITOR_FONT_SIZE, Math.round(size)))
+    this.editorFontSize.value = v
+    localStorage.setItem('editor-font-size', String(v))
   }
 
   setHistoryLimit(limit: number) {
@@ -106,6 +121,7 @@ class ThemeStoreImpl implements ThemeStore {
     }
     const savedEditorTheme = localStorage.getItem('editor-theme') || 'auto'
     const savedHistoryLimit = localStorage.getItem('history-limit')
+    const savedFontSize = parseInt(localStorage.getItem('editor-font-size') || '', 10)
 
     const savedPalette = localStorage.getItem('ui-palette')
     this.palette.value = isValidPalette(savedPalette) ? savedPalette : DEFAULT_PALETTE
@@ -115,6 +131,9 @@ class ThemeStoreImpl implements ThemeStore {
     this.followSystemLang.value = savedLangMode === 'system'
     this.editorTheme.value = savedEditorTheme
     this.historyLimit.value = savedHistoryLimit ? parseInt(savedHistoryLimit) : 50
+    this.editorFontSize.value = Number.isFinite(savedFontSize)
+      ? Math.min(MAX_EDITOR_FONT_SIZE, Math.max(MIN_EDITOR_FONT_SIZE, savedFontSize))
+      : DEFAULT_EDITOR_FONT_SIZE
 
     if (this.followSystemMode.value) {
       this.applySystemTheme()

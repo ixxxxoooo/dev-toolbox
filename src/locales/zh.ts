@@ -29,6 +29,8 @@ export default {
       language: '语言选择',
       history: '历史记录',
       historyLimit: '保留记录数量',
+      editorFontSize: '编辑器字号',
+      editorFontSizeReset: '恢复默认',
       palette: '主题配色',
       palettes: {
         indigo: '靛蓝',

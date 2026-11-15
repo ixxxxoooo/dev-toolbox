@@ -28,6 +28,8 @@ export default {
       lightMode: 'Light',
       language: 'Language',
       history: 'History',
+      editorFontSize: 'Editor font size',
+      editorFontSizeReset: 'Reset',
       historyLimit: 'History Limit',
       palette: 'Color palette',
       palettes: {
